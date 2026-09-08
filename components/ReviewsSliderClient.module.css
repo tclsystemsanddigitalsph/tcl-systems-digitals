@@ -2,6 +2,7 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .slider {
@@ -125,26 +126,22 @@
 }
 
 @media (max-width: 650px) {
-  /*
-    IMPORTANT:
-    The parent homepage container already controls the horizontal width.
-    Do not add padding/margins to the slider or card here.
-    This makes the review card use the exact same outer width as the
-    rating box and the Leave a Review box above/below it.
-  */
   .shell {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .slider {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;
+
+    /* Gives the top border/shadow breathing room so it is not clipped. */
+    padding: 8px 0 2px !important;
+
     gap: 0 !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
