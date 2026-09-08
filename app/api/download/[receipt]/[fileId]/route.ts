@@ -1,9 +1,10 @@
 import { isIP } from "node:net";
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
-import { getSiteSettings } from "@/lib/site-settings";
+import { createLicensedProductPackage } from "@/lib/licensed-package";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const MAX_DOWNLOADS = 3;
 const ACCESS_DAYS = 7;
@@ -143,6 +144,26 @@ async function writeDownloadLog({
   }
 }
 
+function makeAttachmentHeaders(filename: string) {
+  const fallbackFilename =
+    filename
+      .normalize("NFKD")
+      .replace(/[^\x20-\x7E]/g, "")
+      .replace(/["\\]/g, "_")
+      .trim() || "TCL-Licensed-Package.zip";
+
+  return {
+    "Content-Type": "application/zip",
+    "Content-Disposition": `attachment; filename="${fallbackFilename}"; filename*=UTF-8''${encodeURIComponent(
+      filename,
+    )}`,
+    "Cache-Control": "private, no-store, max-age=0",
+    Pragma: "no-cache",
+    Expires: "0",
+    "X-Content-Type-Options": "nosniff",
+  };
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ receipt: string; fileId: string }> },
@@ -240,24 +261,22 @@ export async function GET(
     return NextResponse.redirect(fallback);
   }
 
-  let expiryMinutes = 30;
+  /*
+   * Generate the licensed package BEFORE consuming one download.
+   * If ZIP generation/storage retrieval fails, the customer does not lose
+   * one of their allowed download attempts.
+   */
+  let licensedPackage: Awaited<
+    ReturnType<typeof createLicensedProductPackage>
+  >;
 
   try {
-    const settings = await getSiteSettings();
-    expiryMinutes = Math.max(
-      1,
-      Number(settings.download_link_expiry_minutes) || 30,
-    );
+    licensedPackage = await createLicensedProductPackage({
+      orderId: order.id,
+      productFileId: file.id,
+    });
   } catch (error) {
-    console.error("Unable to load signed URL expiry setting:", error);
-  }
-
-  const { data: signed, error: signedError } = await admin.storage
-    .from("product-files")
-    .createSignedUrl(file.storage_path, expiryMinutes * 60);
-
-  if (signedError || !signed?.signedUrl) {
-    console.error("Unable to create protected download URL:", signedError);
+    console.error("Unable to generate licensed product package:", error);
 
     await writeDownloadLog({
       admin,
@@ -318,5 +337,8 @@ export async function GET(
     result: "SUCCESS",
   });
 
-  return NextResponse.redirect(signed.signedUrl);
+  return new NextResponse(Buffer.from(licensedPackage.bytes), {
+    status: 200,
+    headers: makeAttachmentHeaders(licensedPackage.filename),
+  });
 }
