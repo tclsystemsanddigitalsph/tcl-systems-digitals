@@ -1,17 +1,20 @@
 .shell {
   width: 100%;
-  overflow: hidden;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .slider {
-  display: flex !important;
-  width: 100% !important;
-  gap: 24px !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  scroll-behavior: smooth !important;
-  scroll-snap-type: x mandatory !important;
-  scrollbar-width: none !important;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  gap: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -20,197 +23,211 @@
 }
 
 .reviewCard {
-  position: relative !important;
-  box-sizing: border-box !important;
-  flex: 0 0 calc((100% - 48px) / 3) !important;
-  width: calc((100% - 48px) / 3) !important;
-  min-width: 0 !important;
-  scroll-snap-align: start !important;
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 0 calc((100% - 48px) / 3);
+  width: calc((100% - 48px) / 3);
+  min-width: 0;
+  scroll-snap-align: start;
 }
 
 .cardTop {
-  position: relative !important;
-  display: flex !important;
-  width: 100% !important;
-  min-height: 52px !important;
-  align-items: center !important;
-  margin-bottom: 22px !important;
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  margin-bottom: 22px;
 }
 
 .quoteIcon {
-  position: relative !important;
-  z-index: 2 !important;
-  flex: 0 0 auto !important;
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
 }
 
 .stars {
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  width: max-content !important;
-  margin: 0 !important;
-  transform: translate(-50%, -50%) !important;
-  white-space: nowrap !important;
-  text-align: center !important;
-  line-height: 1 !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max-content;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1;
 }
 
 .controls {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 10px !important;
-  margin-top: 22px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
 }
 
 .arrow {
-  display: inline-flex !important;
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  border: 1px solid #e9bfd0 !important;
-  border-radius: 999px !important;
-  background: #fff !important;
-  color: #b84e77 !important;
-  font-size: 1rem !important;
-  line-height: 1 !important;
-  cursor: pointer !important;
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #e9bfd0;
+  border-radius: 999px;
+  background: #fff;
+  color: #b84e77;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .arrow:disabled {
-  opacity: 0.35 !important;
-  cursor: default !important;
+  opacity: 0.35;
+  cursor: default;
 }
 
 .dots {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 5px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 .dot {
-  width: 6px !important;
-  height: 6px !important;
-  min-width: 6px !important;
-  min-height: 6px !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  background: #e8c5d3 !important;
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  min-height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #e8c5d3;
+  cursor: pointer;
 }
 
 .activeDot {
-  width: 18px !important;
-  background: #d8578a !important;
+  width: 18px;
+  background: #d8578a;
 }
 
 @media (max-width: 1024px) {
   .slider {
-    gap: 18px !important;
+    gap: 18px;
   }
 
   .reviewCard {
-    flex-basis: calc((100% - 18px) / 2) !important;
-    width: calc((100% - 18px) / 2) !important;
+    flex-basis: calc((100% - 18px) / 2);
+    width: calc((100% - 18px) / 2);
   }
 }
 
 @media (max-width: 650px) {
+  /*
+    IMPORTANT:
+    The parent homepage container already controls the horizontal width.
+    Do not add padding/margins to the slider or card here.
+    This makes the review card use the exact same outer width as the
+    rating box and the Leave a Review box above/below it.
+  */
   .shell {
-    padding: 0 8px;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
   }
 
   .slider {
-    gap: 12px !important;
-    padding: 0 2px !important;
-    scroll-padding-inline: 2px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-padding: 0 !important;
   }
 
   .reviewCard {
-    flex: 0 0 calc(100% - 12px) !important;
-    width: calc(100% - 12px) !important;
-    max-width: calc(100% - 12px) !important;
-    padding: 16px !important;
-    border-radius: 18px !important;
+    box-sizing: border-box !important;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    scroll-snap-align: start !important;
   }
 
   .cardTop {
-    min-height: 40px !important;
-    margin-bottom: 12px !important;
+    min-height: 42px;
+    margin-bottom: 14px;
   }
 
   .quoteIcon {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 12px !important;
-    font-size: 1.15rem !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 13px !important;
+    font-size: 1.25rem !important;
   }
 
   .stars {
-    font-size: 0.95rem !important;
-    letter-spacing: 0.8px !important;
+    font-size: 1rem !important;
+    letter-spacing: 1px !important;
   }
 
   .reviewText {
-    margin: 0 0 16px !important;
-    font-size: 0.84rem !important;
-    line-height: 1.5 !important;
+    margin: 0 0 18px !important;
+    font-size: 0.9rem !important;
+    line-height: 1.58 !important;
   }
 
   .client {
-    gap: 10px !important;
-    padding-top: 14px !important;
+    gap: 11px !important;
+    padding-top: 16px !important;
+    margin-top: 0 !important;
   }
 
   .avatar {
-    width: 42px !important;
-    height: 42px !important;
-    flex: 0 0 42px !important;
+    width: 46px !important;
+    height: 46px !important;
+    flex: 0 0 46px !important;
   }
 
   .product {
-    margin-top: 12px !important;
-    padding: 10px 11px !important;
-    border-radius: 12px !important;
+    margin-top: 14px !important;
+    padding: 11px 13px !important;
+    border-radius: 13px !important;
   }
 
   .controls {
-    margin-top: 14px !important;
+    margin-top: 16px;
   }
 
   .arrow {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    font-size: 0.86rem !important;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
   }
 }
 
 @media (max-width: 390px) {
-  .shell {
-    padding: 0 10px;
-  }
-
   .reviewCard {
-    flex-basis: calc(100% - 16px) !important;
-    width: calc(100% - 16px) !important;
-    max-width: calc(100% - 16px) !important;
-    padding: 14px !important;
-    border-radius: 17px !important;
-  }
-
-  .reviewText {
-    font-size: 0.8rem !important;
-    line-height: 1.48 !important;
+    flex-basis: 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
   }
 
   .stars {
     font-size: 0.9rem !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .reviewText {
+    font-size: 0.86rem !important;
   }
 }

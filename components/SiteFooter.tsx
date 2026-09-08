@@ -73,8 +73,23 @@ export default function SiteFooter() {
     Email Us
   </a>
 
-  <a href="#">Instagram</a>
-  <a href="#">Facebook</a>
+  <a
+  href="https://www.facebook.com/tclsystemsanddigitalsph"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  Facebook
+</a>
+
+<a
+  href="https://www.instagram.com/theclawlabmnl.systems"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  Instagram
+</a>
+  
+  
 </div>
 
         
