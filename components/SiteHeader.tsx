@@ -1,5 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
+import styles from "./SiteHeader.module.css";
+
+const navItems = [
+  { label: "Shop", href: "/shop" },
+  { label: "Categories", href: "/#categories" },
+  { label: "About Me", href: "/#about" },
+  { label: "Reviews", href: "/#reviews" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "FAQ", href: "/#faq" },
+];
 
 export default function SiteHeader() {
   return (
@@ -18,52 +28,47 @@ export default function SiteHeader() {
           </span>
 
           <span className="brand-copy">
-            <strong>TCL Systems & Digitals</strong>
-            <small>PH</small>
+            <strong>TCL Systems</strong>
+            <small>& Digitals PH</small>
           </span>
         </Link>
 
         <nav className="desktop-nav" aria-label="Main navigation">
-          <Link href="/shop">Shop</Link>
-          <Link href="/#categories">Categories</Link>
-          <Link href="/#about">About Me</Link>
-          <Link href="/#reviews">Reviews</Link>
-          <Link href="/#how-it-works">How It Works</Link>
-          <Link href="/#faq">FAQ</Link>
+          {navItems.map((item) => (
+            <Link href={item.href} key={item.href}>
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            flexShrink: 0,
-          }}
-        >
+        <div className={styles.actions}>
           <Link
             href="/admin/login"
-            className="nav-button"
-            aria-label="Admin sign in"
-            style={{
-              background: "#ffffff",
-              color: "var(--pink-700)",
-              border: "1px solid var(--border-strong)",
-            }}
+            className={`${styles.actionButton} ${styles.adminButton}`}
           >
             Admin Sign In
           </Link>
 
           <a
-            className="nav-button"
+            className={`${styles.actionButton} ${styles.contactButton}`}
             href="https://t.me/tclsystemsanddigitalsph"
             target="_blank"
             rel="noreferrer"
-            aria-label="Contact TCL Systems & Digitals PH on Telegram"
           >
             Contact TCL
           </a>
         </div>
       </div>
+
+      <nav className={styles.mobileNav} aria-label="Mobile navigation">
+        <div className={styles.mobileTrack}>
+          {navItems.map((item) => (
+            <Link href={item.href} key={item.href} className={styles.mobilePill}>
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
     </header>
   );
 }

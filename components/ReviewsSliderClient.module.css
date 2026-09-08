@@ -1,0 +1,185 @@
+.shell {
+  width: 100%;
+}
+
+.slider {
+  display: flex !important;
+  width: 100% !important;
+  gap: 24px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x mandatory !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.slider::-webkit-scrollbar {
+  display: none;
+}
+
+.reviewCard {
+  position: relative !important;
+  flex: 0 0 calc((100% - 48px) / 3) !important;
+  width: calc((100% - 48px) / 3) !important;
+  min-width: 0 !important;
+  scroll-snap-align: start !important;
+}
+
+.cardTop {
+  position: relative !important;
+  display: flex !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  align-items: center !important;
+  margin-bottom: 22px !important;
+}
+
+.quoteIcon {
+  position: relative !important;
+  z-index: 2 !important;
+  flex: 0 0 auto !important;
+}
+
+.stars {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: max-content !important;
+  margin: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  line-height: 1 !important;
+}
+
+.controls {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  margin-top: 22px !important;
+}
+
+.arrow {
+  display: inline-flex !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border: 1px solid #e9bfd0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #b84e77 !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.arrow:disabled {
+  opacity: 0.35 !important;
+  cursor: default !important;
+}
+
+.dots {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+}
+
+.dot {
+  width: 6px !important;
+  height: 6px !important;
+  min-width: 6px !important;
+  min-height: 6px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #e8c5d3 !important;
+}
+
+.activeDot {
+  width: 18px !important;
+  background: #d8578a !important;
+}
+
+@media (max-width: 1024px) {
+  .slider {
+    gap: 18px !important;
+  }
+
+  .reviewCard {
+    flex-basis: calc((100% - 18px) / 2) !important;
+    width: calc((100% - 18px) / 2) !important;
+  }
+}
+
+@media (max-width: 650px) {
+  .slider {
+    gap: 12px !important;
+  }
+
+  .reviewCard {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 18px !important;
+    border-radius: 20px !important;
+  }
+
+  .cardTop {
+    min-height: 42px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .quoteIcon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 13px !important;
+    font-size: 1.25rem !important;
+  }
+
+  .stars {
+    font-size: 1rem !important;
+    letter-spacing: 1px !important;
+  }
+
+  .reviewText {
+    margin: 0 0 18px !important;
+    font-size: 0.9rem !important;
+    line-height: 1.58 !important;
+  }
+
+  .client {
+    gap: 11px !important;
+    padding-top: 16px !important;
+  }
+
+  .avatar {
+    width: 46px !important;
+    height: 46px !important;
+    flex: 0 0 46px !important;
+  }
+
+  .product {
+    margin-top: 14px !important;
+    padding: 11px 13px !important;
+    border-radius: 13px !important;
+  }
+
+  .controls {
+    margin-top: 16px !important;
+  }
+
+  .arrow {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    font-size: 0.9rem !important;
+  }
+}
