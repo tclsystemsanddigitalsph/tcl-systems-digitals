@@ -1,0 +1,164 @@
+.inlineAction {
+  position: static !important;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.inlineTrigger {
+  position: static !important;
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 13px;
+  border: 1px solid #eadce2;
+  border-radius: 11px;
+  background: #fff;
+  color: #775f69;
+  font: inherit;
+  font-size: .61rem;
+  font-weight: 850;
+  cursor: pointer;
+  box-sizing: border-box;
+  list-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.inlineTrigger::-webkit-details-marker {
+  display: none;
+}
+
+.inlineIndicator::before {
+  content: "+";
+  color: #a16b7d;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.inlineAction[open] > .inlineTrigger .inlineIndicator::before {
+  content: "−";
+}
+
+.cancelTrigger {
+  background: #fff8fa;
+  color: #99546b;
+}
+
+.deleteTrigger {
+  border-color: #efd5d8;
+  background: #fff7f7;
+  color: #a14e56;
+}
+
+.inlinePanel {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 8px 0 0 !important;
+  padding: 16px;
+  overflow: visible !important;
+  transform: none !important;
+  border: 1px solid #eadde2;
+  border-radius: 14px;
+  background: #fffafb;
+  box-shadow: none !important;
+  box-sizing: border-box;
+}
+
+.inlineEyebrow {
+  margin-bottom: 5px;
+  color: #b36a83;
+  font-size: .53rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.inlinePanel h3 {
+  margin: 0 0 6px;
+  color: #40343a;
+  font-size: .9rem;
+}
+
+.inlinePanel p {
+  margin: 0 0 14px;
+  color: #817279;
+  font-size: .64rem;
+  line-height: 1.55;
+}
+
+.inlineForm {
+  display: grid;
+  gap: 8px;
+}
+
+.inlineForm label {
+  color: #66575e;
+  font-size: .59rem;
+  font-weight: 800;
+}
+
+.inlineForm input,
+.inlineForm textarea {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #e8dce1;
+  border-radius: 10px;
+  background: #fff;
+  color: #40343a;
+  font: inherit;
+  font-size: .67rem;
+  box-sizing: border-box;
+}
+
+.inlineForm textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.cancelSubmit,
+.deleteSubmit {
+  min-height: 40px;
+  margin-top: 2px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: .63rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.cancelSubmit {
+  border: 1px solid #e8c9d4;
+  background: #f6dce5;
+  color: #8d4961;
+}
+
+.deleteSubmit {
+  border: 1px solid #edc8cc;
+  background: #fbe2e4;
+  color: #9e4650;
+}
+
+@media (max-width: 700px) {
+  .inlineAction {
+    width: 100%;
+  }
+
+  .inlinePanel {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding: 14px;
+    transform: none !important;
+  }
+}

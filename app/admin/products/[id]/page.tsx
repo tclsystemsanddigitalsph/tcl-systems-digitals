@@ -8,6 +8,8 @@ import {
   updateProductFile,
   uploadProductFile,
 } from "../actions";
+import AdminNav from "@/app/admin/AdminNav";
+import styles from "./page.module.css";
 
 type EditProductPageProps = {
   params: Promise<{
@@ -68,21 +70,6 @@ function getFileErrorMessage(error?: string) {
   }
 }
 
-function formatBytes(value?: number | null) {
-  if (!value || value <= 0) return "Stored privately";
-
-  const units = ["B", "KB", "MB", "GB"];
-  let size = value;
-  let unitIndex = 0;
-
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex += 1;
-  }
-
-  return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
-}
-
 export default async function EditProductPage({
   params,
   searchParams,
@@ -102,15 +89,13 @@ export default async function EditProductPage({
 
   const adminSupabase = createAdminSupabaseClient();
 
-  const [
-    productResult,
-    filesResult,
-  ] = await Promise.all([
+  const [productResult, filesResult] = await Promise.all([
     adminSupabase
       .from("products")
       .select("*")
       .eq("id", id)
       .maybeSingle(),
+
     adminSupabase
       .from("product_files")
       .select(
@@ -142,74 +127,7 @@ export default async function EditProductPage({
   return (
     <main className="store-admin-dashboard">
       <div className="store-admin-dashboard-shell">
-        <aside className="store-admin-sidebar">
-          <div className="store-admin-sidebar-brand">
-            <div className="store-admin-sidebar-logo">TCL</div>
-            <div>
-              <strong>TCL Systems</strong>
-              <span>&amp; Digitals PH</span>
-            </div>
-          </div>
-
-          <div className="store-admin-sidebar-label">
-            STORE ADMIN
-          </div>
-
-          <nav className="store-admin-nav">
-            <a href="/admin">
-              <span>⌂</span>
-              Dashboard
-            </a>
-
-            <a className="active" href="/admin/products">
-              <span>◇</span>
-              Products
-            </a>
-
-            <a href="/admin/orders">
-              <span>▣</span>
-              Orders
-            </a>
-
-            <a href="/admin/deliveries">
-              <span>↗</span>
-              Deliveries
-            </a>
-
-            <a href="/admin/customers">
-              <span>♡</span>
-              Customers
-            </a>
-
-            <a href="/admin/reviews">
-              <span>☆</span>
-              Reviews
-            </a>
-
-            <a href="/admin/settings">
-              <span>⚙</span>
-              Settings
-            </a>
-          </nav>
-
-          <div className="store-admin-sidebar-bottom">
-            <a href="/">
-              <span>←</span>
-              View Store
-            </a>
-
-            <div className="store-admin-user">
-              <div>
-                {user.email?.charAt(0).toUpperCase() || "T"}
-              </div>
-
-              <span>
-                <small>Signed in as</small>
-                <strong>{user.email}</strong>
-              </span>
-            </div>
-          </div>
-        </aside>
+        <AdminNav active="products" email={user.email} />
 
         <section className="store-admin-main">
           <header className="store-admin-topbar">
@@ -264,6 +182,7 @@ export default async function EditProductPage({
                 <div className="store-admin-form-card-heading">
                   <span>PRODUCT DETAILS</span>
                   <h2>Basic information</h2>
+
                   <p>
                     Update the information customers see about this
                     product.
@@ -273,6 +192,7 @@ export default async function EditProductPage({
                 <div className="store-admin-form-fields">
                   <label className="store-admin-field">
                     <span>Product name *</span>
+
                     <input
                       type="text"
                       name="name"
@@ -283,6 +203,7 @@ export default async function EditProductPage({
 
                   <label className="store-admin-field">
                     <span>Product slug *</span>
+
                     <input
                       type="text"
                       name="slug"
@@ -291,22 +212,23 @@ export default async function EditProductPage({
                       title="Use lowercase letters, numbers, and hyphens only."
                       required
                     />
+
                     <small>Used in the product URL.</small>
                   </label>
 
                   <label className="store-admin-field">
                     <span>Short description</span>
+
                     <textarea
                       name="short_description"
                       rows={3}
-                      defaultValue={
-                        product.short_description ?? ""
-                      }
+                      defaultValue={product.short_description ?? ""}
                     />
                   </label>
 
                   <label className="store-admin-field">
                     <span>Full description</span>
+
                     <textarea
                       name="description"
                       rows={7}
@@ -317,6 +239,7 @@ export default async function EditProductPage({
                   <div className="store-admin-form-row">
                     <label className="store-admin-field">
                       <span>Category</span>
+
                       <input
                         type="text"
                         name="category"
@@ -328,6 +251,7 @@ export default async function EditProductPage({
 
                     <label className="store-admin-field">
                       <span>Badge</span>
+
                       <input
                         type="text"
                         name="badge"
@@ -343,6 +267,7 @@ export default async function EditProductPage({
                 <div className="store-admin-form-card-heading">
                   <span>POST-PURCHASE</span>
                   <h2>Customer instructions</h2>
+
                   <p>
                     These instructions appear only after a verified
                     successful payment.
@@ -352,6 +277,7 @@ export default async function EditProductPage({
                 <div className="store-admin-form-fields">
                   <label className="store-admin-field">
                     <span>Post-purchase instructions</span>
+
                     <textarea
                       name="post_purchase_instructions"
                       rows={8}
@@ -360,6 +286,7 @@ export default async function EditProductPage({
                       }
                       placeholder="Example: Download all included files below. Read the setup guide first, then follow the installation instructions..."
                     />
+
                     <small>
                       Keep private download links out of this field.
                       Files are delivered separately through secure
@@ -372,7 +299,9 @@ export default async function EditProductPage({
               <section className="store-admin-form-card">
                 <div className="store-admin-form-card-heading">
                   <span>PRICING</span>
+
                   <h2>Price &amp; fees</h2>
+
                   <p>
                     Update the regular price, sale price, and
                     processing fee.
@@ -383,6 +312,7 @@ export default async function EditProductPage({
                   <div className="store-admin-form-row">
                     <label className="store-admin-field">
                       <span>Regular price (₱) *</span>
+
                       <input
                         type="number"
                         name="price"
@@ -395,6 +325,7 @@ export default async function EditProductPage({
 
                     <label className="store-admin-field">
                       <span>Sale price (₱)</span>
+
                       <input
                         type="number"
                         name="sale_price"
@@ -408,6 +339,7 @@ export default async function EditProductPage({
 
                   <label className="store-admin-field">
                     <span>Processing fee (%)</span>
+
                     <input
                       type="number"
                       name="processing_fee_percent"
@@ -424,7 +356,9 @@ export default async function EditProductPage({
               <section className="store-admin-form-card">
                 <div className="store-admin-form-card-heading">
                   <span>LINKS</span>
+
                   <h2>Product links</h2>
+
                   <p>
                     Update the product image and live demo
                     destinations.
@@ -434,6 +368,7 @@ export default async function EditProductPage({
                 <div className="store-admin-form-fields">
                   <label className="store-admin-field">
                     <span>Image URL</span>
+
                     <input
                       type="url"
                       name="image_url"
@@ -444,6 +379,7 @@ export default async function EditProductPage({
 
                   <label className="store-admin-field">
                     <span>Live demo URL</span>
+
                     <input
                       type="url"
                       name="demo_url"
@@ -459,12 +395,14 @@ export default async function EditProductPage({
               <section className="store-admin-form-card">
                 <div className="store-admin-form-card-heading">
                   <span>SETTINGS</span>
+
                   <h2>Product setup</h2>
                 </div>
 
                 <div className="store-admin-form-fields">
                   <label className="store-admin-field">
                     <span>Product type</span>
+
                     <select
                       name="product_type"
                       defaultValue={product.product_type}
@@ -478,6 +416,7 @@ export default async function EditProductPage({
 
                   <label className="store-admin-field">
                     <span>Delivery method</span>
+
                     <select
                       name="delivery_method"
                       defaultValue={product.delivery_method}
@@ -491,6 +430,7 @@ export default async function EditProductPage({
 
                   <label className="store-admin-field">
                     <span>Display order</span>
+
                     <input
                       type="number"
                       name="display_order"
@@ -498,6 +438,7 @@ export default async function EditProductPage({
                       step="1"
                       defaultValue={product.display_order ?? 0}
                     />
+
                     <small>Lower numbers appear first.</small>
                   </label>
                 </div>
@@ -506,6 +447,7 @@ export default async function EditProductPage({
               <section className="store-admin-form-card">
                 <div className="store-admin-form-card-heading">
                   <span>VISIBILITY</span>
+
                   <h2>Store status</h2>
                 </div>
 
@@ -516,8 +458,10 @@ export default async function EditProductPage({
                       name="is_active"
                       defaultChecked={product.is_active}
                     />
+
                     <span>
                       <strong>Active</strong>
+
                       <small>
                         Show this product publicly in the store.
                       </small>
@@ -530,8 +474,10 @@ export default async function EditProductPage({
                       name="is_featured"
                       defaultChecked={product.is_featured}
                     />
+
                     <span>
                       <strong>Featured</strong>
+
                       <small>
                         Highlight this product in featured
                         sections.
@@ -561,123 +507,165 @@ export default async function EditProductPage({
           </form>
 
           <section
-            className="store-admin-form-card"
             id="product-files"
-            style={{ marginTop: "28px" }}
+            className={styles.filesSection}
           >
-            <div className="store-admin-form-card-heading">
-              <span>SECURE DELIVERY</span>
-              <h2>Product files</h2>
-              <p>
-                Upload private files for this product. Paid
-                customers receive temporary signed download
-                links after payment verification.
-              </p>
+            <div className={styles.filesHeader}>
+              <div className={styles.filesHeaderIcon}>
+                ⇩
+              </div>
+
+              <div className={styles.filesHeaderCopy}>
+                <span>SECURE DELIVERY</span>
+                <h2>Product files</h2>
+                <p>
+                  Upload the actual files buyers receive after a
+                  verified payment.
+                </p>
+              </div>
+
+              <div className={styles.filesCount}>
+                <strong>{productFiles.length}</strong>
+                <span>
+                  {productFiles.length === 1 ? "file" : "files"}
+                </span>
+              </div>
             </div>
 
-            {query.file_uploaded === "1" ? (
-              <div className="store-admin-form-success">
-                <strong>File uploaded ♡</strong>
-                <span>
-                  The file is now assigned to this product.
-                </span>
-              </div>
-            ) : null}
+            <div className={styles.filesBody}>
+              {query.file_uploaded === "1" ? (
+                <div className={styles.successNotice}>
+                  <span>✓</span>
+                  <div>
+                    <strong>File uploaded</strong>
+                    <small>
+                      It is now assigned to this product.
+                    </small>
+                  </div>
+                </div>
+              ) : null}
 
-            {query.file_updated === "1" ? (
-              <div className="store-admin-form-success">
-                <strong>File updated</strong>
-                <span>
-                  The delivery settings were saved.
-                </span>
-              </div>
-            ) : null}
+              {query.file_updated === "1" ? (
+                <div className={styles.successNotice}>
+                  <span>✓</span>
+                  <div>
+                    <strong>File updated</strong>
+                    <small>
+                      Delivery settings were saved.
+                    </small>
+                  </div>
+                </div>
+              ) : null}
 
-            {query.file_deleted === "1" ? (
-              <div className="store-admin-form-success">
-                <strong>File deleted</strong>
-                <span>
-                  The private storage object and database
-                  record were removed.
-                </span>
-              </div>
-            ) : null}
+              {query.file_deleted === "1" ? (
+                <div className={styles.successNotice}>
+                  <span>✓</span>
+                  <div>
+                    <strong>File deleted</strong>
+                    <small>
+                      The private file was removed.
+                    </small>
+                  </div>
+                </div>
+              ) : null}
 
-            {fileErrorMessage ? (
-              <div className="store-admin-form-error">
-                <strong>Couldn&apos;t manage product file</strong>
-                <span>{fileErrorMessage}</span>
-              </div>
-            ) : null}
+              {fileErrorMessage ? (
+                <div className={styles.errorNotice}>
+                  <span>!</span>
+                  <div>
+                    <strong>Couldn&apos;t manage file</strong>
+                    <small>{fileErrorMessage}</small>
+                  </div>
+                </div>
+              ) : null}
 
-            <form
-              action={uploadProductFile}
-              encType="multipart/form-data"
-              style={{
-                display: "grid",
-                gap: "18px",
-                marginTop: "20px",
-              }}
-            >
-              <input
-                type="hidden"
-                name="product_id"
-                value={product.id}
-              />
+              <div className={styles.uploadCard}>
+                <div className={styles.uploadIntro}>
+                  <div className={styles.uploadIcon}>＋</div>
 
-              <div className="store-admin-form-row">
-                <label className="store-admin-field">
-                  <span>Customer-facing file name</span>
-                  <input
-                    type="text"
-                    name="display_name"
-                    placeholder="e.g. Booking System Files"
-                  />
-                  <small>
-                    Optional. If left blank, the uploaded file
-                    name is used.
-                  </small>
-                </label>
+                  <div>
+                    <strong>Add a product file</strong>
+                    <p>
+                      Files are stored privately in Supabase and
+                      delivered with temporary signed links.
+                    </p>
+                  </div>
 
-                <label className="store-admin-field">
-                  <span>Choose file *</span>
-                  <input
-                    type="file"
-                    name="file"
-                    required
-                  />
-                  <small>
-                    Stored in the private Supabase
-                    product-files bucket. Maximum 50 MB.
-                  </small>
-                </label>
-              </div>
+                  <span className={styles.privateBadge}>
+                    PRIVATE
+                  </span>
+                </div>
 
-              <button
-                type="submit"
-                className="store-admin-save-product"
-                style={{ width: "fit-content" }}
-              >
-                Upload Product File
-                <span>→</span>
-              </button>
-            </form>
-
-            <div
-              style={{
-                borderTop: "1px solid rgba(0,0,0,.08)",
-                marginTop: "30px",
-                paddingTop: "24px",
-              }}
-            >
-              {productFiles.length > 0 ? (
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "16px",
-                  }}
+                <form
+                  action={uploadProductFile}
+                  encType="multipart/form-data"
+                  className={styles.uploadForm}
                 >
-                  {productFiles.map((file) => {
+                  <input
+                    type="hidden"
+                    name="product_id"
+                    value={product.id}
+                  />
+
+                  <label className={styles.uploadField}>
+                    <span>Customer file name</span>
+
+                    <input
+                      type="text"
+                      name="display_name"
+                      placeholder="e.g. Complete Booking System"
+                    />
+
+                    <small>
+                      Optional — the original file name is used if
+                      blank.
+                    </small>
+                  </label>
+
+                  <label className={styles.filePicker}>
+                    <span className={styles.filePickerIcon}>
+                      ⇧
+                    </span>
+
+                    <span className={styles.filePickerText}>
+                      <strong>Choose file</strong>
+                      <small>
+                        ZIP, PDF, images, documents and more · max
+                        50 MB
+                      </small>
+                    </span>
+
+                    <input
+                      type="file"
+                      name="file"
+                      required
+                    />
+                  </label>
+
+                  <button
+                    type="submit"
+                    className={styles.uploadButton}
+                  >
+                    Upload File
+                    <span>→</span>
+                  </button>
+                </form>
+              </div>
+
+              <div className={styles.libraryHeader}>
+                <div>
+                  <span>FILE LIBRARY</span>
+                  <h3>Files assigned to this product</h3>
+                </div>
+
+                <small>
+                  Only active files are shown to buyers.
+                </small>
+              </div>
+
+              {productFiles.length > 0 ? (
+                <div className={styles.fileList}>
+                  {productFiles.map((file, index) => {
                     const storageFileName =
                       file.storage_path.split("/").pop() ??
                       file.storage_path;
@@ -685,140 +673,135 @@ export default async function EditProductPage({
                     return (
                       <article
                         key={file.id}
-                        style={{
-                          border: "1px solid rgba(0,0,0,.08)",
-                          borderRadius: "18px",
-                          padding: "18px",
-                          background: "rgba(255,255,255,.7)",
-                        }}
+                        className={styles.fileCard}
                       >
+                        <div className={styles.fileCardTop}>
+                          <div className={styles.fileTypeIcon}>
+                            {index + 1}
+                          </div>
+
+                          <div className={styles.fileTitle}>
+                            <strong>{file.display_name}</strong>
+                            <small title={storageFileName}>
+                              {storageFileName}
+                            </small>
+                          </div>
+
+                          <span
+                            className={
+                              file.is_active
+                                ? styles.activeBadge
+                                : styles.inactiveBadge
+                            }
+                          >
+                            {file.is_active ? "ACTIVE" : "HIDDEN"}
+                          </span>
+                        </div>
+
                         <form
                           action={updateProductFile}
-                          style={{
-                            display: "grid",
-                            gap: "14px",
-                          }}
+                          className={styles.fileSettings}
                         >
                           <input
                             type="hidden"
                             name="product_id"
                             value={product.id}
                           />
+
                           <input
                             type="hidden"
                             name="file_id"
                             value={file.id}
                           />
 
-                          <div className="store-admin-form-row">
-                            <label className="store-admin-field">
-                              <span>File name</span>
-                              <input
-                                type="text"
-                                name="display_name"
-                                defaultValue={file.display_name}
-                                required
-                              />
-                            </label>
+                          <label className={styles.miniField}>
+                            <span>Display name</span>
 
-                            <label className="store-admin-field">
-                              <span>Display order</span>
-                              <input
-                                type="number"
-                                name="display_order"
-                                min="0"
-                                step="1"
-                                defaultValue={
-                                  file.display_order ?? 0
-                                }
-                                required
-                              />
-                            </label>
-                          </div>
+                            <input
+                              type="text"
+                              name="display_name"
+                              defaultValue={file.display_name}
+                              required
+                            />
+                          </label>
 
-                          <label className="store-admin-checkbox">
+                          <label className={styles.orderField}>
+                            <span>Order</span>
+
+                            <input
+                              type="number"
+                              name="display_order"
+                              min="0"
+                              step="1"
+                              defaultValue={file.display_order ?? 0}
+                              required
+                            />
+                          </label>
+
+                          <label className={styles.activeToggle}>
                             <input
                               type="checkbox"
                               name="is_active"
                               defaultChecked={file.is_active}
                             />
-                            <span>
-                              <strong>Active download</strong>
-                              <small>
-                                Only active files appear on the
-                                verified customer success page.
-                              </small>
+
+                            <span className={styles.toggleTrack}>
+                              <i />
+                            </span>
+
+                            <span className={styles.toggleCopy}>
+                              Active
                             </span>
                           </label>
 
-                          <div
-                            style={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                              gap: "10px",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <small
-                              style={{
-                                opacity: 0.65,
-                                overflowWrap: "anywhere",
-                              }}
-                            >
-                              Private storage: {storageFileName}
-                            </small>
-
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "10px",
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <button
-                                type="submit"
-                                className="store-admin-save-product"
-                              >
-                                Save File
-                              </button>
-                            </div>
-                          </div>
-                        </form>
-
-                        <form
-                          action={deleteProductFile}
-                          style={{ marginTop: "10px" }}
-                        >
-                          <input
-                            type="hidden"
-                            name="product_id"
-                            value={product.id}
-                          />
-                          <input
-                            type="hidden"
-                            name="file_id"
-                            value={file.id}
-                          />
-
                           <button
                             type="submit"
-                            className="store-admin-delete-product"
+                            className={styles.saveFileButton}
                           >
-                            Delete File
+                            Save
                           </button>
                         </form>
+
+                        <div className={styles.fileCardFooter}>
+                          <div className={styles.secureMeta}>
+                            <span>🔒</span>
+                            <small>
+                              Private storage · signed links only
+                            </small>
+                          </div>
+
+                          <form action={deleteProductFile}>
+                            <input
+                              type="hidden"
+                              name="product_id"
+                              value={product.id}
+                            />
+
+                            <input
+                              type="hidden"
+                              name="file_id"
+                              value={file.id}
+                            />
+
+                            <button
+                              type="submit"
+                              className={styles.deleteFileButton}
+                            >
+                              Delete
+                            </button>
+                          </form>
+                        </div>
                       </article>
                     );
                   })}
                 </div>
               ) : (
-                <div className="store-admin-empty-state">
+                <div className={styles.emptyFiles}>
                   <div>⇩</div>
-                  <strong>No product files yet</strong>
+                  <strong>No files uploaded yet</strong>
                   <p>
-                    Upload the files customers should receive
-                    after purchasing {product.name}.
+                    Add the files customers should receive after
+                    purchasing {product.name}.
                   </p>
                 </div>
               )}
@@ -828,7 +811,9 @@ export default async function EditProductPage({
           <section className="store-admin-danger-zone">
             <div>
               <span>DANGER ZONE</span>
+
               <h2>Delete product</h2>
+
               <p>
                 Permanently delete this product from the catalog.
                 Its assigned private product files will also be

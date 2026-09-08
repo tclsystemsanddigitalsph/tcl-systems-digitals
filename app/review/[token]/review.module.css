@@ -1,0 +1,309 @@
+.page{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top right,rgba(244,210,224,.45),transparent 34%),
+    #fffafb;
+  color:#3f3036;
+  padding:34px 18px 46px;
+}
+
+.shell{
+  width:min(680px,100%);
+  margin:0 auto;
+}
+
+.brand{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  color:inherit;
+  text-decoration:none;
+  margin-bottom:46px;
+}
+
+.brand>span{
+  display:grid;
+  place-items:center;
+  width:42px;
+  height:42px;
+  border-radius:13px;
+  background:#2f262a;
+  color:#fff;
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+
+.brand div{
+  display:flex;
+  flex-direction:column;
+  line-height:1.05;
+}
+
+.brand strong{
+  font-size:.79rem;
+}
+
+.brand small{
+  margin-top:4px;
+  color:#a17d8c;
+  font-size:.65rem;
+}
+
+.hero{
+  text-align:center;
+  margin-bottom:24px;
+}
+
+.eyebrow{
+  display:block;
+  margin-bottom:8px;
+  color:#b77b94;
+  font-size:.62rem;
+  font-weight:900;
+  letter-spacing:.13em;
+}
+
+.hero h1,
+.stateCard h1{
+  margin:0;
+  color:#34282d;
+  font-size:clamp(2rem,7vw,3rem);
+  line-height:1.05;
+  letter-spacing:-.04em;
+}
+
+.hero p,
+.stateCard p{
+  width:min(530px,100%);
+  margin:14px auto 0;
+  color:#776a70;
+  font-size:.9rem;
+  line-height:1.7;
+}
+
+.productCard{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-bottom:14px;
+  padding:15px 17px;
+  border:1px solid #f0dfe6;
+  border-radius:16px;
+  background:rgba(255,255,255,.8);
+  box-shadow:0 10px 35px rgba(85,42,59,.04);
+}
+
+.productCard span{
+  color:#b77b94;
+  font-size:.55rem;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+
+.productCard strong{
+  font-size:.88rem;
+}
+
+.productCard small{
+  color:#9a8b91;
+  font-size:.68rem;
+}
+
+.form{
+  display:grid;
+  gap:15px;
+  padding:22px;
+  border:1px solid #f0dfe6;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 16px 50px rgba(85,42,59,.06);
+}
+
+.field,
+.ratingField{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.field label,
+.ratingField legend{
+  color:#4a3940;
+  font-size:.72rem;
+  font-weight:850;
+}
+
+.field label span{
+  color:#aa99a0;
+  font-size:.62rem;
+  font-weight:700;
+}
+
+.field input,
+.field textarea{
+  width:100%;
+  border:1px solid #eadce2;
+  border-radius:12px;
+  background:#fff;
+  padding:12px 13px;
+  color:#3f3036;
+  font:inherit;
+  font-size:.82rem;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+
+.field input:focus,
+.field textarea:focus{
+  border-color:#d6a5b9;
+  box-shadow:0 0 0 3px rgba(214,165,185,.12);
+}
+
+.field textarea{
+  resize:vertical;
+  min-height:145px;
+  line-height:1.6;
+}
+
+.field small,
+.ratingField small{
+  color:#a4969c;
+  font-size:.64rem;
+}
+
+.ratingField{
+  margin:0;
+  border:0;
+  padding:0;
+}
+
+.stars{
+  display:flex;
+  flex-direction:row-reverse;
+  justify-content:flex-end;
+  gap:5px;
+}
+
+.starOption{
+  position:relative;
+}
+
+.starOption input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.starOption label{
+  display:block;
+  color:#e5d8dd;
+  font-size:2.05rem;
+  line-height:1;
+  cursor:pointer;
+  transition:color .12s,transform .12s;
+}
+
+.starOption label:hover{
+  transform:translateY(-1px);
+}
+
+.starOption:has(input:checked) label,
+.starOption:has(input:checked)~.starOption label,
+.starOption:hover label,
+.starOption:hover~.starOption label{
+  color:#bd8a4c;
+}
+
+.notice{
+  padding:13px 14px;
+  border-radius:12px;
+  background:#fff7fa;
+  color:#79666e;
+}
+
+.notice strong{
+  display:block;
+  margin-bottom:4px;
+  color:#5a424c;
+  font-size:.68rem;
+}
+
+.notice p{
+  margin:0;
+  font-size:.66rem;
+  line-height:1.55;
+}
+
+.submit,
+.primaryLink{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:46px;
+  border:0;
+  border-radius:12px;
+  background:#34282d;
+  color:#fff;
+  padding:0 18px;
+  font-size:.76rem;
+  font-weight:900;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.stateCard{
+  padding:48px 24px;
+  border:1px solid #f0dfe6;
+  border-radius:24px;
+  background:#fff;
+  text-align:center;
+  box-shadow:0 16px 50px rgba(85,42,59,.06);
+}
+
+.stateCard .icon{
+  display:grid;
+  place-items:center;
+  width:54px;
+  height:54px;
+  margin:0 auto 17px;
+  border-radius:50%;
+  background:#fff0f5;
+  color:#a05272;
+  font-size:1.5rem;
+  font-weight:900;
+}
+
+.stateCard .primaryLink{
+  margin-top:22px;
+}
+
+.footer{
+  margin-top:25px;
+  color:#ad9da4;
+  text-align:center;
+  font-size:.62rem;
+}
+
+@media(max-width:560px){
+  .page{
+    padding:24px 14px 34px;
+  }
+
+  .brand{
+    margin-bottom:34px;
+  }
+
+  .form{
+    padding:17px;
+    border-radius:18px;
+  }
+
+  .starOption label{
+    font-size:1.85rem;
+  }
+
+  .stateCard{
+    padding:38px 18px;
+  }
+}

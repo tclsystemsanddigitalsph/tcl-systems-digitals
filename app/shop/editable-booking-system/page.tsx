@@ -831,7 +831,7 @@ export default async function EditableBookingSystemPage() {
                 <span>✓</span>
 
                 <p id="payment-setup-note">
-                  Online checkout is coming soon with PayPal and PayMongo.
+                  Online checkout is available with PayPal and PayMongo.
                 </p>
               </div>
 

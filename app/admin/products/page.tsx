@@ -1,3 +1,5 @@
+import AdminNav from "@/app/admin/AdminNav";
+import styles from "./products.module.css";
 import { redirect } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
@@ -56,80 +58,10 @@ export default async function AdminProductsPage() {
   return (
     <main className="store-admin-dashboard">
       <div className="store-admin-dashboard-shell">
-        <aside className="store-admin-sidebar">
-          <div className="store-admin-sidebar-brand">
-            <div className="store-admin-sidebar-logo">
-              TCL
-            </div>
-
-            <div>
-              <strong>TCL Systems</strong>
-              <span>&amp; Digitals PH</span>
-            </div>
-          </div>
-
-          <div className="store-admin-sidebar-label">
-            STORE ADMIN
-          </div>
-
-          <nav className="store-admin-nav">
-            <a href="/admin">
-              <span>⌂</span>
-              Dashboard
-            </a>
-
-            <a className="active" href="/admin/products">
-              <span>◇</span>
-              Products
-            </a>
-
-            <a href="/admin/orders">
-              <span>▣</span>
-              Orders
-            </a>
-
-            <a href="/admin/deliveries">
-              <span>↗</span>
-              Deliveries
-            </a>
-
-            <a href="/admin/customers">
-              <span>♡</span>
-              Customers
-            </a>
-
-            <a href="/admin/reviews">
-              <span>☆</span>
-              Reviews
-            </a>
-
-            <a href="/admin/settings">
-              <span>⚙</span>
-              Settings
-            </a>
-          </nav>
-
-          <div className="store-admin-sidebar-bottom">
-            <a href="/">
-              <span>←</span>
-              View Store
-            </a>
-
-            <div className="store-admin-user">
-              <div>
-                {user.email?.charAt(0).toUpperCase() || "T"}
-              </div>
-
-              <span>
-                <small>Signed in as</small>
-                <strong>{user.email}</strong>
-              </span>
-            </div>
-          </div>
-        </aside>
+        <AdminNav active="products" email={user.email} />
 
         <section className="store-admin-main">
-          <header className="store-admin-topbar">
+          <header className={styles.topbar}>
             <div>
               <span className="store-admin-eyebrow">
                 STORE MANAGEMENT
@@ -142,17 +74,8 @@ export default async function AdminProductsPage() {
               </p>
             </div>
 
-            <div className="store-admin-topbar-actions">
-              <a
-                className="store-admin-view-store"
-                href="/shop"
-                target="_blank"
-                rel="noreferrer"
-              >
-                View Shop ↗
-              </a>
-
-              <a
+            <div className={styles.topbarActions}>
+<a
                 className="store-admin-add-product-button"
                 href="/admin/products/new"
               >

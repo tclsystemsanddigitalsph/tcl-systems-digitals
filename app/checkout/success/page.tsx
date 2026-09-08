@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import CopyReceiptLinkButton from "@/components/CopyReceiptLinkButton";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { getSiteSettings } from "@/lib/site-settings";
 import styles from "../checkout.module.css";
 
 export const dynamic = "force-dynamic";
@@ -12,635 +14,213 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-type CompletedOrder = {
-  order_number: string;
-  customer_name: string;
-  product_id: string | null;
-  product_name: string;
-  total_amount: number;
-  currency: string;
-  payment_status: string;
-  paypal_order_id: string | null;
-};
+const MAX_DOWNLOADS = 3;
+const ACCESS_DAYS = 7;
 
-type PurchasedProduct = {
-  name: string;
-  slug: string;
-  post_purchase_instructions: string | null;
-  delivery_method: string;
-};
-
-type ProductFileRecord = {
-  id: string;
-  display_name: string;
-  storage_path: string;
-  display_order: number;
-};
-
-type DownloadFile = {
-  id: string;
-  displayName: string;
-  signedUrl: string;
-};
-
-function formatAmount(
-  amount: number,
-  currency: string,
-) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency,
-  }).format(amount);
+function formatAmount(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-PH", { style: "currency", currency }).format(amount);
+}
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium", timeStyle: "short",
+  }).format(new Date(value));
 }
 
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    receipt?: string | string[];
-  }>;
+  searchParams: Promise<{ receipt?: string | string[]; download?: string | string[] }>;
 }) {
   const params = await searchParams;
+  const receiptToken = typeof params.receipt === "string" ? params.receipt.trim() : "";
+  const downloadMessage = typeof params.download === "string" ? params.download : "";
 
-  const receiptToken =
-    typeof params.receipt === "string"
-      ? params.receipt.trim()
-      : "";
+  let order: any = null;
+  let product: any = null;
+  let files: Array<{ id: string; displayName: string; count: number }> = [];
+  let downloadExpiryMinutes = 30;
+  let accessExpiresAt: string | null = null;
 
-  let order: CompletedOrder | null = null;
-  let product: PurchasedProduct | null = null;
-  let downloads: DownloadFile[] = [];
+  try {
+    const settings = await getSiteSettings();
+    downloadExpiryMinutes = settings.download_link_expiry_minutes;
+  } catch (error) {
+    console.error("Unable to load download expiry setting:", error);
+  }
 
   if (receiptToken) {
     const supabase = createAdminSupabaseClient();
+    const { data: orderData, error } = await supabase
+      .from("orders")
+      .select("id,order_number,customer_name,product_id,product_name,total_amount,currency,payment_status,order_status,paypal_order_id,paid_at,created_at,download_access_expires_at")
+      .eq("receipt_token", receiptToken)
+      .eq("payment_status", "COMPLETED")
+      .maybeSingle();
 
-    const { data: orderData, error: orderError } =
-      await supabase
-        .from("orders")
-        .select(
-          "order_number,customer_name,product_id,product_name,total_amount,currency,payment_status,paypal_order_id",
-        )
-        .eq("receipt_token", receiptToken)
-        .eq("payment_status", "COMPLETED")
-        .maybeSingle();
-
-    if (orderError) {
-      console.error(
-        "Unable to load completed order:",
-        orderError,
-      );
-    }
+    if (error) console.error("Unable to load completed order:", error);
 
     if (orderData) {
-      order = {
-        ...orderData,
-        total_amount: Number(orderData.total_amount),
-      } as CompletedOrder;
+      order = { ...orderData, total_amount: Number(orderData.total_amount) };
+
+      if (!orderData.download_access_expires_at) {
+        const base = new Date(orderData.paid_at || orderData.created_at);
+        const expires = new Date(base.getTime() + ACCESS_DAYS * 86400000).toISOString();
+        const { data: updated } = await supabase
+          .from("orders")
+          .update({ download_access_expires_at: expires, updated_at: new Date().toISOString() })
+          .eq("id", orderData.id)
+          .is("download_access_expires_at", null)
+          .select("download_access_expires_at")
+          .maybeSingle();
+        accessExpiresAt = updated?.download_access_expires_at || expires;
+      } else {
+        accessExpiresAt = orderData.download_access_expires_at;
+      }
 
       if (orderData.product_id) {
-        const {
-          data: productData,
-          error: productError,
-        } = await supabase
+        const { data: productData } = await supabase
           .from("products")
-          .select(
-            "name,slug,post_purchase_instructions,delivery_method",
-          )
-          .eq("id", orderData.product_id)
-          .maybeSingle();
+          .select("name,slug,post_purchase_instructions,delivery_method")
+          .eq("id", orderData.product_id).maybeSingle();
+        product = productData;
 
-        if (productError) {
-          console.error(
-            "Unable to load purchased product:",
-            productError,
-          );
-        }
+        const { data: fileRows } = await supabase
+          .from("product_files")
+          .select("id,display_name,display_order")
+          .eq("product_id", orderData.product_id).eq("is_active", true)
+          .order("display_order").order("display_name");
 
-        if (productData) {
-          product =
-            productData as PurchasedProduct;
+        const { data: counters } = await supabase
+          .from("order_downloads")
+          .select("product_file_id,download_count")
+          .eq("order_id", orderData.id);
 
-          const {
-            data: fileRows,
-            error: filesError,
-          } = await supabase
-            .from("product_files")
-            .select(
-              "id,display_name,storage_path,display_order",
-            )
-            .eq("product_id", orderData.product_id)
-            .eq("is_active", true)
-            .order("display_order", {
-              ascending: true,
-            })
-            .order("display_name", {
-              ascending: true,
-            });
-
-          if (filesError) {
-            console.error(
-              "Unable to load purchased product files:",
-              filesError,
-            );
-          }
-
-          const records =
-            (fileRows ?? []) as ProductFileRecord[];
-
-          const signedFiles = await Promise.all(
-            records.map(async (file) => {
-              const {
-                data: signedData,
-                error: signedError,
-              } = await supabase.storage
-                .from("product-files")
-                .createSignedUrl(
-                  file.storage_path,
-                  60 * 30,
-                );
-
-              if (
-                signedError ||
-                !signedData?.signedUrl
-              ) {
-                console.error(
-                  "Unable to create signed product download:",
-                  file.storage_path,
-                  signedError,
-                );
-
-                return null;
-              }
-
-              return {
-                id: file.id,
-                displayName: file.display_name,
-                signedUrl: signedData.signedUrl,
-              } satisfies DownloadFile;
-            }),
-          );
-
-          downloads = signedFiles.filter(
-            (
-              file,
-            ): file is DownloadFile =>
-              file !== null,
-          );
-        }
+        const countMap = new Map(
+          (counters ?? []).map((x: any) => [x.product_file_id, Number(x.download_count ?? 0)]),
+        );
+        files = (fileRows ?? []).map((file: any) => ({
+          id: file.id, displayName: file.display_name, count: countMap.get(file.id) ?? 0,
+        }));
       }
     }
   }
 
-  const validReceipt =
-    Boolean(order) &&
-    order?.payment_status === "COMPLETED";
+  const validReceipt = Boolean(order) && order?.payment_status === "COMPLETED";
+  const accessActive =
+    Boolean(accessExpiresAt) &&
+    Date.now() < new Date(accessExpiresAt as string).getTime() &&
+    order?.order_status !== "CANCELLED";
 
   return (
     <>
       <SiteHeader />
-
-      <main
-        className={styles.page}
-        style={{
-          minHeight: "calc(100vh - 160px)",
-        }}
-      >
+      <main className={styles.page} style={{ minHeight: "calc(100vh - 160px)" }}>
         <div className="container">
-          <nav
-            aria-label="Page navigation"
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginBottom: 28,
-            }}
-          >
-            <Link
-              href="/"
-              className={styles.back}
-              style={{
-                minHeight: 44,
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+          <nav aria-label="Page navigation" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 28 }}>
+            <Link href="/" className={styles.back} style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }}>
               Return Home →
             </Link>
           </nav>
 
           {!validReceipt ? (
-            <section
-              style={{
-                width: "100%",
-                maxWidth: 720,
-                margin: "0 auto",
-                padding: "clamp(34px, 6vw, 58px)",
-                background: "var(--surface, #fff)",
-                border: "1px solid var(--border)",
-                borderRadius: 24,
-                boxShadow:
-                  "0 18px 50px rgba(49, 37, 41, 0.08)",
-                textAlign: "center",
-              }}
-            >
-              <span className="section-kicker">
-                Order verification
-              </span>
-
-              <h1
-                style={{
-                  marginTop: 14,
-                  marginBottom: 16,
-                  fontSize:
-                    "clamp(2rem, 5vw, 2.7rem)",
-                  lineHeight: 1.1,
-                }}
-              >
-                We couldn&apos;t verify this receipt.
-              </h1>
-
-              <p
-                style={{
-                  maxWidth: 560,
-                  margin: "0 auto",
-                  color: "var(--text-soft)",
-                  lineHeight: 1.7,
-                }}
-              >
-                Purchase instructions and files are
-                only available after a verified
-                completed payment.
+            <section style={{ maxWidth: 720, margin: "0 auto", padding: "clamp(34px,6vw,58px)", background: "#fff", border: "1px solid var(--border)", borderRadius: 24, textAlign: "center" }}>
+              <span className="section-kicker">Order verification</span>
+              <h1>We couldn&apos;t verify this receipt.</h1>
+              <p style={{ color: "var(--text-soft)", lineHeight: 1.7 }}>
+                Purchase instructions and files are only available after a verified completed payment.
               </p>
-
-              <div
-                style={{
-                  marginTop: 30,
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <Link
-                  href="/shop"
-                  className="button button-primary"
-                  style={{
-                    minHeight: 48,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  Back to Shop
-                </Link>
-              </div>
+              <Link href="/shop" className="button button-primary">Back to Shop</Link>
             </section>
           ) : (
-            <section
-              aria-labelledby="payment-success-heading"
-              style={{
-                width: "100%",
-                maxWidth: 860,
-                margin: "0 auto",
-                padding:
-                  "clamp(34px, 6vw, 64px)",
-                background: "var(--surface, #fff)",
-                border: "1px solid var(--border)",
-                borderRadius: 24,
-                boxShadow:
-                  "0 18px 50px rgba(49, 37, 41, 0.08)",
-              }}
-            >
+            <section style={{ width: "100%", maxWidth: 860, margin: "0 auto", padding: "clamp(34px,6vw,64px)", background: "#fff", border: "1px solid var(--border)", borderRadius: 24, boxShadow: "0 18px 50px rgba(49,37,41,.08)" }}>
               <div style={{ textAlign: "center" }}>
-                <div
-                  aria-hidden="true"
-                  style={{
-                    width: 72,
-                    height: 72,
-                    margin: "0 auto 24px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "50%",
-                    background:
-                      "rgba(217, 86, 139, 0.12)",
-                    border:
-                      "1px solid rgba(217, 86, 139, 0.18)",
-                    fontSize: 32,
-                    lineHeight: 1,
-                  }}
-                >
-                  ✓
-                </div>
-
-                <span className="section-kicker">
-                  Payment received
-                </span>
-
-                <h1
-                  id="payment-success-heading"
-                  style={{
-                    marginTop: 14,
-                    marginBottom: 14,
-                    fontSize:
-                      "clamp(2rem, 5vw, 3rem)",
-                    lineHeight: 1.08,
-                  }}
-                >
-                  Thank you
-                  {order?.customer_name
-                    ? `, ${order.customer_name}`
-                    : ""}
-                  !
+                <div aria-hidden="true" style={{ width: 72, height: 72, margin: "0 auto 24px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "rgba(217,86,139,.12)", fontSize: 32 }}>✓</div>
+                <span className="section-kicker">Payment received</span>
+                <h1 style={{ margin: "14px 0", fontSize: "clamp(2rem,5vw,3rem)" }}>
+                  Thank you{order.customer_name ? `, ${order.customer_name}` : ""}!
                 </h1>
-
-                <p
-                  style={{
-                    maxWidth: 620,
-                    margin: "0 auto",
-                    color: "var(--text-soft)",
-                    fontSize:
-                      "clamp(1rem, 2vw, 1.08rem)",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  Your payment for{" "}
-                  <strong>
-                    {product?.name ??
-                      order!.product_name}
-                  </strong>{" "}
-                  was completed successfully.
+                <p style={{ color: "var(--text-soft)", lineHeight: 1.7 }}>
+                  Your payment for <strong>{product?.name ?? order.product_name}</strong> was completed successfully.
                 </p>
               </div>
 
-              <div
-                style={{
-                  marginTop: 32,
-                  padding: 20,
-                  border:
-                    "1px solid var(--border)",
-                  borderRadius: 16,
-                  background:
-                    "rgba(255, 255, 255, 0.68)",
-                  display: "grid",
-                  gap: 14,
-                }}
-              >
-                <div>
-                  <small
-                    style={{
-                      display: "block",
-                      marginBottom: 5,
-                      color: "var(--text-soft)",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Order number
-                  </small>
-                  <strong>
-                    {order!.order_number}
-                  </strong>
-                </div>
-
-                <div>
-                  <small
-                    style={{
-                      display: "block",
-                      marginBottom: 5,
-                      color: "var(--text-soft)",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Amount paid
-                  </small>
-                  <strong>
-                    {formatAmount(
-                      order!.total_amount,
-                      order!.currency,
-                    )}
-                  </strong>
-                </div>
-
-                {order!.paypal_order_id && (
-                  <div>
-                    <small
-                      style={{
-                        display: "block",
-                        marginBottom: 5,
-                        color: "var(--text-soft)",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        letterSpacing: "0.08em",
-                        textTransform:
-                          "uppercase",
-                      }}
-                    >
-                      PayPal reference
-                    </small>
-
-                    <strong
-                      style={{
-                        display: "block",
-                        overflowWrap: "anywhere",
-                      }}
-                    >
-                      {order!.paypal_order_id}
-                    </strong>
-                  </div>
-                )}
+              <div style={{ marginTop: 32, padding: 20, border: "1px solid var(--border)", borderRadius: 16, display: "grid", gap: 14 }}>
+                <div><small>ORDER NUMBER</small><br/><strong>{order.order_number}</strong></div>
+                <div><small>AMOUNT PAID</small><br/><strong>{formatAmount(order.total_amount, order.currency)}</strong></div>
+                {order.paypal_order_id ? <div><small>PAYPAL REFERENCE</small><br/><strong>{order.paypal_order_id}</strong></div> : null}
               </div>
 
-              <section
-                aria-labelledby="next-steps-heading"
-                style={{
-                  marginTop: 30,
-                  padding:
-                    "clamp(22px, 4vw, 30px)",
-                  border:
-                    "1px solid var(--border)",
-                  borderRadius: 18,
-                  background:
-                    "rgba(217, 86, 139, 0.055)",
-                }}
-              >
-                <span className="section-kicker">
-                  Your instructions
-                </span>
-
-                <h2
-                  id="next-steps-heading"
-                  style={{
-                    marginTop: 10,
-                    marginBottom: 16,
-                    fontSize:
-                      "clamp(1.35rem, 4vw, 1.8rem)",
-                  }}
-                >
-                  Instructions for{" "}
-                  {product?.name ??
-                    order!.product_name}
-                </h2>
-
-                <div
-                  style={{
-                    color: "var(--text-soft)",
-                    fontSize: "1rem",
-                    lineHeight: 1.8,
-                    whiteSpace: "pre-wrap",
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  {product?.post_purchase_instructions?.trim() ||
-                    "Your payment has been confirmed. TCL Systems & Digitals PH will contact you with the next steps for this purchase."}
+              <section style={{ marginTop: 30, padding: "clamp(22px,4vw,30px)", border: "1px solid var(--border)", borderRadius: 18, background: "rgba(217,86,139,.055)" }}>
+                <span className="section-kicker">Your instructions</span>
+                <h2>Instructions for {product?.name ?? order.product_name}</h2>
+                <div style={{ color: "var(--text-soft)", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                  {product?.post_purchase_instructions?.trim() || "Your payment has been confirmed. TCL Systems & Digitals PH will contact you with the next steps for this purchase."}
                 </div>
               </section>
 
-              <section
-                aria-labelledby="downloads-heading"
-                style={{
-                  marginTop: 24,
-                  padding:
-                    "clamp(22px, 4vw, 30px)",
-                  border:
-                    "1px solid var(--border)",
-                  borderRadius: 18,
-                  background:
-                    "rgba(255, 255, 255, 0.72)",
-                }}
-              >
-                <span className="section-kicker">
-                  Your files
-                </span>
+              {files.length > 0 ? (
+                <section style={{ marginTop: 24, padding: "clamp(22px,4vw,30px)", border: "1px solid var(--border)", borderRadius: 18 }}>
+                  <span className="section-kicker">Your files</span>
+                  <h2>Download your purchase</h2>
 
-                <h2
-                  id="downloads-heading"
-                  style={{
-                    marginTop: 10,
-                    marginBottom: 10,
-                    fontSize:
-                      "clamp(1.35rem, 4vw, 1.8rem)",
-                  }}
-                >
-                  Download your purchase
-                </h2>
+                  {downloadMessage ? (
+                    <div style={{ marginBottom: 16, padding: 12, borderRadius: 12, background: "#fff4f6", color: "#8d4051" }}>
+                      {downloadMessage === "expired" ? "Your 7-day download access has expired. Please contact TCL if you need access restored." :
+                       downloadMessage === "limit" ? "The 3-download limit for this file has been reached. Please contact TCL if you need access restored." :
+                       downloadMessage === "error" ? "We could not prepare this download. Please try again or contact TCL." :
+                       "This file is currently unavailable."}
+                    </div>
+                  ) : null}
 
-                {downloads.length > 0 ? (
-                  <>
-                    <p
-                      style={{
-                        marginTop: 0,
-                        marginBottom: 20,
-                        color: "var(--text-soft)",
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      These download links are private
-                      and temporary. If a link expires,
-                      reopen this verified receipt page
-                      to generate a new one.
+                  <div style={{ marginBottom: 20, padding: "14px 16px", border: "1px solid rgba(217,86,139,.18)", borderRadius: 14, background: "rgba(217,86,139,.06)" }}>
+                    <strong style={{ display: "block", marginBottom: 6 }}>Important Download Information</strong>
+                    <p style={{ margin: 0, color: "var(--text-soft)", lineHeight: 1.65 }}>
+                      Your files are available for <strong>7 days</strong> after purchase, with up to <strong>3 downloads per file</strong>.
+                      Each secure file link is temporary and expires after <strong>{downloadExpiryMinutes} minutes</strong>.
+                      Please save your files to your device and keep this private receipt link secure. If your access period or download
+                      limit is reached, contact TCL Systems &amp; Digitals PH for assistance.
                     </p>
+                    {accessExpiresAt ? (
+                      <p style={{ margin: "10px 0 0", fontWeight: 700 }}>
+                        Access expires: {formatDateTime(accessExpiresAt)}
+                      </p>
+                    ) : null}
+                  </div>
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: 12,
-                      }}
-                    >
-                      {downloads.map((file) => (
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {files.map((file) => {
+                      const remaining = Math.max(0, MAX_DOWNLOADS - file.count);
+                      const enabled = accessActive && remaining > 0;
+                      return enabled ? (
                         <a
                           key={file.id}
-                          href={file.signedUrl}
+                          href={`/api/download/${encodeURIComponent(receiptToken)}/${encodeURIComponent(file.id)}`}
                           className="button button-primary"
-                          style={{
-                            width: "100%",
-                            minHeight: 50,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent:
-                              "space-between",
-                            gap: 16,
-                            textAlign: "left",
-                          }}
+                          style={{ width: "100%", minHeight: 50, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}
                         >
-                          <span>
-                            {file.displayName}
-                          </span>
-
-                          <span aria-hidden="true">
-                            Download ↓
-                          </span>
+                          <span>{file.displayName}</span>
+                          <span>{remaining} of {MAX_DOWNLOADS} remaining ↓</span>
                         </a>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <p
-                    style={{
-                      margin: 0,
-                      color: "var(--text-soft)",
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    No automatic download files are
-                    attached to this product yet.
-                    {product?.delivery_method ===
-                    "MANUAL"
-                      ? " This item is currently set for manual delivery."
-                      : ""}
-                  </p>
-                )}
-              </section>
+                      ) : (
+                        <div key={file.id} style={{ padding: 14, border: "1px solid var(--border)", borderRadius: 12, opacity: .65 }}>
+                          <strong>{file.displayName}</strong>
+                          <div>{remaining > 0 ? "Access expired" : "Download limit reached"}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
 
-              <div
-                style={{
-                  marginTop: 32,
-                  display: "flex",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                  gap: 12,
-                }}
-              >
-                <Link
-                  href="/shop"
-                  className="button button-primary"
-                  style={{
-                    minWidth: 150,
-                    minHeight: 48,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  Back to Shop
-                </Link>
-
-                {product?.slug && (
-                  <Link
-                    href={`/shop/${encodeURIComponent(
-                      product.slug,
-                    )}`}
-                    className={styles.back}
-                    style={{
-                      minHeight: 48,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      paddingInline: 14,
-                    }}
-                  >
-                    View Product →
-                  </Link>
-                )}
+              <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>
+                <CopyReceiptLinkButton />
+                <Link href="/shop" className="button button-primary">Back to Shop</Link>
+                {product?.slug ? <Link href={`/shop/${encodeURIComponent(product.slug)}`} className={styles.back}>View Product →</Link> : null}
               </div>
             </section>
           )}
         </div>
       </main>
-
       <SiteFooter />
     </>
   );

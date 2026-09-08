@@ -6,7 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 const featuredProducts = [
   {
     category: "Booking System",
-    title: "Editable Booking System",
+    title: "Basic Booking System Templates",
     description:
       "Ready-to-use digital resources designed to help small business owners organize, present, and manage their brand more professionally.",
     price: "₱1,999",
@@ -16,10 +16,10 @@ const featuredProducts = [
   },
   {
     category: "Digital Product",
-    title: "Business Starter Kit",
+    title: "Business Starter Kits",
     description:
-      "A polished online booking website with an admin dashboard, service management, scheduling tools, and a professional client experience.",
-    price: "Coming Soon",
+      "A polished online booking or online shop website with an admin dashboard, service management, scheduling tools, and a professional client experience.",
+    price: "₱3,999",
     tag: "New",
     href: "#",
     available: false,
@@ -83,33 +83,6 @@ const roles = [
   "MOM",
 ];
 
-const reviews = [
-  {
-    name: "Client Name",
-    business: "Beauty Business",
-    product: "Booking System",
-    rating: 5,
-    review:
-      "Add your client's review here. This space is perfect for feedback about their experience, the system, your service, or how TCL helped their business.",
-  },
-  {
-    name: "Client Name",
-    business: "Small Business Owner",
-    product: "Website Solution",
-    rating: 5,
-    review:
-      "Add another recommendation here. You can use reviews from previous clients, business owners, or people you have created systems and digital solutions for.",
-  },
-  {
-    name: "Client Name",
-    business: "Service Provider",
-    product: "Digital Product",
-    rating: 5,
-    review:
-      "Use this card for another client testimonial. Later, these reviews can be added and managed directly from your Admin dashboard.",
-  },
-];
-
 const faqs = [
   {
     question: "Are these just Canva or website templates?",
@@ -133,7 +106,26 @@ const faqs = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { createAdminSupabaseClient } = await import("@/lib/supabase-admin");
+  const supabase = createAdminSupabaseClient();
+
+  const { data: approvedReviews, error: reviewsError } = await supabase
+    .from("reviews")
+    .select(
+      "id,customer_name,business_name,product_name,rating,review_text,is_featured,display_order,created_at",
+    )
+    .eq("status", "APPROVED")
+    .order("is_featured", { ascending: false })
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (reviewsError) {
+    console.error("Homepage reviews load error:", reviewsError);
+  }
+
+  const reviews = approvedReviews ?? [];
+
   return (
     <>
       <SiteHeader />
@@ -170,6 +162,10 @@ export default function Home() {
                 <a className="button button-secondary" href="#categories">
                   Explore Solutions
                 </a>
+
+                <Link className="button button-secondary" href="/policies">
+                  Policies
+                </Link>
               </div>
 
               <div className="hero-trust">
@@ -337,7 +333,7 @@ export default function Home() {
 
                         <div className="digital-sheet digital-sheet-front">
                           <small>BUSINESS</small>
-                          <strong>Starter Kit</strong>
+                          <strong>Starter Kits</strong>
                           <span />
                           <span />
                           <span />
@@ -529,11 +525,11 @@ export default function Home() {
               </div>
 
               <a
-  className="button button-primary"
-  href="https://t.me/tclsystemsanddigitalsph"
-  target="_blank"
-  rel="noreferrer"
->
+                className="button button-primary"
+                href="https://t.me/tclsystemsanddigitalsph"
+                target="_blank"
+                rel="noreferrer"
+              >
                 Ask About Customization
                 <span>→</span>
               </a>
@@ -766,58 +762,192 @@ export default function Home() {
               </div>
 
               <div className="reviews-rating-summary">
-                <strong>5.0</strong>
+                <strong>
+                  {reviews.length > 0
+                    ? (
+                        reviews.reduce(
+                          (sum, review) => sum + Number(review.rating || 0),
+                          0,
+                        ) / reviews.length
+                      ).toFixed(1)
+                    : "5.0"}
+                </strong>
 
                 <div>
                   <span className="reviews-summary-stars">
                     ★★★★★
                   </span>
-                  <small>Client feedback</small>
+                  <small>
+                    {reviews.length > 0
+                      ? `${reviews.length} approved review${
+                          reviews.length === 1 ? "" : "s"
+                        }`
+                      : "Client feedback"}
+                  </small>
                 </div>
               </div>
             </div>
 
-            <div className="reviews-grid">
-              {reviews.map((review, index) => (
-                <article
-                  className={`review-card ${
-                    index === 0 ? "review-card-featured" : ""
-                  }`}
-                  key={`${review.name}-${index}`}
-                >
-                  <div className="review-card-top">
-                    <div className="review-quote-icon">“</div>
-
-                    <div
-                      className="review-stars"
-                      aria-label={`${review.rating} out of 5 stars`}
+            {reviews.length > 0 ? (
+              <div className="reviews-slider-shell">
+                <div className="reviews-slider" id="reviews-slider">
+                  {reviews.map((review, index) => (
+                    <article
+                      className={`review-card ${
+                        review.is_featured ? "review-card-featured" : ""
+                      }`}
+                      key={review.id}
                     >
-                      {"★".repeat(review.rating)}
-                    </div>
-                  </div>
+                      <div className="review-card-top">
+                        <div className="review-quote-icon">“</div>
 
-                  <p className="review-text">
-                    {review.review}
-                  </p>
+                        <div
+                          className="review-stars"
+                          aria-label={`${review.rating} out of 5 stars`}
+                        >
+                          {"★".repeat(
+                            Math.max(
+                              1,
+                              Math.min(5, Number(review.rating) || 5),
+                            ),
+                          )}
+                        </div>
+                      </div>
 
-                  <div className="review-client">
-                    <div className="review-avatar">
-                      {review.name.charAt(0)}
-                    </div>
+                      <p className="review-text">
+                        {review.review_text}
+                      </p>
 
-                    <div className="review-client-info">
-                      <strong>{review.name}</strong>
-                      <span>{review.business}</span>
-                    </div>
-                  </div>
+                      <div className="review-client">
+                        <div className="review-avatar">
+                          {review.customer_name.charAt(0).toUpperCase()}
+                        </div>
 
-                  <div className="review-product">
-                    <span>Purchased</span>
-                    <strong>{review.product}</strong>
-                  </div>
-                </article>
-              ))}
-            </div>
+                        <div className="review-client-info">
+                          <strong>{review.customer_name}</strong>
+                          <span>
+                            {review.business_name || "TCL Client"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="review-product">
+                        <span>
+                          {review.product_name ? "Purchased" : "Review"}
+                        </span>
+                        <strong>
+                          {review.product_name || "TCL Systems & Digitals PH"}
+                        </strong>
+                      </div>
+
+                      {review.is_featured ? (
+                        <div className="review-featured-label">
+                          Featured
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+
+                <div className="reviews-slider-controls">
+                  <button
+                    type="button"
+                    className="reviews-slider-arrow"
+                    data-review-prev
+                    aria-label="Previous reviews"
+                  >
+                    ←
+                  </button>
+
+                  <div className="reviews-slider-dots" data-review-dots />
+
+                  <button
+                    type="button"
+                    className="reviews-slider-arrow"
+                    data-review-next
+                    aria-label="Next reviews"
+                  >
+                    →
+                  </button>
+                </div>
+
+                <script
+                  dangerouslySetInnerHTML={{
+                    __html: `
+                      (() => {
+                        const root = document.getElementById("reviews-slider");
+                        if (!root || root.dataset.ready === "1") return;
+                        root.dataset.ready = "1";
+
+                        const prev = document.querySelector("[data-review-prev]");
+                        const next = document.querySelector("[data-review-next]");
+                        const dotsRoot = document.querySelector("[data-review-dots]");
+                        const cards = Array.from(root.querySelectorAll(".review-card"));
+
+                        const cardStep = () => {
+                          const first = cards[0];
+                          if (!first) return root.clientWidth;
+                          const styles = getComputedStyle(root);
+                          const gap = parseFloat(styles.columnGap || styles.gap || "0");
+                          return first.getBoundingClientRect().width + gap;
+                        };
+
+                        const visibleCount = () => {
+                          const step = cardStep();
+                          return step > 0 ? Math.max(1, Math.round(root.clientWidth / step)) : 1;
+                        };
+
+                        const pageCount = () => Math.max(1, cards.length - visibleCount() + 1);
+
+                        const currentIndex = () => {
+                          const step = cardStep();
+                          return step > 0 ? Math.round(root.scrollLeft / step) : 0;
+                        };
+
+                        const renderDots = () => {
+                          if (!dotsRoot) return;
+                          const count = pageCount();
+                          const current = Math.min(currentIndex(), count - 1);
+                          dotsRoot.innerHTML = "";
+
+                          for (let i = 0; i < count; i += 1) {
+                            const dot = document.createElement("button");
+                            dot.type = "button";
+                            dot.className = "reviews-slider-dot" + (i === current ? " is-active" : "");
+                            dot.setAttribute("aria-label", "Go to review " + (i + 1));
+                            dot.addEventListener("click", () => {
+                              root.scrollTo({ left: i * cardStep(), behavior: "smooth" });
+                            });
+                            dotsRoot.appendChild(dot);
+                          }
+                        };
+
+                        prev?.addEventListener("click", () => {
+                          root.scrollBy({ left: -cardStep(), behavior: "smooth" });
+                        });
+
+                        next?.addEventListener("click", () => {
+                          root.scrollBy({ left: cardStep(), behavior: "smooth" });
+                        });
+
+                        let timer;
+                        root.addEventListener("scroll", () => {
+                          clearTimeout(timer);
+                          timer = setTimeout(renderDots, 60);
+                        });
+
+                        window.addEventListener("resize", renderDots);
+                        renderDots();
+                      })();
+                    `,
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="reviews-empty-state">
+                Approved reviews will appear here.
+              </div>
+            )}
 
             <div className="reviews-recommendation">
               <div className="reviews-recommendation-icon">
@@ -910,14 +1040,13 @@ export default function Home() {
               </Link>
 
               <a
-  className="button button-outline-light"
-  href="https://t.me/tclsystemsanddigitalsph"
-  target="_blank"
-  rel="noreferrer"
->
-  Contact TCL
-</a>
-              
+                className="button button-outline-light"
+                href="https://t.me/tclsystemsanddigitalsph"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Contact TCL
+              </a>
             </div>
           </div>
         </section>

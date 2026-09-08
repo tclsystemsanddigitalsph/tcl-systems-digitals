@@ -1,0 +1,201 @@
+.inlineAction {
+  position: static !important;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.inlineTrigger {
+  position: static !important;
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 13px;
+  border: 1px solid #eadce2;
+  border-radius: 11px;
+  background: #fff8fa;
+  color: #99546b;
+  font: inherit;
+  font-size: .61rem;
+  font-weight: 850;
+  cursor: pointer;
+  box-sizing: border-box;
+  list-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.inlineTrigger::-webkit-details-marker {
+  display: none;
+}
+
+.inlineIndicator::before {
+  content: "+";
+  color: #a16b7d;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.inlineAction[open] > .inlineTrigger .inlineIndicator::before {
+  content: "−";
+}
+
+.inlinePanel {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 8px 0 0 !important;
+  padding: 16px;
+  overflow: visible !important;
+  transform: none !important;
+  border: 1px solid #eadde2;
+  border-radius: 14px;
+  background: #fffafb;
+  box-shadow: none !important;
+  box-sizing: border-box;
+}
+
+.inlineEyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #b36a83;
+  font-size: .53rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.inlinePanel h3 {
+  margin: 0 0 6px;
+  color: #40343a;
+  font-size: .9rem;
+}
+
+.inlinePanel > p {
+  margin: 0 0 14px;
+  color: #817279;
+  font-size: .64rem;
+  line-height: 1.55;
+}
+
+.amountGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.amountGrid div {
+  padding: 9px;
+  border: 1px solid #eee1e6;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.amountGrid span {
+  display: block;
+  margin-bottom: 3px;
+  color: #9a8a91;
+  font-size: .48rem;
+  font-weight: 800;
+}
+
+.amountGrid strong {
+  display: block;
+  color: #4c3d44;
+  font-size: .61rem;
+}
+
+.inlineForm {
+  display: grid;
+  gap: 8px;
+}
+
+.inlineForm label {
+  color: #66575e;
+  font-size: .59rem;
+  font-weight: 800;
+}
+
+.inlineForm input,
+.inlineForm textarea {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #e8dce1;
+  border-radius: 10px;
+  background: #fff;
+  color: #40343a;
+  font: inherit;
+  font-size: .67rem;
+  box-sizing: border-box;
+}
+
+.inlineForm textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.inlineForm button {
+  min-height: 40px;
+  margin-top: 2px;
+  border: 1px solid #e8c9d4;
+  border-radius: 10px;
+  background: #f6dce5;
+  color: #8d4961;
+  font: inherit;
+  font-size: .63rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.manualRefund {
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid #eadde2;
+}
+
+.manualRefund > summary {
+  color: #8d6070;
+  font-size: .58rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.manualRefund .inlineForm {
+  margin-top: 10px;
+}
+
+.inlineFootnote {
+  display: block;
+  margin-top: 10px;
+  color: #aa9da2;
+  font-size: .51rem;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .inlineAction {
+    width: 100%;
+  }
+
+  .inlinePanel {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding: 14px;
+    transform: none !important;
+  }
+
+  .amountGrid {
+    grid-template-columns: 1fr;
+  }
+}
