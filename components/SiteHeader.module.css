@@ -36,101 +36,191 @@
 }
 
 @media (max-width: 900px) {
+  :global(.nav-shell) {
+    min-height: 58px !important;
+    gap: 8px !important;
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+  }
+
+  :global(.brand) {
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  :global(.brand-logo-shell),
+  :global(.brand-logo-image) {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  :global(.brand-logo-shell) {
+    flex: 0 0 40px !important;
+  }
+
+  :global(.brand-copy strong) {
+    font-size: 0.76rem !important;
+    line-height: 1.15 !important;
+  }
+
+  :global(.brand-copy small) {
+    margin-top: 2px !important;
+    font-size: 0.58rem !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.16em !important;
+  }
+
   .actions {
     margin-left: auto;
-    gap: 6px;
+    gap: 5px;
   }
 
   .actionButton {
-    min-height: 36px;
-    padding: 0 10px;
-    font-size: 0.64rem;
+    min-height: 31px;
+    padding: 0 8px;
+    font-size: 0.55rem;
   }
 
   .mobileNav {
     display: block;
     width: 100%;
-    padding: 6px 0;
-    border-top: 1px solid rgba(223, 183, 198, 0.5);
-    border-bottom: 1px solid rgba(223, 183, 198, 0.5);
-    background: #fffafb;
-  }
-
-  .mobileTrack {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 6px;
     overflow-x: auto;
-    padding: 0 12px;
+    border-top: 1px solid rgba(223, 183, 198, 0.42);
+    border-bottom: 1px solid rgba(223, 183, 198, 0.42);
+    background: rgba(255, 250, 252, 0.96);
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
 
-  .mobileTrack::-webkit-scrollbar {
+  .mobileNav::-webkit-scrollbar {
     display: none;
+  }
+
+  .mobileTrack {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 7px 12px;
   }
 
   .mobilePill {
     display: inline-flex;
     flex: 0 0 auto;
-    min-height: 28px;
+    min-height: 22px;
     align-items: center;
     justify-content: center;
-    padding: 0 10px;
-    border: 1px solid #efd5df;
-    border-radius: 999px;
-    background: #ffffff;
-    color: #8f536b;
-    font-size: 0.62rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #705b64;
+    font-size: 0.58rem;
     font-weight: 800;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
   }
+
+  .mobilePill:hover {
+    color: #b84e77;
+  }
 }
 
 @media (max-width: 650px) {
-  .actions {
-    gap: 5px;
+  :global(.nav-shell) {
+    min-height: 54px !important;
+    gap: 6px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
   }
 
-  .actionButton {
-    min-height: 34px;
-    padding: 0 8px;
-    font-size: 0.59rem;
+  :global(.brand) {
+    gap: 6px !important;
   }
 
-  .mobileNav {
-    padding: 5px 0;
+  :global(.brand-logo-shell),
+  :global(.brand-logo-image) {
+    width: 36px !important;
+    height: 36px !important;
   }
 
-  .mobileTrack {
-    gap: 5px;
-    padding: 0 10px;
+  :global(.brand-logo-shell) {
+    flex-basis: 36px !important;
   }
 
-  .mobilePill {
-    min-height: 26px;
-    padding: 0 9px;
-    font-size: 0.58rem;
+  :global(.brand-copy strong) {
+    font-size: 0.7rem !important;
   }
-}
 
-@media (max-width: 430px) {
+  :global(.brand-copy small) {
+    font-size: 0.53rem !important;
+    letter-spacing: 0.14em !important;
+  }
+
   .actions {
     gap: 4px;
   }
 
   .actionButton {
-    min-height: 32px;
+    min-height: 29px;
     padding: 0 7px;
-    font-size: 0.55rem;
+    font-size: 0.51rem;
+  }
+
+  .mobileTrack {
+    gap: 11px;
+    padding: 6px 10px;
   }
 
   .mobilePill {
-    min-height: 25px;
-    padding: 0 8px;
-    font-size: 0.55rem;
+    min-height: 20px;
+    font-size: 0.54rem;
+  }
+}
+
+@media (max-width: 430px) {
+  :global(.nav-shell) {
+    min-height: 50px !important;
+    gap: 5px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  :global(.brand-logo-shell),
+  :global(.brand-logo-image) {
+    width: 33px !important;
+    height: 33px !important;
+  }
+
+  :global(.brand-logo-shell) {
+    flex-basis: 33px !important;
+  }
+
+  :global(.brand-copy strong) {
+    font-size: 0.64rem !important;
+  }
+
+  :global(.brand-copy small) {
+    font-size: 0.48rem !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  .actionButton {
+    min-height: 27px;
+    padding: 0 6px;
+    font-size: 0.47rem;
+  }
+
+  .mobileTrack {
+    gap: 9px;
+    padding: 5px 9px;
+  }
+
+  .mobilePill {
+    min-height: 19px;
+    font-size: 0.5rem;
   }
 }

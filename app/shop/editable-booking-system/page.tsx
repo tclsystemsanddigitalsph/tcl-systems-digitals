@@ -778,7 +778,7 @@ export default async function EditableBookingSystemPage() {
               </p>
 
               <div className="product-purchase-benefits">
-                <span>✓ One-time TCL product purchase</span>
+                <span>✓ One-time TCL product purchase</span> 
                 <span>✓ Admin dashboard included</span>
                 <span>✓ Setup instructions included</span>
                 <span>✓ Customize it for your business</span>
