@@ -32,15 +32,37 @@ export default function SiteHeader() {
           <Link href="/#faq">FAQ</Link>
         </nav>
 
-        <a
-          className="nav-button"
-          href="https://t.me/tclsystemsanddigitalsph"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Contact TCL Systems & Digitals PH on Telegram"
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            flexShrink: 0,
+          }}
         >
-          Contact TCL
-        </a>
+          <Link
+            href="/admin/login"
+            className="nav-button"
+            aria-label="Admin sign in"
+            style={{
+              background: "#ffffff",
+              color: "var(--pink-700)",
+              border: "1px solid var(--border-strong)",
+            }}
+          >
+            Admin Sign In
+          </Link>
+
+          <a
+            className="nav-button"
+            href="https://t.me/tclsystemsanddigitalsph"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Contact TCL Systems & Digitals PH on Telegram"
+          >
+            Contact TCL
+          </a>
+        </div>
       </div>
     </header>
   );

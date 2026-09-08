@@ -6,11 +6,11 @@ import SiteHeader from "@/components/SiteHeader";
 const featuredProducts = [
   {
     category: "Booking System",
-    title: "Basic Booking System Templates",
+    title: "Booking System Templates",
     description:
       "Ready-to-use digital resources designed to help small business owners organize, present, and manage their brand more professionally.",
     price: "₱1,999",
-    tag: "Intro Price",
+    tag: "Best Seller",
     href: "/shop/editable-booking-system",
     available: true,
   },
@@ -19,8 +19,8 @@ const featuredProducts = [
     title: "Business Starter Kits",
     description:
       "A polished online booking or online shop website with an admin dashboard, service management, scheduling tools, and a professional client experience.",
-    price: "₱3,999",
-    tag: "New",
+    price: "₱5,999",
+    tag: "Best Offer",
     href: "#",
     available: false,
   },
@@ -28,9 +28,9 @@ const featuredProducts = [
     category: "Website Solution",
     title: "Custom Business Website",
     description:
-      "A customized website experience designed around your business, branding, services, and customer journey.",
+      "A fully customized website experience designed around your business, branding, services, and customer journey.",
     price: "Custom Quote",
-    tag: "Service",
+    tag: "Made For You",
     href: "#contact",
     available: false,
   },
