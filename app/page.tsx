@@ -32,7 +32,7 @@ const featuredProducts = [
       "A customized website experience designed around your business, branding, services, and customer journey.",
     price: "Custom Quote",
     tag: "Made For You",
-    href: "/quotation-form",
+    href: "/shop/custom-business-website",
     available: true,
   },
 ];

@@ -242,7 +242,7 @@ export default async function AdminProjectRequirementDetailPage({
 
   const { data: linkedOrder, error: linkedOrderError } = await adminSupabase
     .from("orders")
-    .select("delivery_status,delivered_at")
+    .select("delivery_status,delivered_at,payment_terms,balance_due,amount_paid,payment_status,total_amount")
     .eq("id", request.order_id)
     .maybeSingle();
 
@@ -287,6 +287,11 @@ export default async function AdminProjectRequirementDetailPage({
   );
 
   const deliveryStatus = linkedOrder?.delivery_status || "NOT_STARTED";
+  const paymentTerms =
+    typeof linkedOrder?.payment_terms === "string"
+      ? linkedOrder.payment_terms
+      : null;
+  const balanceDue = Number(linkedOrder?.balance_due || 0);
 
   const focus = currentFocus(
     request.requirements_status,
@@ -563,6 +568,8 @@ export default async function AdminProjectRequirementDetailPage({
                 deliveryStatus={deliveryStatus}
                 adminNotes={request.admin_notes || ""}
                 customerUpdateNote={request.customer_update_note || ""}
+                paymentTerms={paymentTerms}
+                balanceDue={balanceDue}
               />
 
               <section className={styles.linkCard}>

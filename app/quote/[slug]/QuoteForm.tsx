@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./quote.module.css";
 
 type Props = {
@@ -58,6 +58,13 @@ export default function QuoteForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const draftReadyRef = useRef(false);
+
+  const draftKey = useMemo(
+    () => `tcl-quotation-draft:${productSlug}`,
+    [productSlug],
+  );
 
   const isShop =
     category.toLowerCase().includes("shop") ||
@@ -87,12 +94,99 @@ export default function QuoteForm({
     return "Tell us about your business and the system or setup you need.";
   }, [isBooking, isShop, isWebsite]);
 
+  useEffect(() => {
+    const form = formRef.current;
+
+    if (!form) {
+      return;
+    }
+
+    try {
+      const rawDraft = window.localStorage.getItem(draftKey);
+
+      if (rawDraft) {
+        const draft = JSON.parse(rawDraft) as {
+          fields?: Record<string, string>;
+          selectedFeatures?: string[];
+        };
+
+        if (draft.fields) {
+          Object.entries(draft.fields).forEach(([name, value]) => {
+            const field = form.elements.namedItem(name);
+
+            if (
+              field instanceof HTMLInputElement ||
+              field instanceof HTMLTextAreaElement ||
+              field instanceof HTMLSelectElement
+            ) {
+              field.value = value;
+            }
+          });
+        }
+
+        if (Array.isArray(draft.selectedFeatures)) {
+          setSelectedFeatures(
+            draft.selectedFeatures.filter(
+              (feature): feature is string =>
+                typeof feature === "string" &&
+                featureOptions.includes(feature),
+            ),
+          );
+        }
+      }
+    } catch (error) {
+      console.warn("Unable to restore quotation draft:", error);
+    } finally {
+      draftReadyRef.current = true;
+    }
+  }, [draftKey]);
+
+  function saveDraft(form: HTMLFormElement, features = selectedFeatures) {
+    if (!draftReadyRef.current) {
+      return;
+    }
+
+    const formData = new FormData(form);
+    const fields: Record<string, string> = {};
+
+    formData.forEach((value, key) => {
+      if (typeof value === "string") {
+        fields[key] = value;
+      }
+    });
+
+    try {
+      window.localStorage.setItem(
+        draftKey,
+        JSON.stringify({
+          fields,
+          selectedFeatures: features,
+          savedAt: new Date().toISOString(),
+        }),
+      );
+    } catch (error) {
+      console.warn("Unable to save quotation draft:", error);
+    }
+  }
+
+  function handleDraftChange() {
+    if (formRef.current) {
+      saveDraft(formRef.current);
+    }
+  }
+
   function toggleFeature(feature: string) {
-    setSelectedFeatures((current) =>
-      current.includes(feature)
+    setSelectedFeatures((current) => {
+      const next = current.includes(feature)
         ? current.filter((item) => item !== feature)
-        : [...current, feature],
-    );
+        : [...current, feature];
+
+      if (formRef.current) {
+        saveDraft(formRef.current, next);
+      }
+
+      return next;
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -235,6 +329,12 @@ export default function QuoteForm({
         displayValue(payload.notes),
       ].join("\n");
 
+      try {
+        window.localStorage.removeItem(draftKey);
+      } catch (error) {
+        console.warn("Unable to clear quotation draft:", error);
+      }
+
       setSubmitted(true);
 
       window.open(
@@ -256,7 +356,13 @@ export default function QuoteForm({
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form
+      ref={formRef}
+      className={styles.form}
+      onSubmit={handleSubmit}
+      onInput={handleDraftChange}
+      onChange={handleDraftChange}
+    >
       <section className={styles.formCard}>
         <div className={styles.sectionHeading}>
           <span>01</span>

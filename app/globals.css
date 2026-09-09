@@ -10148,3 +10148,411 @@ main {
     scroll-padding-right: 12px !important;
   }
 }
+/* =========================================================
+   SIMPLE BUSINESS WEBSITE TEMPLATE — COMPACT PRODUCT PAGE
+   ========================================================= */
+
+.product-detail-page .section {
+  padding-top: 54px;
+  padding-bottom: 54px;
+}
+
+.product-detail-page .container {
+  width: min(1120px, calc(100% - 40px));
+}
+
+/* HERO */
+.product-detail-page .product-detail-hero {
+  padding-top: 28px;
+  padding-bottom: 56px;
+  min-height: auto;
+}
+
+.product-detail-page .product-detail-hero h1 {
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 1.05;
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+
+.product-detail-page .product-detail-lead {
+  font-size: 1rem;
+  line-height: 1.65;
+  margin-bottom: 22px;
+}
+
+.product-detail-page .product-detail-labels {
+  gap: 7px;
+}
+
+.product-detail-page .product-detail-category,
+.product-detail-page .product-detail-intro-label {
+  font-size: 0.68rem;
+  padding: 7px 11px;
+}
+
+/* PRICE */
+.product-detail-page .product-detail-price-row {
+  margin-top: 22px;
+  margin-bottom: 22px;
+  gap: 18px;
+}
+
+.product-detail-page .product-detail-price strong {
+  font-size: 2rem;
+}
+
+.product-detail-page .product-detail-price small,
+.product-detail-page .product-detail-price-note span,
+.product-detail-page .product-detail-price-note strong {
+  font-size: 0.82rem;
+}
+
+/* HERO BUTTONS */
+.product-detail-page .product-detail-actions {
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.product-detail-page .button {
+  min-height: 42px;
+  padding: 10px 17px;
+  font-size: 0.84rem;
+}
+
+.product-detail-page .product-detail-mini-notes {
+  margin-top: 18px;
+  gap: 14px;
+}
+
+.product-detail-page .product-detail-mini-notes span {
+  font-size: 0.76rem;
+}
+
+/* TRUST STRIP */
+.product-detail-page .product-detail-trust-strip {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.product-detail-page .product-detail-trust-strip .container {
+  min-height: auto;
+}
+
+.product-detail-page .product-detail-trust-strip strong {
+  font-size: 0.9rem;
+}
+
+.product-detail-page .product-detail-trust-strip span {
+  font-size: 0.7rem;
+}
+
+/* SECTION HEADINGS */
+.product-detail-page .section-heading {
+  margin-bottom: 30px;
+}
+
+.product-detail-page .section-heading h2,
+.product-detail-page .product-included-copy h2,
+.product-detail-page .product-notes-grid > div:first-child h2,
+.product-detail-page .product-purchase-copy h2 {
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  line-height: 1.12;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.product-detail-page .section-heading p,
+.product-detail-page .product-included-copy > p,
+.product-detail-page .product-notes-grid > div:first-child > p,
+.product-detail-page .product-purchase-copy > p {
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.product-detail-page .section-kicker {
+  font-size: 0.67rem;
+  letter-spacing: 0.11em;
+}
+
+/* DESIGN / FEATURE CARDS */
+.product-detail-page .product-feature-grid {
+  gap: 16px;
+}
+
+.product-detail-page .product-feature-card {
+  padding: 22px;
+  min-height: 0 !important;
+}
+
+.product-detail-page .product-feature-card > span:first-child {
+  font-size: 0.72rem;
+}
+
+.product-detail-page .product-feature-card h3 {
+  font-size: 1.1rem;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
+
+.product-detail-page .product-feature-card p {
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.product-detail-page .product-feature-card small {
+  font-size: 0.7rem;
+}
+
+/* INCLUDED */
+.product-detail-page .product-included-grid {
+  gap: 40px;
+}
+
+.product-detail-page .product-included-list {
+  gap: 7px;
+}
+
+.product-detail-page .product-included-list > div {
+  padding: 10px 13px;
+  min-height: auto;
+}
+
+.product-detail-page .product-included-list p {
+  font-size: 0.82rem;
+}
+
+.product-detail-page .product-included-list span {
+  font-size: 0.8rem;
+}
+
+/* CALLOUT NOTES */
+.product-detail-page .product-included-note {
+  padding: 17px;
+  gap: 12px;
+}
+
+.product-detail-page .product-included-note strong {
+  font-size: 0.88rem;
+}
+
+.product-detail-page .product-included-note p {
+  font-size: 0.79rem;
+  line-height: 1.55;
+}
+
+/* HOW IT WORKS */
+.product-detail-page .product-setup-grid {
+  gap: 15px;
+}
+
+.product-detail-page .product-setup-card {
+  padding: 21px;
+  min-height: auto;
+}
+
+.product-detail-page .product-setup-number {
+  font-size: 0.69rem;
+}
+
+.product-detail-page .product-setup-card h3 {
+  font-size: 1rem;
+  margin-top: 14px;
+  margin-bottom: 7px;
+}
+
+.product-detail-page .product-setup-card p {
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+/* COMPARISON */
+.product-detail-page .product-comparison-table {
+  margin-top: 28px;
+}
+
+.product-detail-page .product-comparison-header > div,
+.product-detail-page .product-comparison-row > div {
+  padding: 13px 15px;
+}
+
+.product-detail-page .product-comparison-header {
+  font-size: 0.78rem;
+}
+
+.product-detail-page .product-comparison-header strong {
+  font-size: 0.9rem;
+}
+
+.product-detail-page .product-comparison-header small {
+  font-size: 0.62rem;
+}
+
+.product-detail-page .product-comparison-row {
+  font-size: 0.78rem;
+}
+
+.product-detail-page .product-comparison-cta {
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.product-detail-page .product-comparison-cta span {
+  font-size: 0.76rem;
+}
+
+.product-detail-page .product-comparison-cta strong {
+  font-size: 0.95rem;
+}
+
+/* NOTES */
+.product-detail-page .product-notes-grid {
+  gap: 38px;
+}
+
+.product-detail-page .product-note-cards {
+  gap: 10px;
+}
+
+.product-detail-page .product-note-cards article {
+  padding: 17px;
+  gap: 13px;
+}
+
+.product-detail-page .product-note-cards article > span {
+  font-size: 0.68rem;
+}
+
+.product-detail-page .product-note-cards strong {
+  font-size: 0.88rem;
+}
+
+.product-detail-page .product-note-cards p {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  margin-top: 4px;
+}
+
+/* FINAL PURCHASE */
+.product-detail-page .product-purchase-section {
+  padding-top: 58px;
+  padding-bottom: 58px;
+}
+
+.product-detail-page .product-purchase-grid {
+  gap: 38px;
+}
+
+.product-detail-page .product-purchase-benefits {
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.product-detail-page .product-purchase-benefits span {
+  font-size: 0.8rem;
+}
+
+.product-detail-page .product-checkout-card {
+  padding: 22px;
+}
+
+.product-detail-page .product-checkout-heading strong {
+  font-size: 1rem;
+}
+
+.product-detail-page .product-checkout-heading small,
+.product-detail-page .product-checkout-lines span,
+.product-detail-page .product-checkout-lines strong {
+  font-size: 0.8rem;
+}
+
+.product-detail-page .product-checkout-total {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.product-detail-page .product-checkout-total strong {
+  font-size: 1.45rem;
+}
+
+.product-detail-page .product-secure-note p,
+.product-detail-page .product-checkout-fine-print {
+  font-size: 0.7rem;
+}
+
+/* TABLET */
+@media (max-width: 900px) {
+  .product-detail-page .section {
+    padding-top: 44px;
+    padding-bottom: 44px;
+  }
+
+  .product-detail-page .product-detail-hero {
+    padding-bottom: 46px;
+  }
+
+  .product-detail-page .product-included-grid,
+  .product-detail-page .product-notes-grid,
+  .product-detail-page .product-purchase-grid {
+    gap: 28px;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 640px) {
+  .product-detail-page .container {
+    width: min(100% - 28px, 1120px);
+  }
+
+  .product-detail-page .section {
+    padding-top: 36px;
+    padding-bottom: 36px;
+  }
+
+  .product-detail-page .product-detail-hero {
+    padding-top: 20px;
+    padding-bottom: 38px;
+  }
+
+  .product-detail-page .product-detail-hero h1 {
+    font-size: 2rem;
+  }
+
+  .product-detail-page .product-detail-lead {
+    font-size: 0.9rem;
+  }
+
+  .product-detail-page .product-detail-price strong {
+    font-size: 1.7rem;
+  }
+
+  .product-detail-page .section-heading {
+    margin-bottom: 23px;
+  }
+
+  .product-detail-page .section-heading h2,
+  .product-detail-page .product-included-copy h2,
+  .product-detail-page .product-notes-grid > div:first-child h2,
+  .product-detail-page .product-purchase-copy h2 {
+    font-size: 1.55rem;
+  }
+
+  .product-detail-page .product-feature-card,
+  .product-detail-page .product-setup-card,
+  .product-detail-page .product-checkout-card {
+    padding: 17px;
+  }
+
+  .product-detail-page .product-comparison-header > div,
+  .product-detail-page .product-comparison-row > div {
+    padding: 10px 8px;
+  }
+
+  .product-detail-page .product-comparison-row {
+    font-size: 0.7rem;
+  }
+
+  .product-detail-page .product-comparison-header {
+    font-size: 0.68rem;
+  }
+}

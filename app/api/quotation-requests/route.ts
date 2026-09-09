@@ -35,6 +35,8 @@ type QuotePayload = {
   notes?: unknown;
 };
 
+const CUSTOM_BUSINESS_WEBSITE_SLUG = "custom-business-website";
+
 function cleanString(value: unknown, maxLength = 4000) {
   if (typeof value !== "string") {
     return "";
@@ -90,19 +92,12 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as QuotePayload;
 
-    const productSlug = requiredString(
-      body.productSlug,
-      "Product",
-      200,
-    );
-
+    const productSlug = requiredString(body.productSlug, "Product", 200);
     const supabase = getAdminClient();
 
-    const { data: product, error: productError } = await supabase
+    const { data: catalogProduct, error: productError } = await supabase
       .from("products")
-      .select(
-        "slug,name,category,price,sale_price,product_type,is_active",
-      )
+      .select("slug,name,category,price,sale_price,product_type,is_active")
       .eq("slug", productSlug)
       .eq("is_active", true)
       .maybeSingle();
@@ -115,28 +110,45 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!product) {
+    const isCustomBusinessWebsite =
+      productSlug === CUSTOM_BUSINESS_WEBSITE_SLUG;
+
+    if (!catalogProduct && !isCustomBusinessWebsite) {
       return NextResponse.json(
         { error: "This service could not be found." },
         { status: 404 },
       );
     }
 
-    const effectivePrice = Number(
-      product.sale_price ?? product.price ?? 0,
-    );
-
-    const isQuotationOnly =
-      product.product_type === "SERVICE" &&
-      Number.isFinite(effectivePrice) &&
-      effectivePrice === 0;
-
-    if (!isQuotationOnly) {
-      return NextResponse.json(
-        { error: "This product does not use quotation requests." },
-        { status: 400 },
+    if (catalogProduct && !isCustomBusinessWebsite) {
+      const effectivePrice = Number(
+        catalogProduct.sale_price ?? catalogProduct.price ?? 0,
       );
+
+      const isQuotationOnly =
+        catalogProduct.product_type === "SERVICE" &&
+        Number.isFinite(effectivePrice) &&
+        effectivePrice === 0;
+
+      if (!isQuotationOnly) {
+        return NextResponse.json(
+          { error: "This product does not use quotation requests." },
+          { status: 400 },
+        );
+      }
     }
+
+    const product = {
+      slug: catalogProduct?.slug ?? CUSTOM_BUSINESS_WEBSITE_SLUG,
+      name:
+        catalogProduct?.name?.trim() ||
+        cleanString(body.productName, 200) ||
+        "Custom Business Website",
+      category:
+        catalogProduct?.category?.trim() ||
+        cleanString(body.category, 200) ||
+        "Websites",
+    };
 
     const fullName = requiredString(body.fullName, "Full name", 200);
     const businessName = requiredString(
@@ -186,15 +198,9 @@ export async function POST(request: Request) {
         business_name: businessName,
         email,
         contact_number: contactNumber,
-        preferred_contact: cleanString(
-          body.preferredContact,
-          100,
-        ),
+        preferred_contact: cleanString(body.preferredContact, 100),
         business_type: businessType,
-        business_location: cleanString(
-          body.businessLocation,
-          300,
-        ),
+        business_location: cleanString(body.businessLocation, 300),
         business_age: cleanString(body.businessAge, 100),
         staff_count: cleanString(body.staffCount, 100),
         location_count: cleanString(body.locationCount, 100),

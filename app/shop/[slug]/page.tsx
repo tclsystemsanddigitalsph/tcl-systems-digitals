@@ -327,6 +327,72 @@ export default async function ProductPage({
 
                 <section
                   style={{
+                    margin: "44px 0",
+                    padding: "24px",
+                    border: "1px solid var(--border)",
+                    borderRadius: 20,
+                    background: "var(--surface, #fff)",
+                  }}
+                >
+                  <span className="section-kicker">Possible Additional Costs</span>
+                  <h2 style={{ marginTop: 10 }}>Third-party fees may apply.</h2>
+                  <p style={{ lineHeight: 1.75, maxWidth: 850 }}>
+                    Depending on your project, separate provider costs may apply
+                    for things such as a custom domain, paid email service,
+                    payment processing, premium integrations, subscriptions, or
+                    other third-party services. Any relevant costs can be
+                    discussed during the quotation process.
+                  </p>
+                </section>
+
+                <section style={{ margin: "44px 0" }}>
+                  <span className="section-kicker">Frequently Asked</span>
+                  <h2 style={{ marginTop: 10 }}>Before you request a quote.</h2>
+                  <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
+                    {[
+                      [
+                        "Is requesting a quote a commitment to purchase?",
+                        "No. Your request helps TCL review your project and prepare the appropriate scope and quotation.",
+                      ],
+                      [
+                        "Can I request a feature that is not listed here?",
+                        "Yes. Describe the feature, workflow, or result you need in the quotation form so it can be reviewed.",
+                      ],
+                      [
+                        "Can my project include an admin dashboard?",
+                        "Yes, when an admin or management area is required and included in the approved project scope.",
+                      ],
+                      [
+                        "Can you build booking or online shop features?",
+                        "Yes. Booking, ecommerce, and other customer-facing workflows can be included depending on your requirements.",
+                      ],
+                      [
+                        "What if I request more features later?",
+                        "The approved quotation defines the project scope. Additional work outside that scope may require an additional fee or updated quotation.",
+                      ],
+                    ].map(([question, answer]) => (
+                      <details
+                        key={question}
+                        style={{
+                          padding: "18px 20px",
+                          border: "1px solid var(--border)",
+                          borderRadius: 14,
+                          background: "var(--surface, #fff)",
+                        }}
+                      >
+                        <summary style={{ cursor: "pointer", fontWeight: 700 }}>
+                          {question}
+                        </summary>
+                        <p style={{ margin: "12px 0 0", lineHeight: 1.7 }}>
+                          {answer}
+                        </p>
+                      </details>
+                    ))}
+                  </div>
+                </section>
+
+                <section
+                  style={{
                     margin: "48px 0 12px",
                     padding: "30px 24px",
                     textAlign: "center",

@@ -33,6 +33,8 @@ const DELIVERY_STATUSES = new Set([
   "CANCELLED",
 ]);
 
+const CUSTOM_PAYMENT_TERMS = new Set(["FULL", "DEPOSIT_50"]);
+
 async function requireAdmin() {
   const auth = await createServerSupabaseClient();
 
@@ -51,18 +53,14 @@ export async function updateProjectRequirements(formData: FormData) {
   await requireAdmin();
 
   const id = String(formData.get("id") || "").trim();
-  let projectStatus = String(
-    formData.get("project_status") || "",
-  ).trim();
+  let projectStatus = String(formData.get("project_status") || "").trim();
   const requirementsStatus = String(
     formData.get("requirements_status") || "",
   ).trim();
   const deliveryStatus = String(
     formData.get("delivery_status") || "",
   ).trim();
-  const adminNotes = String(
-    formData.get("admin_notes") || "",
-  ).trim();
+  const adminNotes = String(formData.get("admin_notes") || "").trim();
   const customerUpdateNote = String(
     formData.get("customer_update_note") || "",
   ).trim();
@@ -106,6 +104,46 @@ export async function updateProjectRequirements(formData: FormData) {
     throw new Error("Project requirements record was not found.");
   }
 
+  const { data: linkedOrder, error: linkedOrderError } = await supabase
+    .from("orders")
+    .select("id,payment_terms,balance_due,order_status")
+    .eq("id", currentRequest.order_id)
+    .maybeSingle();
+
+  if (linkedOrderError || !linkedOrder) {
+    console.error(
+      "Unable to load linked order before project update:",
+      linkedOrderError,
+    );
+    throw new Error("The linked order could not be loaded.");
+  }
+
+  const paymentTerms =
+    typeof linkedOrder.payment_terms === "string"
+      ? linkedOrder.payment_terms
+      : null;
+
+  const balanceDue = Number(linkedOrder.balance_due || 0);
+  const isCustomPaymentOrder =
+    paymentTerms !== null && CUSTOM_PAYMENT_TERMS.has(paymentTerms);
+  const hasOutstandingBalance = balanceDue > 0.005;
+
+  if (
+    isCustomPaymentOrder &&
+    hasOutstandingBalance &&
+    (projectStatus === "COMPLETED" || deliveryStatus === "DELIVERED")
+  ) {
+    throw new Error(
+      `Final payment is required before this project can be completed or delivered. Remaining balance: ₱${balanceDue.toLocaleString(
+        "en-PH",
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        },
+      )}.`,
+    );
+  }
+
   if (requirementsStatus === "NEED_MORE_INFO") {
     projectStatus = "NEED_MORE_INFO";
   }
@@ -115,9 +153,7 @@ export async function updateProjectRequirements(formData: FormData) {
     requirements_status: requirementsStatus,
     admin_notes: adminNotes || null,
     customer_update_note:
-      requirementsStatus === "NEED_MORE_INFO"
-        ? customerUpdateNote
-        : null,
+      requirementsStatus === "NEED_MORE_INFO" ? customerUpdateNote : null,
     updated_at: now,
   };
 

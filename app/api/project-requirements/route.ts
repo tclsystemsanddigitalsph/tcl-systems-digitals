@@ -10,6 +10,8 @@ type Body = {
   customerNotes?: string;
 };
 
+const CUSTOM_PRODUCT_SLUG = "custom-business-website";
+
 function jsonError(message: string, status = 500) {
   return NextResponse.json(
     { ok: false, error: message },
@@ -76,7 +78,9 @@ export async function POST(request: Request) {
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("payment_status,order_status")
+      .select(
+        "payment_status,payment_terms,amount_paid,order_status",
+      )
       .eq("id", record.order_id)
       .maybeSingle();
 
@@ -92,13 +96,34 @@ export async function POST(request: Request) {
       );
     }
 
-    if (
-      !order ||
-      order.payment_status !== "COMPLETED" ||
-      order.order_status === "CANCELLED"
-    ) {
+    if (!order || order.order_status === "CANCELLED") {
       return jsonError(
         "This paid order is not eligible for project requirements.",
+        403,
+      );
+    }
+
+    const isCustomQuotation =
+      record.product_slug.trim().toLowerCase() === CUSTOM_PRODUCT_SLUG;
+
+    const amountPaid = Number(order.amount_paid ?? 0);
+
+    const eligibleForRequirements = isCustomQuotation
+      ? order.payment_terms === "DEPOSIT_50"
+        ? Number.isFinite(amountPaid) &&
+          amountPaid > 0 &&
+          (order.payment_status === "PARTIALLY_PAID" ||
+            order.payment_status === "COMPLETED")
+        : order.payment_terms === "FULL"
+          ? order.payment_status === "COMPLETED"
+          : false
+      : order.payment_status === "COMPLETED";
+
+    if (!eligibleForRequirements) {
+      return jsonError(
+        isCustomQuotation && order.payment_terms === "DEPOSIT_50"
+          ? "The required project deposit must be paid before submitting project requirements."
+          : "This paid order is not eligible for project requirements.",
         403,
       );
     }

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import {
+  completeCustomOrderPayment,
+} from "@/lib/custom-order-payments";
 import { verifyPayMongoWebhookSignature } from "@/lib/paymongo";
 
 export const dynamic = "force-dynamic";
@@ -107,8 +110,7 @@ function getPayments(
 
   return payments.filter(
     (payment): payment is PayMongoPayment =>
-      !!payment &&
-      typeof payment === "object",
+      !!payment && typeof payment === "object",
   );
 }
 
@@ -162,12 +164,48 @@ function getLineItemsTotalCentavos(
   return foundAmount ? total : null;
 }
 
+function validatePaidAmount({
+  attributes,
+  expectedCentavos,
+  currency,
+}: {
+  attributes: Record<string, unknown>;
+  expectedCentavos: number;
+  currency: string;
+}) {
+  const paidPayment = getPaidPayment(attributes);
+  const paymentAmount = paidPayment?.attributes?.amount;
+  const paymentCurrency = paidPayment?.attributes?.currency;
+  const lineItemsTotal = getLineItemsTotalCentavos(attributes);
+
+  if (
+    typeof paymentAmount === "number" &&
+    paymentAmount !== expectedCentavos
+  ) {
+    return { ok: false, paidPayment };
+  }
+
+  if (
+    typeof paymentAmount !== "number" &&
+    typeof lineItemsTotal === "number" &&
+    lineItemsTotal !== expectedCentavos
+  ) {
+    return { ok: false, paidPayment };
+  }
+
+  if (
+    paymentCurrency &&
+    paymentCurrency.toUpperCase() !== currency.toUpperCase()
+  ) {
+    return { ok: false, paidPayment };
+  }
+
+  return { ok: true, paidPayment };
+}
+
 export async function POST(request: Request) {
   const rawBody = await request.text();
-
-  const signatureHeader = request.headers.get(
-    "paymongo-signature",
-  );
+  const signatureHeader = request.headers.get("paymongo-signature");
 
   if (
     !verifyPayMongoWebhookSignature(
@@ -199,10 +237,6 @@ export async function POST(request: Request) {
   const session = extractPaidCheckoutSession(payload);
 
   if (!session || !session.id || !session.attributes) {
-    console.log(
-      "Ignoring PayMongo webhook: no paid checkout session resource found.",
-    );
-
     return NextResponse.json({
       received: true,
       ignored: true,
@@ -210,12 +244,75 @@ export async function POST(request: Request) {
   }
 
   const attributes = session.attributes;
+  const supabase = createAdminSupabaseClient();
+
+  // ---------------------------------------------------------
+  // CUSTOM PROJECT / INSTALLMENT PAYMENT
+  // ---------------------------------------------------------
+  const { data: customPayment, error: customPaymentError } =
+    await supabase
+      .from("order_payments")
+      .select(
+        "id,order_id,amount,currency,status,paymongo_checkout_session_id,paymongo_payment_id",
+      )
+      .eq("paymongo_checkout_session_id", session.id)
+      .maybeSingle();
+
+  if (customPaymentError) {
+    console.error(
+      "Unable to check custom PayMongo payment:",
+      customPaymentError,
+    );
+
+    return NextResponse.json(
+      { error: "Unable to verify custom payment." },
+      { status: 500 },
+    );
+  }
+
+  if (customPayment) {
+    if (customPayment.status === "COMPLETED") {
+      return NextResponse.json({
+        received: true,
+        completed: true,
+        alreadyCompleted: true,
+        customPayment: true,
+      });
+    }
+
+    const validation = validatePaidAmount({
+      attributes,
+      expectedCentavos: Math.round(Number(customPayment.amount) * 100),
+      currency: String(customPayment.currency),
+    });
+
+    if (!validation.ok) {
+      return NextResponse.json(
+        { error: "Custom payment amount or currency mismatch." },
+        { status: 409 },
+      );
+    }
+
+    await completeCustomOrderPayment({
+      paymentId: customPayment.id,
+      provider: "PAYMONGO",
+      paymongoPaymentId: validation.paidPayment?.id ?? null,
+    });
+
+    return NextResponse.json({
+      received: true,
+      completed: true,
+      customPayment: true,
+    });
+  }
+
+  // ---------------------------------------------------------
+  // EXISTING NORMAL STOREFRONT PAYMONGO FLOW
+  // ---------------------------------------------------------
   const referenceNumber = getString(
     attributes,
     "reference_number",
   );
-
-  const supabase = createAdminSupabaseClient();
 
   let {
     data: order,
@@ -300,42 +397,15 @@ export async function POST(request: Request) {
     Number(order.total_amount) * 100,
   );
 
-  const paidPayment = getPaidPayment(attributes);
-  const paymentAmount = paidPayment?.attributes?.amount;
-  const paymentCurrency =
-    paidPayment?.attributes?.currency;
+  const validation = validatePaidAmount({
+    attributes,
+    expectedCentavos,
+    currency: String(order.currency),
+  });
 
-  const lineItemsTotal =
-    getLineItemsTotalCentavos(attributes);
-
-  if (
-    typeof paymentAmount === "number" &&
-    paymentAmount !== expectedCentavos
-  ) {
+  if (!validation.ok) {
     return NextResponse.json(
-      { error: "Payment amount mismatch." },
-      { status: 409 },
-    );
-  }
-
-  if (
-    typeof paymentAmount !== "number" &&
-    typeof lineItemsTotal === "number" &&
-    lineItemsTotal !== expectedCentavos
-  ) {
-    return NextResponse.json(
-      { error: "Checkout amount mismatch." },
-      { status: 409 },
-    );
-  }
-
-  if (
-    paymentCurrency &&
-    paymentCurrency.toUpperCase() !==
-      String(order.currency).toUpperCase()
-  ) {
-    return NextResponse.json(
-      { error: "Payment currency mismatch." },
+      { error: "Payment amount or currency mismatch." },
       { status: 409 },
     );
   }
@@ -348,8 +418,8 @@ export async function POST(request: Request) {
     updated_at: now,
   };
 
-  if (paidPayment?.id) {
-    update.paymongo_payment_id = paidPayment.id;
+  if (validation.paidPayment?.id) {
+    update.paymongo_payment_id = validation.paidPayment.id;
   }
 
   const {

@@ -31,6 +31,7 @@ const links = [
 
 async function signOut() {
   "use server";
+
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();
   redirect("/admin/login");
@@ -47,48 +48,61 @@ export default function AdminNav({
 
   return (
     <>
-      <aside className={`store-admin-sidebar ${styles.desktopNav}`}>
-        <div className="store-admin-sidebar-brand">
-          <div className="store-admin-sidebar-logo">TCL</div>
-          <div>
-            <strong>TCL Systems</strong>
-            <span>&amp; Digitals PH</span>
+      <aside className={styles.desktopNav}>
+        <div className={styles.desktopInner}>
+          <div className={styles.brand}>
+            <div className={styles.logo}>TCL</div>
+            <div className={styles.brandText}>
+              <strong>TCL Systems</strong>
+              <span>&amp; Digitals PH</span>
+            </div>
           </div>
-        </div>
 
-        <div className="store-admin-sidebar-label">STORE ADMIN</div>
+          <div className={styles.sectionLabel}>
+            <span className={styles.sectionLabelFull}>STORE ADMIN</span>
+            <span className={styles.sectionLabelDot}>•</span>
+          </div>
 
-        <nav className="store-admin-nav">
-          {links.map((item) => (
-            <a
-              className={item.key === active ? "active" : undefined}
-              href={item.href}
-              key={item.key}
-            >
-              <span>{item.icon}</span>
-              {item.label}
+          <nav className={styles.desktopLinks}>
+            {links.map((item) => (
+              <a
+                className={item.key === active ? styles.desktopActive : undefined}
+                href={item.href}
+                key={item.key}
+                title={item.label}
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                <span className={styles.navLabel}>{item.label}</span>
+                {item.key === active ? (
+                  <span className={styles.activeDot} aria-hidden="true" />
+                ) : null}
+              </a>
+            ))}
+          </nav>
+
+          <div className={styles.desktopBottom}>
+            <a className={styles.storeLink} href="/" title="View Store">
+              <span className={styles.navIcon}>🛒</span>
+              <span className={styles.navLabel}>View Store</span>
             </a>
-          ))}
-        </nav>
 
-        <div className="store-admin-sidebar-bottom">
-          <a href="/">
-            <span>←</span>
-            View Store
-          </a>
+            <form action={signOut}>
+              <button className={styles.desktopSignOut} type="submit" title="Sign Out">
+                <span className={styles.signOutIcon}>🔒</span>
+                <span className={styles.navLabel}>Sign Out</span>
+              </button>
+            </form>
 
-          <form action={signOut}>
-            <button className={styles.desktopSignOut} type="submit">
-              Sign Out
-            </button>
-          </form>
+            <div className={styles.user}>
+              <div className={styles.avatar} aria-hidden="true">
+                ♙
+              </div>
 
-          <div className="store-admin-user">
-            <div>{email?.charAt(0).toUpperCase() || "T"}</div>
-            <span>
-              <small>Signed in as</small>
-              <strong>{email}</strong>
-            </span>
+              <span className={styles.userText}>
+                <small>Signed in as</small>
+                <strong>{email || "Admin"}</strong>
+              </span>
+            </div>
           </div>
         </div>
       </aside>

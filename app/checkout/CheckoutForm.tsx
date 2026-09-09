@@ -16,10 +16,14 @@ const POLICY_VERSION = "September 2026";
 
 export default function CheckoutForm({
   productSlug,
+  selectedDesignSlug,
+  selectedDesignLabel,
   cancelled,
   paymentError,
 }: {
   productSlug: string;
+  selectedDesignSlug?: string;
+  selectedDesignLabel?: string;
   cancelled: boolean;
   paymentError: boolean;
 }) {
@@ -192,6 +196,21 @@ export default function CheckoutForm({
     <>
       <section className="tcl-checkout-card" aria-labelledby="customer-heading">
         <form onSubmit={handleSubmit}>
+          {selectedDesignSlug ? (
+            <input
+              type="hidden"
+              name="selected_design_slug"
+              value={selectedDesignSlug}
+            />
+          ) : null}
+
+          {selectedDesignLabel ? (
+            <input
+              type="hidden"
+              name="selected_design_label"
+              value={selectedDesignLabel}
+            />
+          ) : null}
           <div className="tcl-checkout-section">
             <div className="tcl-checkout-number">1</div>
 
@@ -242,6 +261,13 @@ export default function CheckoutForm({
               <div className="tcl-checkout-form-heading">
                 <h2>Choose how to pay</h2>
                 <p>Select your preferred secure payment provider.</p>
+
+                {selectedDesignLabel ? (
+                  <div className="tcl-checkout-form-design">
+                    <span>Selected design</span>
+                    <strong>{selectedDesignLabel}</strong>
+                  </div>
+                ) : null}
               </div>
 
               <fieldset className="tcl-checkout-methods" disabled={submitting}>
@@ -724,6 +750,30 @@ export default function CheckoutForm({
       ) : null}
 
       <style jsx global>{`
+        .tcl-checkout-form-design {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-top: 11px;
+          padding: 9px 11px;
+          border: 1px solid #eadde2;
+          border-radius: 10px;
+          background: #fff8fa;
+        }
+
+        .tcl-checkout-form-design span {
+          color: #9b7c88;
+          font-size: 0.62rem;
+          font-weight: 700;
+        }
+
+        .tcl-checkout-form-design strong {
+          color: #8e5068;
+          font-size: 0.68rem;
+          text-align: right;
+        }
+
         .tcl-checkout-policy {
           display: grid;
           grid-template-columns: 26px 1fr;

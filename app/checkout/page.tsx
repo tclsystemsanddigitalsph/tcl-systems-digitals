@@ -534,6 +534,30 @@ const checkoutStyles = `
   font-weight: 850;
 }
 
+.tcl-checkout-selected-design {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0;
+  padding: 9px 11px;
+  border: 1px solid #eadde2;
+  border-radius: 10px;
+  background: #fff8fa;
+}
+
+.tcl-checkout-selected-design span {
+  color: #9b7c88;
+  font-size: 0.58rem;
+  font-weight: 750;
+}
+
+.tcl-checkout-selected-design strong {
+  color: #8e5068;
+  font-size: 0.68rem;
+  text-align: right;
+}
+
 .tcl-checkout-sr-only {
   position: absolute !important;
   width: 1px !important;
@@ -784,17 +808,29 @@ const checkoutStyles = `
 }
 `;
 
+const SIMPLE_WEBSITE_DESIGNS: Record<string, string> = {
+  "aesthetic-soft": "Aesthetic & Soft",
+  "clean-minimal": "Clean & Minimal",
+  "professional-business": "Professional Business",
+  "bold-creative": "Bold & Creative",
+  "modern-monochrome": "Modern Monochrome",
+  "modern-refined": "Modern & Refined",
+};
+
 export default async function CheckoutPage({
   searchParams,
 }: {
   searchParams: Promise<{
     product?: string | string[];
+    design?: string | string[];
     cancelled?: string | string[];
     payment_error?: string | string[];
   }>;
 }) {
   const params = await searchParams;
   const slug = params.product;
+  const designParam =
+    typeof params.design === "string" ? params.design.trim() : "";
   const cancelled = params.cancelled === "1";
   const paymentError = params.payment_error === "1";
 
@@ -826,6 +862,20 @@ export default async function CheckoutPage({
   }
 
   if (!product) notFound();
+
+  const requiresDesign =
+    product.slug === "simple-business-website-template";
+
+  const selectedDesignSlug = requiresDesign ? designParam : "";
+  const selectedDesignLabel = requiresDesign
+    ? SIMPLE_WEBSITE_DESIGNS[selectedDesignSlug] ?? ""
+    : "";
+
+  if (requiresDesign && !selectedDesignLabel) {
+    redirect(
+      `/shop/${encodeURIComponent(product.slug)}#choose-design`
+    );
+  }
 
   const hasSale =
     product.sale_price !== null && product.sale_price < product.price;
@@ -875,6 +925,8 @@ export default async function CheckoutPage({
             <section className="tcl-checkout-left">
               <CheckoutForm
                 productSlug={product.slug}
+                selectedDesignSlug={selectedDesignSlug}
+                selectedDesignLabel={selectedDesignLabel}
                 cancelled={cancelled}
                 paymentError={paymentError}
               />
@@ -916,6 +968,13 @@ export default async function CheckoutPage({
                 </div>
 
                 <h3>{product.name}</h3>
+
+                {selectedDesignLabel ? (
+                  <div className="tcl-checkout-selected-design">
+                    <span>Selected design</span>
+                    <strong>{selectedDesignLabel}</strong>
+                  </div>
+                ) : null}
 
                 {product.short_description ? (
                   <p>{product.short_description}</p>

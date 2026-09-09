@@ -22,6 +22,8 @@ type OrderRow = {
   product_id: string | null;
   product_name: string;
   payment_status: string;
+  payment_terms: string | null;
+  amount_paid: number | string | null;
   order_status: string | null;
 };
 
@@ -36,6 +38,8 @@ type ProductRow = {
   product_type: string | null;
   is_active: boolean | null;
 };
+
+const CUSTOM_PRODUCT_SLUG = "custom-business-website";
 
 const KNOWN_TIERS = [
   "Enterprise",
@@ -121,6 +125,34 @@ function effectivePrice(product: ProductRow) {
   return Number.isFinite(regularPrice) ? regularPrice : 0;
 }
 
+function hasRequiredPayment(order: OrderRow, product: ProductRow) {
+  const isCustomQuotation =
+    product.slug.trim().toLowerCase() === CUSTOM_PRODUCT_SLUG;
+
+  if (isCustomQuotation) {
+    const amountPaid = Number(order.amount_paid ?? 0);
+
+    if (!Number.isFinite(amountPaid) || amountPaid <= 0) {
+      return false;
+    }
+
+    if (order.payment_terms === "DEPOSIT_50") {
+      return (
+        order.payment_status === "PARTIALLY_PAID" ||
+        order.payment_status === "COMPLETED"
+      );
+    }
+
+    if (order.payment_terms === "FULL") {
+      return order.payment_status === "COMPLETED";
+    }
+
+    return false;
+  }
+
+  return order.payment_status === "COMPLETED";
+}
+
 export async function ensureProjectRequirementsForPaidOrder(
   orderId: string,
 ): Promise<ProjectRequirementsResult | null> {
@@ -135,7 +167,7 @@ export async function ensureProjectRequirementsForPaidOrder(
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
     .select(
-      "id,order_number,customer_name,customer_email,product_id,product_name,payment_status,order_status",
+      "id,order_number,customer_name,customer_email,product_id,product_name,payment_status,payment_terms,amount_paid,order_status",
     )
     .eq("id", normalizedOrderId)
     .maybeSingle<OrderRow>();
@@ -148,14 +180,7 @@ export async function ensureProjectRequirementsForPaidOrder(
     throw new Error("Unable to verify paid order.");
   }
 
-  if (!orderData) {
-    return null;
-  }
-
-  if (
-    orderData.payment_status !== "COMPLETED" ||
-    orderData.order_status === "CANCELLED"
-  ) {
+  if (!orderData || orderData.order_status === "CANCELLED") {
     return null;
   }
 
@@ -208,19 +233,30 @@ export async function ensureProjectRequirementsForPaidOrder(
     return null;
   }
 
+  const isCustomQuotation =
+    productData.slug.trim().toLowerCase() === CUSTOM_PRODUCT_SLUG;
+
   const isPaidCustomizedService =
     productData.product_type === "SERVICE" &&
-    effectivePrice(productData) > 0;
+    (isCustomQuotation || effectivePrice(productData) > 0);
 
   if (!isPaidCustomizedService) {
     return null;
   }
 
-  const productTier = inferTier(
-    productData.slug,
-    productData.name,
-    productData.badge,
-  );
+  if (!hasRequiredPayment(orderData, productData)) {
+    return null;
+  }
+
+  // Custom Business Website is quotation-based, not a fixed storefront tier.
+  // Do not infer "Business" from the words in its product name.
+  const productTier = isCustomQuotation
+    ? null
+    : inferTier(
+        productData.slug,
+        productData.name,
+        productData.badge,
+      );
 
   const { data: createdData, error: createError } = await supabase
     .from("project_requirements")

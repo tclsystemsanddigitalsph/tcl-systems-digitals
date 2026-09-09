@@ -62,7 +62,15 @@ export default async function AdminNewProductPage({
         <AdminNav active="products" email={user.email} />
 
         <section className="store-admin-main">
-          <header className={dashboardStyles.topbar}>
+          <header
+            className={dashboardStyles.topbar}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: "24px",
+            }}
+          >
             <div>
               <span className="store-admin-eyebrow">PRODUCT CATALOG</span>
               <h1>Add Product</h1>
@@ -72,7 +80,13 @@ export default async function AdminNewProductPage({
               </p>
             </div>
 
-            <div className={dashboardStyles.topbarActions}>
+            <div
+              className={dashboardStyles.topbarActions}
+              style={{
+                marginLeft: "auto",
+                flexShrink: 0,
+              }}
+            >
               <a
                 href="/admin/products"
                 className={dashboardStyles.secondaryButton}

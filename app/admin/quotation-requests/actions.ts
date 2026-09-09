@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
+import { redirect } from "next/navigation";
+import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 
 const allowedStatuses = [
   "NEW",
@@ -12,27 +14,26 @@ const allowedStatuses = [
   "CLOSED",
 ] as const;
 
-function getAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+async function requireAdmin() {
+  const authSupabase = await createServerSupabaseClient();
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase server environment variables are missing.");
+  const {
+    data: { user },
+  } = await authSupabase.auth.getUser();
+
+  if (!user) {
+    redirect("/admin/login");
   }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
 }
 
 export async function updateQuotationRequest(formData: FormData) {
+  await requireAdmin();
+
   const id = String(formData.get("id") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
   const adminNotes = String(formData.get("admin_notes") ?? "").trim();
   const quotedAmountRaw = String(formData.get("quoted_amount") ?? "").trim();
+  const paymentTermsRaw = String(formData.get("payment_terms") ?? "").trim();
 
   if (!id) {
     throw new Error("Quotation request ID is missing.");
@@ -54,17 +55,38 @@ export async function updateQuotationRequest(formData: FormData) {
     quotedAmount = parsed;
   }
 
-  const supabase = getAdminClient();
+  let paymentTerms: "FULL" | "DEPOSIT_50" | null = null;
+
+  if (paymentTermsRaw) {
+    if (paymentTermsRaw !== "FULL" && paymentTermsRaw !== "DEPOSIT_50") {
+      throw new Error("Invalid payment terms.");
+    }
+    paymentTerms = paymentTermsRaw;
+  }
+
+  if (status === "QUOTED") {
+    if (!quotedAmount || quotedAmount <= 0) {
+      throw new Error("Set a quoted amount greater than ₱0 before marking this as Quoted.");
+    }
+
+    if (!paymentTerms) {
+      throw new Error("Choose payment terms before marking this as Quoted.");
+    }
+  }
+
+  const supabase = createAdminSupabaseClient();
 
   const payload: {
     status: string;
     admin_notes: string | null;
     quoted_amount: number | null;
+    payment_terms: "FULL" | "DEPOSIT_50" | null;
     quoted_at?: string | null;
   } = {
     status,
     admin_notes: adminNotes || null,
     quoted_amount: quotedAmount,
+    payment_terms: paymentTerms,
   };
 
   if (status === "QUOTED" && quotedAmount !== null) {

@@ -9,6 +9,8 @@ import {
   deleteOrder,
   processProviderRefund,
   recordExternalRefund,
+  requestCustomProjectPayment,
+  updateCustomProjectAmount,
 } from "./actions";
 import CopyPaymentLinkButton from "./CopyPaymentLinkButton";
 import DigitalAccessPanel from "./DigitalAccessPanel";
@@ -20,6 +22,8 @@ type OrderDetailsPageProps = {
     cancelled?: string;
     refund_recorded?: string;
     refund_processed?: string;
+    amount_updated?: string;
+    payment_requested?: string;
   }>;
 };
 
@@ -43,7 +47,7 @@ function formatDateTime(value: string | null) {
 
 function statusClass(status: string | null) {
   if (status === "COMPLETED") return styles.completed;
-  if (status === "PENDING") return styles.pending;
+  if (status === "PENDING" || status === "PARTIALLY_PAID") return styles.pending;
   if (status === "FAILED" || status === "CANCELLED") return styles.failed;
   return styles.muted;
 }
@@ -66,7 +70,7 @@ export default async function OrderDetailsPage({
   const { data: order, error } = await adminSupabase
     .from("orders")
     .select(
-      "id,order_number,customer_id,customer_name,customer_email,product_id,product_name,base_price,processing_fee_percent,processing_fee,total_amount,currency,payment_provider,payment_status,order_status,cancellation_reason,cancelled_at,refund_status,refunded_amount,refunded_at,refund_note,paypal_order_id,paypal_capture_id,paymongo_checkout_session_id,paymongo_payment_id,delivery_status,notes,paid_at,delivered_at,created_at,updated_at,receipt_token,download_access_expires_at",
+      "id,order_number,customer_id,customer_name,customer_email,product_id,product_name,base_price,processing_fee_percent,processing_fee,total_amount,currency,payment_provider,payment_status,payment_terms,amount_paid,balance_due,deposit_percent,deposit_paid_at,final_payment_requested_at,order_status,cancellation_reason,cancelled_at,refund_status,refunded_amount,refunded_at,refund_note,paypal_order_id,paypal_capture_id,paymongo_checkout_session_id,paymongo_payment_id,paymongo_checkout_url,delivery_status,notes,paid_at,delivered_at,created_at,updated_at,receipt_token,download_access_expires_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -108,6 +112,15 @@ export default async function OrderDetailsPage({
   const refunds = refundsResult.data ?? [];
 
   const totalAmount = Number(order.total_amount ?? 0);
+  const isCustomQuotationOrder = Boolean(order.payment_terms);
+  const amountPaid = isCustomQuotationOrder
+    ? Number(order.amount_paid ?? 0)
+    : order.payment_status === "COMPLETED"
+      ? totalAmount
+      : 0;
+  const balanceDue = isCustomQuotationOrder
+    ? Number(order.balance_due ?? Math.max(0, totalAmount - amountPaid))
+    : Math.max(0, totalAmount - amountPaid);
   const refundedAmount = Number(order.refunded_amount ?? 0);
   const netRevenue =
     order.payment_status === "COMPLETED"
@@ -136,6 +149,18 @@ export default async function OrderDetailsPage({
               </a>
             </div>
           </header>
+
+          {query.amount_updated === "1" ? (
+            <div style={{ marginBottom: "14px", padding: "10px 12px", border: "1px solid #ead5de", borderRadius: "10px", background: "#fff8fa", color: "#8b4d63", fontSize: "0.68rem", fontWeight: 750 }}>
+              Custom project amount updated. Previous payments were preserved and the remaining balance was recalculated.
+            </div>
+          ) : null}
+
+          {query.payment_requested === "1" ? (
+            <div style={{ marginBottom: "14px", padding: "10px 12px", border: "1px solid #ead5de", borderRadius: "10px", background: "#fff8fa", color: "#8b4d63", fontSize: "0.68rem", fontWeight: 750 }}>
+              Final / additional payment activated. The customer can use the same private custom checkout link to pay the current balance.
+            </div>
+          ) : null}
 
           {query.cancelled === "1" ? (
             <div style={{ marginBottom: "14px", padding: "10px 12px", border: "1px solid #efcdd5", borderRadius: "10px", background: "#fff3f5", color: "#8d4051", fontSize: "0.68rem", fontWeight: 750 }}>
@@ -174,9 +199,11 @@ export default async function OrderDetailsPage({
             </article>
             <article>
               <span>AMOUNT PAID</span>
-              <strong>{formatMoney(Number(order.total_amount ?? 0))}</strong>
+              <strong>{formatMoney(amountPaid)}</strong>
               <small>
-                {order.refund_status === "REFUNDED"
+                {isCustomQuotationOrder && balanceDue > 0
+                  ? `${formatMoney(balanceDue)} balance remaining`
+                  : order.refund_status === "REFUNDED"
                   ? `Fully refunded • ${order.currency || "PHP"}`
                   : order.refund_status === "PARTIALLY_REFUNDED"
                     ? `${formatMoney(refundedAmount)} refunded`
@@ -312,11 +339,61 @@ export default async function OrderDetailsPage({
                 <div className={styles.productBlock}>
                   <div><strong>{order.product_name}</strong><small>{order.product_id || "No product ID"}</small></div>
                   <div className={styles.breakdown}>
-                    <div><span>Base price</span><strong>{formatMoney(Number(order.base_price ?? 0))}</strong></div>
+                    <div><span>Project price</span><strong>{formatMoney(Number(order.base_price ?? 0))}</strong></div>
                     <div><span>Processing fee ({Number(order.processing_fee_percent ?? 0)}%)</span><strong>{formatMoney(Number(order.processing_fee ?? 0))}</strong></div>
-                    <div className={styles.totalRow}><span>Total</span><strong>{formatMoney(Number(order.total_amount ?? 0))}</strong></div>
+                    <div className={styles.totalRow}><span>Customer total</span><strong>{formatMoney(Number(order.total_amount ?? 0))}</strong></div>
+                    {isCustomQuotationOrder ? (
+                      <>
+                        <div><span>Amount paid</span><strong>{formatMoney(amountPaid)}</strong></div>
+                        <div><span>Balance due</span><strong>{formatMoney(balanceDue)}</strong></div>
+                      </>
+                    ) : null}
                   </div>
                 </div>
+
+                {isCustomQuotationOrder && order.order_status !== "CANCELLED" ? (
+                  <details style={{ marginTop: "18px", borderTop: "1px solid var(--border)", paddingTop: "16px" }}>
+                    <summary style={{ cursor: "pointer", color: "var(--text)", fontSize: "0.68rem", fontWeight: 900 }}>
+                      Edit Custom Project Amount
+                    </summary>
+
+                    <form action={updateCustomProjectAmount} className={styles.actionForm} style={{ marginTop: "14px" }}>
+                      <input type="hidden" name="order_id" value={order.id} />
+
+                      <label htmlFor={`custom-project-price-${order.id}`}>
+                        Project price before processing fee
+                      </label>
+                      <input
+                        id={`custom-project-price-${order.id}`}
+                        name="base_price"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        inputMode="decimal"
+                        defaultValue={Number(order.base_price ?? 0).toFixed(2)}
+                        required
+                      />
+
+                      <label htmlFor={`custom-project-reason-${order.id}`}>
+                        Reason for adjustment
+                      </label>
+                      <textarea
+                        id={`custom-project-reason-${order.id}`}
+                        name="reason"
+                        rows={3}
+                        maxLength={1000}
+                        placeholder="Example: Added inventory management feature +₱4,000"
+                        required
+                      />
+
+                      <div style={{ padding: "10px 12px", borderRadius: "10px", background: "#fff8fa", color: "var(--text-soft)", fontSize: "0.58rem", lineHeight: 1.6 }}>
+                        Previous successful payments will never be changed. The processing fee, customer total, and remaining balance are recalculated from the new project price. The new total cannot be lower than the amount already paid.
+                      </div>
+
+                      <button type="submit">Update Project Amount</button>
+                    </form>
+                  </details>
+                ) : null}
               </section>
 
               <section className={styles.card}>
@@ -396,11 +473,58 @@ export default async function OrderDetailsPage({
                 </section>
               ) : null}
 
-              {order.payment_status === "PENDING" && order.order_status !== "CANCELLED" ? (
+              {isCustomQuotationOrder &&
+              order.order_status !== "CANCELLED" &&
+              amountPaid > 0 &&
+              balanceDue > 0.005 ? (
+                <section className={styles.card}>
+                  <div className={styles.cardHeader}>
+                    <span>BALANCE PAYMENT</span>
+                    <h2>Request final / additional payment</h2>
+                  </div>
+
+                  <div className={styles.referenceList}>
+                    <div>
+                      <span>Amount already paid</span>
+                      <strong>{formatMoney(amountPaid)}</strong>
+                    </div>
+                    <div>
+                      <span>Current remaining balance</span>
+                      <strong>{formatMoney(balanceDue)}</strong>
+                    </div>
+                    <div>
+                      <span>Last activated</span>
+                      <strong>{formatDateTime(order.final_payment_requested_at)}</strong>
+                    </div>
+                  </div>
+
+                  <div className={styles.cardBody}>
+                    <p>
+                      Activate the current balance when it is ready to be collected.
+                      This works for the second 50% payment and for any later amount
+                      added after a scope change.
+                    </p>
+                    <p>
+                      The customer keeps using the same private custom checkout link.
+                      If a pending balance request already exists, this button refreshes
+                      it to the latest saved balance instead of creating a duplicate.
+                    </p>
+                  </div>
+
+                  <form action={requestCustomProjectPayment}>
+                    <input type="hidden" name="order_id" value={order.id} />
+                    <button type="submit">
+                      Request {formatMoney(balanceDue)} →
+                    </button>
+                  </form>
+                </section>
+              ) : null}
+
+              {isCustomQuotationOrder && order.payment_status !== "COMPLETED" && order.order_status !== "CANCELLED" ? (
                 <section className={styles.checkoutCard}>
                   <span>PRIVATE PAYMENT CHECKOUT</span><h2>Customer payment link</h2>
                   {query.checkout_created === "1" ? <div className={styles.checkoutCreated}>Checkout created successfully.</div> : null}
-                  <p>Send this private link to the customer to collect the exact saved order total through PayPal.</p>
+                  <p>This secure link always uses the latest saved project balance. The customer can pay through PayPal or QR Ph when a payment stage is active.</p>
                   <div className={styles.checkoutUrl}><code>/checkout/custom/{order.receipt_token}</code></div>
                   <CopyPaymentLinkButton path={`/checkout/custom/${order.receipt_token}`} />
                   <a href={`/checkout/custom/${order.receipt_token}`} target="_blank" rel="noreferrer">Open Payment Checkout →</a>

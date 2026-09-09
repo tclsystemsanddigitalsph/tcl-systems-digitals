@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import AdminNav from "@/app/admin/AdminNav";
-import styles from "../dashboard.module.css";
+import styles from "./quotation-requests.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ function formatDate(value: string) {
 }
 
 function formatMoney(value: number | null) {
-  if (value === null) return "—";
+  if (value === null) return "Not quoted yet";
 
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -27,12 +27,6 @@ function formatMoney(value: number | null) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
-}
-
-function statusClass(status: string) {
-  if (status === "ACCEPTED" || status === "QUOTED") return styles.completed;
-  if (status === "NEW" || status === "REVIEWING") return styles.pending;
-  return styles.muted;
 }
 
 function statusLabel(status: string) {
@@ -51,6 +45,25 @@ function statusLabel(status: string) {
       return "Closed";
     default:
       return status;
+  }
+}
+
+function statusClass(status: string) {
+  switch (status) {
+    case "NEW":
+      return styles.statusNew;
+    case "REVIEWING":
+      return styles.statusReviewing;
+    case "QUOTED":
+      return styles.statusQuoted;
+    case "ACCEPTED":
+      return styles.statusAccepted;
+    case "DECLINED":
+      return styles.statusDeclined;
+    case "CLOSED":
+      return styles.statusClosed;
+    default:
+      return styles.statusClosed;
   }
 }
 
@@ -79,10 +92,15 @@ export default async function AdminQuotationRequestsPage() {
   }
 
   const rows = requests ?? [];
+
   const newCount = rows.filter((item) => item.status === "NEW").length;
-  const reviewingCount = rows.filter((item) => item.status === "REVIEWING").length;
+  const reviewingCount = rows.filter(
+    (item) => item.status === "REVIEWING",
+  ).length;
   const quotedCount = rows.filter((item) => item.status === "QUOTED").length;
-  const acceptedCount = rows.filter((item) => item.status === "ACCEPTED").length;
+  const acceptedCount = rows.filter(
+    (item) => item.status === "ACCEPTED",
+  ).length;
 
   return (
     <main className="store-admin-dashboard">
@@ -90,161 +108,180 @@ export default async function AdminQuotationRequestsPage() {
         <AdminNav active="quotations" email={user.email} />
 
         <section className="store-admin-main">
-          <header className={styles.topbar}>
-            <div>
-              <span className="store-admin-eyebrow">QUOTATIONS</span>
-              <h1>Quotation Requests</h1>
-              <p>
-                Review project requirements, prepare pricing, and manage quote
-                follow-ups.
-              </p>
-            </div>
-
-            <div className={styles.topbarActions}>
-              <a className={styles.secondaryButton} href="/admin">
-                Dashboard
-              </a>
-              <a className={styles.primaryButton} href="/">
-                View Store
-              </a>
-            </div>
-          </header>
-
-          <section className={styles.stats}>
-            <article className={styles.statCard}>
-              <div className={styles.statTop}>
-                <span>NEW</span>
-                <i>✦</i>
-              </div>
-              <strong>{newCount}</strong>
-              <small>New requests waiting for review</small>
-            </article>
-
-            <article className={styles.statCard}>
-              <div className={styles.statTop}>
-                <span>REVIEWING</span>
-                <i>⌕</i>
-              </div>
-              <strong>{reviewingCount}</strong>
-              <small>Requests currently being assessed</small>
-            </article>
-
-            <article className={styles.statCard}>
-              <div className={styles.statTop}>
-                <span>QUOTED</span>
-                <i>₱</i>
-              </div>
-              <strong>{quotedCount}</strong>
-              <small>Quotes already sent or prepared</small>
-            </article>
-
-            <article className={styles.statCard}>
-              <div className={styles.statTop}>
-                <span>ACCEPTED</span>
-                <i>♡</i>
-              </div>
-              <strong>{acceptedCount}</strong>
-              <small>Approved quotations ready to proceed</small>
-            </article>
-          </section>
-
-          <section className={styles.ordersPanel}>
-            <div className={styles.panelHeader}>
-              <div>
-                <span>REQUESTS</span>
-                <h2>All quotation requests</h2>
+          <div className={styles.page}>
+            <header className={styles.topbar}>
+              <div className={styles.heading}>
+                <span className={styles.eyebrow}>QUOTATIONS</span>
+                <h1>Quotation Requests</h1>
                 <p>
-                  Open a request to view full business details and manage the quote.
+                  Review project requirements, prepare pricing, and manage quote
+                  follow-ups.
                 </p>
               </div>
-            </div>
 
-            {rows.length > 0 ? (
-              <div className={styles.transactions}>
-                {rows.map((request) => (
-                  <Link
-                    key={request.id}
-                    href={`/admin/quotation-requests/${request.id}`}
-                    className={styles.transactionCard}
-                  >
-                    <div className={styles.transactionTop}>
-                      <div className={styles.customerBlock}>
-                        <div className={styles.avatar}>
-                          {request.business_name?.charAt(0).toUpperCase() ||
-                            request.full_name?.charAt(0).toUpperCase() ||
-                            "Q"}
+              <div className={styles.topbarActions}>
+                <Link className={styles.secondaryButton} href="/admin">
+                  Dashboard
+                </Link>
+                <Link className={styles.primaryButton} href="/">
+                  View Store
+                </Link>
+              </div>
+            </header>
+
+            <section className={styles.statsGrid}>
+              <article className={styles.statCard}>
+                <div className={styles.statHeader}>
+                  <span>NEW</span>
+                  <div className={styles.statIcon}>✦</div>
+                </div>
+                <strong>{newCount}</strong>
+                <p>Waiting for review</p>
+              </article>
+
+              <article className={styles.statCard}>
+                <div className={styles.statHeader}>
+                  <span>REVIEWING</span>
+                  <div className={styles.statIcon}>⌕</div>
+                </div>
+                <strong>{reviewingCount}</strong>
+                <p>Currently being assessed</p>
+              </article>
+
+              <article className={styles.statCard}>
+                <div className={styles.statHeader}>
+                  <span>QUOTED</span>
+                  <div className={styles.statIcon}>₱</div>
+                </div>
+                <strong>{quotedCount}</strong>
+                <p>Quote already prepared</p>
+              </article>
+
+              <article className={styles.statCard}>
+                <div className={styles.statHeader}>
+                  <span>ACCEPTED</span>
+                  <div className={styles.statIcon}>♡</div>
+                </div>
+                <strong>{acceptedCount}</strong>
+                <p>Ready to proceed</p>
+              </article>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <div>
+                  <span className={styles.panelEyebrow}>REQUESTS</span>
+                  <h2>All quotation requests</h2>
+                  <p>
+                    Open a request to view full business details and manage the
+                    quote.
+                  </p>
+                </div>
+
+                <div className={styles.requestCount}>
+                  {rows.length} {rows.length === 1 ? "request" : "requests"}
+                </div>
+              </div>
+
+              {rows.length > 0 ? (
+                <div className={styles.requestList}>
+                  {rows.map((request) => {
+                    const initial =
+                      request.business_name?.charAt(0).toUpperCase() ||
+                      request.full_name?.charAt(0).toUpperCase() ||
+                      "Q";
+
+                    return (
+                      <article className={styles.requestCard} key={request.id}>
+                        <div className={styles.cardTop}>
+                          <div className={styles.customer}>
+                            <div className={styles.avatar}>{initial}</div>
+
+                            <div className={styles.customerDetails}>
+                              <div className={styles.customerTitleRow}>
+                                <h3>{request.business_name || "No business name"}</h3>
+                                <span
+                                  className={`${styles.statusBadge} ${statusClass(
+                                    request.status,
+                                  )}`}
+                                >
+                                  {statusLabel(request.status)}
+                                </span>
+                              </div>
+
+                              <p>
+                                {request.full_name}
+                                <span>•</span>
+                                {request.email}
+                              </p>
+                            </div>
+                          </div>
+
+                          <Link
+                            href={`/admin/quotation-requests/${request.id}`}
+                            className={styles.viewButton}
+                          >
+                            View Request →
+                          </Link>
                         </div>
 
-                        <div className={styles.customerText}>
-                          <strong>{request.business_name}</strong>
-                          <span>
-                            {request.full_name} · {request.email}
-                          </span>
+                        <div className={styles.cardBody}>
+                          <div className={styles.serviceBlock}>
+                            <span className={styles.metaLabel}>SERVICE</span>
+                            <strong>
+                              {request.product_name || "Custom Business Website"}
+                            </strong>
+                          </div>
+
+                          <div className={styles.amountBlock}>
+                            <span className={styles.metaLabel}>QUOTED AMOUNT</span>
+                            <strong>
+                              {formatMoney(
+                                request.quoted_amount === null
+                                  ? null
+                                  : Number(request.quoted_amount),
+                              )}
+                            </strong>
+                          </div>
                         </div>
-                      </div>
 
-                      <span
-                        className={`${styles.status} ${statusClass(
-                          request.status,
-                        )}`}
-                      >
-                        {statusLabel(request.status)}
-                      </span>
-                    </div>
+                        <div className={styles.metaGrid}>
+                          <div>
+                            <span className={styles.metaLabel}>BUDGET</span>
+                            <strong>{request.budget || "—"}</strong>
+                          </div>
 
-                    <div className={styles.transactionMiddle}>
-                      <div className={styles.productBlock}>
-                        <span>SERVICE</span>
-                        <strong>{request.product_name}</strong>
-                      </div>
+                          <div>
+                            <span className={styles.metaLabel}>TIMELINE</span>
+                            <strong>{request.timeline || "—"}</strong>
+                          </div>
 
-                      <div className={styles.amountBlock}>
-                        <span>QUOTED AMOUNT</span>
-                        <strong>
-                          {formatMoney(
-                            request.quoted_amount === null
-                              ? null
-                              : Number(request.quoted_amount),
-                          )}
-                        </strong>
-                      </div>
-                    </div>
+                          <div>
+                            <span className={styles.metaLabel}>STATUS</span>
+                            <strong>{statusLabel(request.status)}</strong>
+                          </div>
 
-                    <div className={styles.transactionBottom}>
-                      <div>
-                        <span className={styles.metaLabel}>BUDGET</span>
-                        <strong>{request.budget}</strong>
-                      </div>
-
-                      <div>
-                        <span className={styles.metaLabel}>TIMELINE</span>
-                        <strong>{request.timeline}</strong>
-                      </div>
-
-                      <div>
-                        <span className={styles.metaLabel}>STATUS</span>
-                        <strong>{statusLabel(request.status)}</strong>
-                      </div>
-
-                      <div>
-                        <span className={styles.metaLabel}>SUBMITTED</span>
-                        <strong>{formatDate(request.created_at)}</strong>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.empty}>
-                <div>✦</div>
-                <strong>No quotation requests yet</strong>
-                <p>
-                  New quotation requests submitted through the store will appear
-                  here.
-                </p>
-              </div>
-            )}
-          </section>
+                          <div>
+                            <span className={styles.metaLabel}>SUBMITTED</span>
+                            <strong>{formatDate(request.created_at)}</strong>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className={styles.empty}>
+                  <div className={styles.emptyIcon}>✦</div>
+                  <strong>No quotation requests yet</strong>
+                  <p>
+                    New quotation requests submitted through the store will
+                    appear here.
+                  </p>
+                </div>
+              )}
+            </section>
+          </div>
         </section>
       </div>
     </main>
