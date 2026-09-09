@@ -280,7 +280,7 @@ export default function CheckoutForm({
                   <span className="tcl-checkout-method-copy">
                     <strong>PayMongo</strong>
                     <small>
-                      GCash, Maya, Visa and Mastercard when enabled.
+                      QR Ph payments via GCash, Maya, bank apps, and other supported e-wallets.
                     </small>
                   </span>
 
