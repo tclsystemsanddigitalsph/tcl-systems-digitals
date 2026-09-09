@@ -32,8 +32,8 @@ const featuredProducts = [
       "A customized website experience designed around your business, branding, services, and customer journey.",
     price: "Custom Quote",
     tag: "Made For You",
-    href: "#contact",
-    available: false,
+    href: "/quotation-form",
+    available: true,
   },
 ];
 
@@ -494,15 +494,10 @@ export default async function Home() {
                 <div><span>✓</span>Additional features available when needed</div>
               </div>
 
-              <a
-                className="button button-primary"
-                href="https://t.me/tclsystemsanddigitalsph"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <Link className="button button-primary" href="/quotation-form">
                 Ask About Customization
                 <span>→</span>
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -618,10 +613,10 @@ export default async function Home() {
                 </div>
               </div>
 
-              <a className="button button-primary" href="#contact">
+              <Link className="button button-primary" href="/quotation-form">
                 Let&apos;s Work Together
                 <span>→</span>
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -645,14 +640,9 @@ export default async function Home() {
                 Browse Products
                 <span>→</span>
               </Link>
-              <a
-                className="button button-outline-light"
-                href="https://t.me/tclsystemsanddigitalsph"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Contact TCL
-              </a>
+              <Link className="button button-outline-light" href="/quotation-form">
+                Request a Custom Quote
+              </Link>
             </div>
           </div>
         </section>
