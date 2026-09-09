@@ -224,3 +224,14 @@
     font-size: 0.5rem;
   }
 }
+
+/* Request a Quote CTA */
+.quoteButton {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mobileQuotePill {
+  font-weight: 700;
+  white-space: nowrap;
+}
