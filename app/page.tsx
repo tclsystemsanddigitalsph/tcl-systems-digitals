@@ -494,7 +494,7 @@ export default async function Home() {
                 <div><span>✓</span>Additional features available when needed</div>
               </div>
 
-              <Link className="button button-primary" href="/quotation-form">
+              <Link className="button button-primary" href="/quote/custom-business-website">
                 Ask About Customization
                 <span>→</span>
               </Link>
@@ -613,7 +613,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <Link className="button button-primary" href="/quotation-form">
+              <Link className="button button-primary" href="/quote/custom-business-website">
                 Let&apos;s Work Together
                 <span>→</span>
               </Link>
@@ -640,7 +640,7 @@ export default async function Home() {
                 Browse Products
                 <span>→</span>
               </Link>
-              <Link className="button button-outline-light" href="/quotation-form">
+              <Link className="button button-outline-light" href="/quote/custom-business-website">
                 Request a Custom Quote
               </Link>
             </div>
