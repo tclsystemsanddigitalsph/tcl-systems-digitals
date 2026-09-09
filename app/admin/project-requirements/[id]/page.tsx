@@ -12,7 +12,9 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-function titleCase(value: string) {
+function titleCase(value: string | null) {
+  if (!value) return "—";
+
   return value
     .replaceAll("_", " ")
     .toLowerCase()
@@ -53,7 +55,6 @@ function labelize(key: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-
 function displayProjectTier(
   productSlug: string | null,
   productTier: string | null,
@@ -63,6 +64,150 @@ function displayProjectTier(
   }
 
   return productTier || "Custom";
+}
+
+function statusTone(status: string | null) {
+  if (
+    status === "APPROVED" ||
+    status === "COMPLETED" ||
+    status === "DELIVERED"
+  ) {
+    return styles.statusSuccess;
+  }
+
+  if (
+    status === "SUBMITTED" ||
+    status === "RESUBMITTED" ||
+    status === "REVIEWING" ||
+    status === "READY_TO_BUILD"
+  ) {
+    return styles.statusReview;
+  }
+
+  if (
+    status === "IN_PROGRESS" ||
+    status === "QA_REVIEW" ||
+    status === "READY_FOR_HANDOVER"
+  ) {
+    return styles.statusActive;
+  }
+
+  if (status === "NEED_MORE_INFO") {
+    return styles.statusCustomer;
+  }
+
+  if (status === "CANCELLED") {
+    return styles.statusCancelled;
+  }
+
+  return styles.statusNeutral;
+}
+
+function currentFocus(
+  requirementsStatus: string,
+  projectStatus: string,
+  deliveryStatus: string,
+) {
+  if (
+    requirementsStatus === "SUBMITTED" ||
+    requirementsStatus === "RESUBMITTED"
+  ) {
+    return {
+      eyebrow: "ACTION NEEDED",
+      title: "Review customer requirements",
+      description:
+        "The customer has submitted their project brief and it is ready for your review.",
+      tone: styles.focusImportant,
+    };
+  }
+
+  if (requirementsStatus === "NEED_MORE_INFO") {
+    return {
+      eyebrow: "WAITING ON CUSTOMER",
+      title: "Additional information requested",
+      description:
+        "The customer needs to update their requirements before the project can continue.",
+      tone: styles.focusWaiting,
+    };
+  }
+
+  if (
+    requirementsStatus === "NOT_STARTED" ||
+    requirementsStatus === "IN_PROGRESS"
+  ) {
+    return {
+      eyebrow: "WAITING ON CUSTOMER",
+      title: "Requirements are not complete yet",
+      description:
+        "The customer is still preparing their project brief. No build work is required yet.",
+      tone: styles.focusWaiting,
+    };
+  }
+
+  if (projectStatus === "READY_FOR_HANDOVER") {
+    return {
+      eyebrow: "NEXT STEP",
+      title: "Project is ready for handover",
+      description:
+        "Complete the customer handover and update the delivery status when finished.",
+      tone: styles.focusImportant,
+    };
+  }
+
+  if (projectStatus === "QA_REVIEW") {
+    return {
+      eyebrow: "IN REVIEW",
+      title: "Complete final quality review",
+      description:
+        "Check the project carefully before moving it to ready for handover.",
+      tone: styles.focusActive,
+    };
+  }
+
+  if (
+    projectStatus === "IN_PROGRESS" ||
+    projectStatus === "READY_TO_BUILD" ||
+    projectStatus === "REVIEWING"
+  ) {
+    return {
+      eyebrow: "ACTIVE PROJECT",
+      title: titleCase(projectStatus),
+      description:
+        "This project is actively moving through your build workflow.",
+      tone: styles.focusActive,
+    };
+  }
+
+  if (deliveryStatus === "IN_PROGRESS") {
+    return {
+      eyebrow: "DELIVERY",
+      title: "Handover is in progress",
+      description:
+        "Finish the customer delivery and mark it delivered once everything has been handed over.",
+      tone: styles.focusActive,
+    };
+  }
+
+  if (
+    projectStatus === "COMPLETED" &&
+    deliveryStatus === "DELIVERED"
+  ) {
+    return {
+      eyebrow: "COMPLETE",
+      title: "Project completed and delivered",
+      description:
+        "No action is currently required for this project.",
+      tone: styles.focusComplete,
+    };
+  }
+
+  return {
+    eyebrow: "PROJECT STATUS",
+    title: titleCase(projectStatus),
+    description:
+      "Review the project details and update the workflow when the next milestone is reached.",
+    tone: styles.focusNeutral,
+  };
 }
 
 export default async function AdminProjectRequirementDetailPage({
@@ -132,13 +277,21 @@ export default async function AdminProjectRequirementDetailPage({
   const projectAssetsConfirmed =
     request.requirements?.project_assets_confirmed === true;
 
-  const featureEntries = requirementEntries.filter(
-    ([key]) => key.startsWith("feature_"),
+  const featureEntries = requirementEntries.filter(([key]) =>
+    key.startsWith("feature_"),
   );
 
   const shownTier = displayProjectTier(
     request.product_slug,
     request.product_tier,
+  );
+
+  const deliveryStatus = linkedOrder?.delivery_status || "NOT_STARTED";
+
+  const focus = currentFocus(
+    request.requirements_status,
+    request.project_status,
+    deliveryStatus,
   );
 
   return (
@@ -147,8 +300,10 @@ export default async function AdminProjectRequirementDetailPage({
         <AdminNav active="requirements" email={user.email} />
 
         <section className="store-admin-main">
-          <header className={dashboardStyles.topbar}>
-            <div>
+          <header
+            className={`${dashboardStyles.topbar} ${styles.pageHeader}`}
+          >
+            <div className={styles.headerCopy}>
               <span className="store-admin-eyebrow">PROJECT REQUIREMENTS</span>
               <h1>{request.product_name}</h1>
               <p>
@@ -156,7 +311,9 @@ export default async function AdminProjectRequirementDetailPage({
               </p>
             </div>
 
-            <div className={dashboardStyles.topbarActions}>
+            <div
+              className={`${dashboardStyles.topbarActions} ${styles.headerActions}`}
+            >
               <a
                 className={dashboardStyles.secondaryButton}
                 href="/admin/project-requirements"
@@ -173,18 +330,45 @@ export default async function AdminProjectRequirementDetailPage({
             </div>
           </header>
 
+          <section className={`${styles.focusCard} ${focus.tone}`}>
+            <div>
+              <span>{focus.eyebrow}</span>
+              <h2>{focus.title}</h2>
+              <p>{focus.description}</p>
+            </div>
+
+            <div className={styles.focusArrow}>→</div>
+          </section>
+
           <section className={styles.statusStrip}>
             <div>
               <span>Requirements</span>
-              <strong className={styles.statusPill}>
+              <strong
+                className={`${styles.statusPill} ${statusTone(
+                  request.requirements_status,
+                )}`}
+              >
                 {titleCase(request.requirements_status)}
               </strong>
             </div>
 
             <div>
               <span>Project</span>
-              <strong className={styles.statusPill}>
+              <strong
+                className={`${styles.statusPill} ${statusTone(
+                  request.project_status,
+                )}`}
+              >
                 {titleCase(request.project_status)}
+              </strong>
+            </div>
+
+            <div>
+              <span>Delivery</span>
+              <strong
+                className={`${styles.statusPill} ${statusTone(deliveryStatus)}`}
+              >
+                {titleCase(deliveryStatus)}
               </strong>
             </div>
 
@@ -210,6 +394,9 @@ export default async function AdminProjectRequirementDetailPage({
                   <div>
                     <span>CUSTOMER & ORDER</span>
                     <h2>Project information</h2>
+                    <p>
+                      Customer, purchase, and package details for this project.
+                    </p>
                   </div>
                 </div>
 
@@ -249,12 +436,16 @@ export default async function AdminProjectRequirementDetailPage({
               <section className={styles.section}>
                 <div className={styles.sectionHeader}>
                   <div>
-                    <span>GENERAL REQUIREMENTS</span>
+                    <span>CUSTOMER BRIEF</span>
                     <h2>Business & project details</h2>
                     <p>
-                      Main information submitted by the customer for this
+                      The main information submitted by the customer for this
                       project.
                     </p>
+                  </div>
+
+                  <div className={styles.sectionCount}>
+                    {generalEntries.length}
                   </div>
                 </div>
 
@@ -280,35 +471,39 @@ export default async function AdminProjectRequirementDetailPage({
                     <span>PROJECT FILES & ASSETS</span>
                     <h2>Customer Google Drive folder</h2>
                     <p>
-                      Open the shared folder to review logos, photos, documents,
-                      references, menus, product images, policies, and other
-                      project assets supplied by the customer.
+                      Review the logos, photos, documents, references, menus,
+                      product images, policies, and other project assets supplied
+                      by the customer.
                     </p>
                   </div>
                 </div>
 
-                <div className={styles.answers}>
-                  <div className={styles.answerRow}>
-                    <span>Google Drive folder</span>
+                <div className={styles.assetPanel}>
+                  <div className={styles.assetIcon}>↗</div>
+
+                  <div className={styles.assetCopy}>
+                    <span>GOOGLE DRIVE FOLDER</span>
+                    <strong>
+                      {projectAssetsDriveLink
+                        ? "Project assets available"
+                        : "No folder provided"}
+                    </strong>
                     <p>
-                      {projectAssetsDriveLink ? (
-                        <a
-                          href={projectAssetsDriveLink}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open Google Drive Folder →
-                        </a>
-                      ) : (
-                        "Not provided"
-                      )}
+                      Customer confirmed file access & naming:{" "}
+                      <b>{projectAssetsConfirmed ? "Yes" : "No"}</b>
                     </p>
                   </div>
 
-                  <div className={styles.answerRow}>
-                    <span>Customer confirmed file access & naming</span>
-                    <p>{projectAssetsConfirmed ? "Yes" : "No"}</p>
-                  </div>
+                  {projectAssetsDriveLink ? (
+                    <a
+                      className={styles.assetButton}
+                      href={projectAssetsDriveLink}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open Folder →
+                    </a>
+                  ) : null}
                 </div>
               </section>
 
@@ -321,6 +516,10 @@ export default async function AdminProjectRequirementDetailPage({
                       Expand a feature to review the customer&apos;s workflow
                       details.
                     </p>
+                  </div>
+
+                  <div className={styles.sectionCount}>
+                    {featureEntries.length}
                   </div>
                 </div>
 
@@ -361,17 +560,18 @@ export default async function AdminProjectRequirementDetailPage({
                 id={request.id}
                 requirementsStatus={request.requirements_status}
                 projectStatus={request.project_status}
-                deliveryStatus={linkedOrder?.delivery_status || "NOT_STARTED"}
+                deliveryStatus={deliveryStatus}
                 adminNotes={request.admin_notes || ""}
                 customerUpdateNote={request.customer_update_note || ""}
               />
 
               <section className={styles.linkCard}>
-                <span>SECURE PROJECT LINK</span>
-                <strong>Customer requirements form</strong>
+                <div className={styles.linkIcon}>↗</div>
+                <span>CUSTOMER ACCESS</span>
+                <strong>Secure requirements form</strong>
                 <p>
-                  Reopen the customer&apos;s secure form when they need to
-                  update their answers.
+                  Open the customer&apos;s secure form to view the same page they
+                  use for updates and resubmissions.
                 </p>
 
                 <a
@@ -385,14 +585,14 @@ export default async function AdminProjectRequirementDetailPage({
 
               <section className={styles.activityCard}>
                 <div className={styles.activityHeader}>
-                  <span>ACTIVITY</span>
-                  <h2>Project timeline</h2>
+                  <span>PROJECT ACTIVITY</span>
+                  <h2>Timeline</h2>
                   <p>Important milestones for this project.</p>
                 </div>
 
                 <div className={styles.timeline}>
                   <div className={styles.timelineItem}>
-                    <i />
+                    <i className={request.created_at ? styles.doneDot : ""} />
                     <div>
                       <span>Requirements created</span>
                       <strong>{formatDate(request.created_at)}</strong>
@@ -400,7 +600,9 @@ export default async function AdminProjectRequirementDetailPage({
                   </div>
 
                   <div className={styles.timelineItem}>
-                    <i />
+                    <i
+                      className={request.first_opened_at ? styles.doneDot : ""}
+                    />
                     <div>
                       <span>Customer first opened form</span>
                       <strong>{formatDate(request.first_opened_at)}</strong>
@@ -408,7 +610,9 @@ export default async function AdminProjectRequirementDetailPage({
                   </div>
 
                   <div className={styles.timelineItem}>
-                    <i />
+                    <i
+                      className={request.submitted_at ? styles.doneDot : ""}
+                    />
                     <div>
                       <span>Requirements submitted</span>
                       <strong>{formatDate(request.submitted_at)}</strong>
@@ -416,7 +620,9 @@ export default async function AdminProjectRequirementDetailPage({
                   </div>
 
                   <div className={styles.timelineItem}>
-                    <i />
+                    <i
+                      className={request.approved_at ? styles.doneDot : ""}
+                    />
                     <div>
                       <span>Requirements approved</span>
                       <strong>{formatDate(request.approved_at)}</strong>
@@ -424,10 +630,22 @@ export default async function AdminProjectRequirementDetailPage({
                   </div>
 
                   <div className={styles.timelineItem}>
-                    <i />
+                    <i
+                      className={request.completed_at ? styles.doneDot : ""}
+                    />
                     <div>
                       <span>Project completed</span>
                       <strong>{formatDate(request.completed_at)}</strong>
+                    </div>
+                  </div>
+
+                  <div className={styles.timelineItem}>
+                    <i
+                      className={linkedOrder?.delivered_at ? styles.doneDot : ""}
+                    />
+                    <div>
+                      <span>Delivered to customer</span>
+                      <strong>{formatDate(linkedOrder?.delivered_at || null)}</strong>
                     </div>
                   </div>
                 </div>

@@ -219,9 +219,8 @@ export async function POST(request: Request) {
             },
             line_items: lineItems,
             payment_method_types: [
-              "card",
-              "gcash",
-              "paymaya",
+              "qrph",
+            
             ],
             success_url: successUrl,
             cancel_url: cancelUrl,

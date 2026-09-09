@@ -78,7 +78,7 @@ export default async function AdminDashboardPage() {
     adminSupabase
       .from("orders")
       .select(
-        "id,customer_email,total_amount,payment_status,delivery_status,refund_status,refunded_amount",
+        "id,customer_email,product_id,total_amount,payment_status,order_status,delivery_status,refund_status,refunded_amount,download_access_expires_at",
       ),
 
     adminSupabase
@@ -91,7 +91,7 @@ export default async function AdminDashboardPage() {
 
     adminSupabase
       .from("products")
-      .select("id,is_active"),
+      .select("id,is_active,product_type,delivery_method"),
 
     adminSupabase
       .from("delivery_requests")
@@ -103,7 +103,7 @@ export default async function AdminDashboardPage() {
 
     adminSupabase
       .from("project_requirements")
-      .select("id,requirements_status,project_status"),
+      .select("id,order_id,requirements_status,project_status"),
   ]);
 
   if (ordersResult.error) {
@@ -183,6 +183,79 @@ export default async function AdminDashboardPage() {
       item.project_status === "REVIEWING",
   ).length;
 
+  const orderMap = new Map(orders.map((order) => [order.id, order]));
+  const productMap = new Map(products.map((product) => [product.id, product]));
+
+  const paidOrdersToReview = orders.filter(
+    (order) =>
+      order.payment_status === "COMPLETED" &&
+      order.order_status !== "CANCELLED" &&
+      (order.delivery_status === "NOT_STARTED" ||
+        order.delivery_status === "PENDING" ||
+        !order.delivery_status),
+  ).length;
+
+  const submittedRequirements = projectRequirements.filter(
+    (item) =>
+      item.requirements_status === "SUBMITTED" ||
+      item.requirements_status === "RESUBMITTED",
+  ).length;
+
+  const needsMoreInfo = projectRequirements.filter(
+    (item) => item.requirements_status === "NEED_MORE_INFO",
+  ).length;
+
+  const projectsInProgress = projectRequirements.filter(
+    (item) =>
+      item.project_status === "IN_PROGRESS" ||
+      item.project_status === "REVIEWING",
+  ).length;
+
+  const readyForDelivery = projectRequirements.filter((item) => {
+    if (item.project_status !== "COMPLETED") return false;
+    const linkedOrder = orderMap.get(item.order_id);
+    return Boolean(
+      linkedOrder &&
+        linkedOrder.order_status !== "CANCELLED" &&
+        linkedOrder.delivery_status !== "DELIVERED",
+    );
+  }).length;
+
+  const now = Date.now();
+  const digitalAccessIssues = orders.filter((order) => {
+    if (order.payment_status !== "COMPLETED" || order.order_status === "CANCELLED") {
+      return false;
+    }
+
+    const product = order.product_id ? productMap.get(order.product_id) : null;
+    const productType = (product?.product_type || "").toUpperCase();
+    const deliveryMethod = (product?.delivery_method || "").toUpperCase();
+    const isDigital =
+      productType === "DIGITAL" ||
+      productType === "DIGITAL_PRODUCT" ||
+      deliveryMethod.includes("DOWNLOAD");
+
+    if (!isDigital) return false;
+    if (!order.download_access_expires_at) return true;
+
+    return new Date(order.download_access_expires_at).getTime() <= now;
+  }).length;
+
+  const refundOrCancellationCount = orders.filter(
+    (order) =>
+      order.order_status === "CANCELLED" ||
+      order.refund_status === "PARTIALLY_REFUNDED" ||
+      order.refund_status === "REFUNDED" ||
+      Number(order.refunded_amount ?? 0) > 0,
+  ).length;
+
+  const attentionTotal =
+    paidOrdersToReview +
+    submittedRequirements +
+    needsMoreInfo +
+    readyForDelivery +
+    digitalAccessIssues;
+
   void completedOrders;
 
   return (
@@ -191,308 +264,205 @@ export default async function AdminDashboardPage() {
         <AdminNav active="dashboard" email={user.email} />
 
         <section className="store-admin-main">
-          <header className={styles.topbar}>
-            <div>
-              <span className="store-admin-eyebrow">
-                STORE OVERVIEW
-              </span>
-
-              <h1>Dashboard</h1>
-
+          <header className={styles.heroHeader}>
+            <div className={styles.heroCopy}>
+              <span className="store-admin-eyebrow">STORE OVERVIEW</span>
+              <h1>Your business, at a glance.</h1>
               <p>
-                Track sales, orders, customers, products, fulfillment,
-                quotation requests, and project requirements.
+                Keep an eye on sales, customer activity, project work, and the
+                items that need your attention today.
               </p>
             </div>
 
-            <div className={styles.topbarActions}>
+            <div className={styles.heroActions}>
               <a className={styles.primaryButton} href="/admin/orders/new">
                 + Add Order
               </a>
-
               <a className={styles.secondaryButton} href="/">
                 View Store
               </a>
             </div>
           </header>
 
-          <section className={styles.stats}>
-            <article className={styles.statCard}>
-              <div className={styles.statTop}>
-                <span>REVENUE</span>
+          <section className={styles.overviewBoard}>
+            <article className={`${styles.metricCard} ${styles.revenueCard}`}>
+              <div className={styles.metricLabel}>
+                <span>NET REVENUE</span>
                 <i>₱</i>
               </div>
-
-              <strong className={styles.moneyStat}>
-                {formatMoney(totalRevenue)}
-              </strong>
-
-              <small>
-                Net collected revenue after recorded refunds
-              </small>
+              <strong className={styles.revenueValue}>{formatMoney(totalRevenue)}</strong>
+              <small>After recorded refunds</small>
             </article>
 
-            <article className={styles.statCard}>
-              <div className={styles.statTop}>
+            <article className={styles.metricCard}>
+              <div className={styles.metricLabel}>
                 <span>ORDERS</span>
                 <i>▣</i>
               </div>
-
               <strong>{orders.length}</strong>
-
-              <small>
-                {pendingOrders} currently pending
-              </small>
+              <small>{pendingOrders} payment{pendingOrders === 1 ? "" : "s"} pending</small>
             </article>
 
-            <article className={styles.statCard}>
-              <div className={styles.statTop}>
+            <article className={styles.metricCard}>
+              <div className={styles.metricLabel}>
                 <span>CUSTOMERS</span>
                 <i>♡</i>
               </div>
-
               <strong>{uniqueCustomers}</strong>
-
-              <small>
-                Unique customer emails
-              </small>
+              <small>Unique customer emails</small>
             </article>
 
-            <article className={styles.statCard}>
-              <div className={styles.statTop}>
-                <span>PRODUCTS</span>
+            <article className={styles.metricCard}>
+              <div className={styles.metricLabel}>
+                <span>ACTIVE PRODUCTS</span>
                 <i>◇</i>
               </div>
-
               <strong>{activeProducts}</strong>
-
-              <small>
-                {products.length} total{" "}
-                {products.length === 1 ? "product" : "products"}
-              </small>
+              <small>{products.length} total product{products.length === 1 ? "" : "s"}</small>
             </article>
           </section>
 
-          <section
-            className={`${styles.deliveryCard} ${styles.mobilePendingDelivery}`}
-          >
-            <div>
-              <span>PENDING DELIVERY</span>
+          <section className={styles.workspaceGrid}>
+            <section className={styles.attentionPanel}>
+              <div className={styles.sectionHeading}>
+                <div>
+                  <span>NEEDS ATTENTION</span>
+                  <h2>What needs you right now</h2>
+                  <p>Only the items that may need a review, update, or next step.</p>
+                </div>
+                <div className={styles.attentionBubble}>
+                  <strong>{attentionTotal}</strong>
+                  <span>active</span>
+                </div>
+              </div>
 
-              <strong>{pendingDeliveries}</strong>
+              <div className={styles.attentionList}>
+                <a className={styles.attentionRow} href="/admin/orders">
+                  <div className={styles.rowIcon}>₱</div>
+                  <div className={styles.rowCopy}>
+                    <strong>Paid orders to review</strong>
+                    <span>Completed payments waiting for fulfillment progress.</span>
+                  </div>
+                  <b>{paidOrdersToReview}</b>
+                  <i>→</i>
+                </a>
 
-              <p>
-                Delivery requests that still need attention.
-              </p>
-            </div>
+                <a className={styles.attentionRow} href="/admin/project-requirements">
+                  <div className={styles.rowIcon}>✓</div>
+                  <div className={styles.rowCopy}>
+                    <strong>Requirements submitted</strong>
+                    <span>New or resubmitted requirements ready for review.</span>
+                  </div>
+                  <b>{submittedRequirements}</b>
+                  <i>→</i>
+                </a>
 
-            <a href="/admin/deliveries">
-              Open Deliveries →
-            </a>
-          </section>
+                <a className={styles.attentionRow} href="/admin/project-requirements">
+                  <div className={styles.rowIcon}>?</div>
+                  <div className={styles.rowCopy}>
+                    <strong>Needs more info</strong>
+                    <span>Projects currently waiting on customer details.</span>
+                  </div>
+                  <b>{needsMoreInfo}</b>
+                  <i>→</i>
+                </a>
 
-          <section className={styles.dashboardGrid}>
-            <section className={styles.ordersPanel}>
-              <div className={styles.panelHeader}>
+                <a className={styles.attentionRow} href="/admin/project-requirements">
+                  <div className={styles.rowIcon}>◈</div>
+                  <div className={styles.rowCopy}>
+                    <strong>Projects in progress</strong>
+                    <span>Customized projects being reviewed or built.</span>
+                  </div>
+                  <b>{projectsInProgress}</b>
+                  <i>→</i>
+                </a>
+
+                <a className={styles.attentionRow} href="/admin/project-requirements">
+                  <div className={styles.rowIcon}>→</div>
+                  <div className={styles.rowCopy}>
+                    <strong>Ready for delivery</strong>
+                    <span>Completed projects not yet marked delivered.</span>
+                  </div>
+                  <b>{readyForDelivery}</b>
+                  <i>→</i>
+                </a>
+
+                <a className={styles.attentionRow} href="/admin/orders">
+                  <div className={styles.rowIcon}>↓</div>
+                  <div className={styles.rowCopy}>
+                    <strong>Digital access issues</strong>
+                    <span>Paid digital orders with missing or expired access.</span>
+                  </div>
+                  <b>{digitalAccessIssues}</b>
+                  <i>→</i>
+                </a>
+
+                <a className={`${styles.attentionRow} ${styles.exceptionRow}`} href="/admin/orders">
+                  <div className={styles.rowIcon}>!</div>
+                  <div className={styles.rowCopy}>
+                    <strong>Refunds / cancellations</strong>
+                    <span>Orders with a cancellation or recorded refund.</span>
+                  </div>
+                  <b>{refundOrCancellationCount}</b>
+                  <i>→</i>
+                </a>
+              </div>
+            </section>
+
+            <section className={styles.activityPanel}>
+              <div className={styles.sectionHeading}>
                 <div>
                   <span>RECENT ACTIVITY</span>
-                  <h2>Recent orders</h2>
-                  <p>Latest website and manual transactions.</p>
+                  <h2>Latest orders</h2>
+                  <p>Your newest website and manual transactions.</p>
                 </div>
-
-                <a href="/admin/orders">
-                  View all orders →
-                </a>
+                <a className={styles.textLink} href="/admin/orders">View all →</a>
               </div>
 
               {recentOrders.length > 0 ? (
-                <div className={styles.transactions}>
+                <div className={styles.orderList}>
                   {recentOrders.map((order) => (
-                    <a
-                      key={order.id}
-                      href={`/admin/orders/${order.id}`}
-                      className={styles.transactionCard}
-                    >
-                      <div className={styles.transactionTop}>
-                        <div className={styles.customerBlock}>
-                          <div className={styles.avatar}>
-                            {order.customer_name
-                              ?.charAt(0)
-                              .toUpperCase() || "C"}
-                          </div>
-
-                          <div className={styles.customerText}>
-                            <strong>{order.customer_name || "Customer"}</strong>
-                            <span>{order.customer_email}</span>
-                          </div>
-                        </div>
-
-                        <span
-                          className={`${styles.status} ${
-                            order.payment_status === "COMPLETED"
-                              ? styles.completed
-                              : order.payment_status === "PENDING"
-                                ? styles.pending
-                                : styles.muted
-                          }`}
-                        >
-                          {order.payment_status}
-                        </span>
+                    <a key={order.id} href={`/admin/orders/${order.id}`} className={styles.orderRow}>
+                      <div className={styles.orderAvatar}>
+                        {order.customer_name?.charAt(0).toUpperCase() || "C"}
                       </div>
 
-                      <div className={styles.transactionMiddle}>
-                        <div className={styles.productBlock}>
-                          <span>PRODUCT</span>
-                          <strong>{order.product_name}</strong>
-                        </div>
-
-                        <div className={styles.amountBlock}>
-                          <span>AMOUNT</span>
-                          <strong>
-                            {formatMoney(
-                              Number(order.total_amount ?? 0),
-                            )}
-                          </strong>
-                        </div>
+                      <div className={styles.orderIdentity}>
+                        <strong>{order.customer_name || "Customer"}</strong>
+                        <span>{order.product_name}</span>
+                        <small>{order.order_number}</small>
                       </div>
 
-                      <div className={styles.transactionBottom}>
-                        <div>
-                          <span className={styles.metaLabel}>ORDER</span>
-                          <strong>{order.order_number}</strong>
-                        </div>
-
-                        <div>
-                          <span className={styles.metaLabel}>SOURCE</span>
-                          <strong>{sourceLabel(order.order_source)}</strong>
-                        </div>
-
-                        <div>
-                          <span className={styles.metaLabel}>PAYMENT</span>
-                          <strong>{providerLabel(order.payment_provider)}</strong>
-                        </div>
-
-                        <div>
-                          <span className={styles.metaLabel}>DATE</span>
-                          <strong>{formatDate(order.created_at)}</strong>
-                        </div>
+                      <div className={styles.orderMeta}>
+                        <span>{sourceLabel(order.order_source)}</span>
+                        <small>{formatDate(order.created_at)}</small>
                       </div>
+
+                      <div className={styles.orderPayment}>
+                        <strong>{formatMoney(Number(order.total_amount ?? 0))}</strong>
+                        <small>{providerLabel(order.payment_provider)}</small>
+                      </div>
+
+                      <span className={`${styles.status} ${
+                        order.payment_status === "COMPLETED"
+                          ? styles.completed
+                          : order.payment_status === "PENDING"
+                            ? styles.pending
+                            : styles.muted
+                      }`}>
+                        {order.payment_status}
+                      </span>
                     </a>
                   ))}
                 </div>
               ) : (
-                <div className={styles.empty}>
+                <div className={styles.emptyState}>
                   <div>▣</div>
                   <strong>No orders yet</strong>
-                  <p>
-                    New customer orders will appear here.
-                  </p>
+                  <p>New customer orders will appear here.</p>
                 </div>
               )}
             </section>
-
-            <aside className={styles.sideColumn}>
-              <section
-                className={`${styles.quickCard} ${styles.mobileQuickActions}`}
-              >
-                <span>QUICK ACTIONS</span>
-                <h2>Manage your store</h2>
-
-                <div className={styles.quickLinks}>
-                  <a href="/admin/orders/new">
-                    <i>＋</i>
-                    <div>
-                      <strong>Add order</strong>
-                      <small>
-                        Log an off-platform or manual sale.
-                      </small>
-                    </div>
-                    <b>→</b>
-                  </a>
-
-                  <a href="/admin/products/new">
-                    <i>◇</i>
-                    <div>
-                      <strong>Add product</strong>
-                      <small>
-                        Create a new digital product.
-                      </small>
-                    </div>
-                    <b>→</b>
-                  </a>
-
-                  <a href="/admin/products">
-                    <i>✎</i>
-                    <div>
-                      <strong>Manage products</strong>
-                      <small>
-                        Edit pricing, files, and visibility.
-                      </small>
-                    </div>
-                    <b>→</b>
-                  </a>
-
-                  <a href="/admin/quotation-requests">
-                    <i>♡</i>
-                    <div>
-                      <strong>Quotation requests</strong>
-                      <small>
-                        {pendingQuotations}{" "}
-                        {pendingQuotations === 1
-                          ? "request needs"
-                          : "requests need"}{" "}
-                        review.
-                      </small>
-                    </div>
-                    <b>→</b>
-                  </a>
-
-                  <a href="/admin/project-requirements">
-                    <i>◈</i>
-                    <div>
-                      <strong>Project requirements</strong>
-                      <small>
-                        {pendingProjectRequirements}{" "}
-                        {pendingProjectRequirements === 1
-                          ? "project needs"
-                          : "projects need"}{" "}
-                        attention.
-                      </small>
-                    </div>
-                    <b>→</b>
-                  </a>
-
-                  <a href="/admin/orders">
-                    <i>▣</i>
-                    <div>
-                      <strong>View all orders</strong>
-                      <small>
-                        Review payments and fulfillment.
-                      </small>
-                    </div>
-                    <b>→</b>
-                  </a>
-                </div>
-              </section>
-
-              <section
-                className={`${styles.deliveryCard} ${styles.desktopPendingDelivery}`}
-              >
-                <div>
-                  <span>PENDING DELIVERY</span>
-
-                  <strong>{pendingDeliveries}</strong>
-
-                  <p>
-                    Delivery requests that still need attention.
-                  </p>
-                </div>
-
-                <a href="/admin/deliveries">
-                  Open Deliveries →
-                </a>
-              </section>
-            </aside>
           </section>
         </section>
       </div>

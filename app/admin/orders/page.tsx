@@ -182,107 +182,81 @@ export default async function AdminOrdersPage({
             <div>
               <span className="store-admin-eyebrow">SALES &amp; PAYMENTS</span>
               <h1>Orders</h1>
-              <p>Review website purchases and manually logged sales.</p>
+              <p>
+                Review website purchases, manual sales, payments, and delivery
+                status.
+              </p>
             </div>
 
             <div className={styles.mobileTopActions}>
-              <a className={styles.backButton} href="/admin/orders/new">
+              <a className={styles.primaryButton} href="/admin/orders/new">
                 + Add Order
               </a>
               <a className={styles.backButton} href="/admin">
-                ← Dashboard
+                Dashboard
               </a>
             </div>
           </header>
 
           <section className={styles.summaryGrid}>
             <article>
-              <span>TOTAL ORDERS</span>
+              <div className={styles.summaryTop}>
+                <span>TOTAL ORDERS</span>
+                <i>▣</i>
+              </div>
               <strong>{allOrders.length}</strong>
-              <small>All recorded orders</small>
+              <small>All recorded transactions</small>
             </article>
+
             <article>
-              <span>COMPLETED</span>
+              <div className={styles.summaryTop}>
+                <span>COMPLETED</span>
+                <i>✓</i>
+              </div>
               <strong>{completed.length}</strong>
               <small>Verified / logged payments</small>
             </article>
+
             <article>
-              <span>PENDING</span>
+              <div className={styles.summaryTop}>
+                <span>PENDING</span>
+                <i>◷</i>
+              </div>
               <strong>{pending}</strong>
               <small>Waiting for confirmation</small>
             </article>
+
             <article>
-              <span>REVENUE</span>
+              <div className={styles.summaryTop}>
+                <span>REVENUE</span>
+                <i>₱</i>
+              </div>
               <strong>{formatMoney(revenue)}</strong>
               <small>Completed orders only</small>
             </article>
           </section>
 
           {query.delivery_saved === "1" ? (
-            <div
-              role="status"
-              style={{
-                margin: "0 0 16px",
-                padding: "12px 14px",
-                border: "1px solid rgba(128, 75, 94, 0.18)",
-                borderRadius: "12px",
-                background: "rgba(255, 247, 250, 0.9)",
-                fontSize: "13px",
-                fontWeight: 700,
-              }}
-            >
+            <div className={`${styles.notice} ${styles.noticeSuccess}`} role="status">
               Delivery status updated.
             </div>
           ) : null}
 
           {query.delivery_error ? (
-            <div
-              role="alert"
-              style={{
-                margin: "0 0 16px",
-                padding: "12px 14px",
-                border: "1px solid rgba(153, 52, 52, 0.2)",
-                borderRadius: "12px",
-                background: "rgba(255, 245, 245, 0.95)",
-                fontSize: "13px",
-                fontWeight: 700,
-              }}
-            >
+            <div className={`${styles.notice} ${styles.noticeError}`} role="alert">
               Delivery status could not be updated. Please try again.
             </div>
           ) : null}
 
           {query.bulk_deleted ? (
-            <div
-              role="status"
-              style={{
-                margin: "0 0 16px",
-                padding: "12px 14px",
-                border: "1px solid rgba(128, 75, 94, 0.18)",
-                borderRadius: "12px",
-                background: "rgba(255, 247, 250, 0.9)",
-                fontSize: "13px",
-                fontWeight: 700,
-              }}
-            >
+            <div className={`${styles.notice} ${styles.noticeSuccess}`} role="status">
               {query.bulk_deleted} selected order
               {query.bulk_deleted === "1" ? "" : "s"} deleted permanently.
             </div>
           ) : null}
 
           {query.bulk_delete_error ? (
-            <div
-              role="alert"
-              style={{
-                margin: "0 0 16px",
-                padding: "12px 14px",
-                border: "1px solid rgba(153, 52, 52, 0.2)",
-                borderRadius: "12px",
-                background: "rgba(255, 245, 245, 0.95)",
-                fontSize: "13px",
-                fontWeight: 700,
-              }}
-            >
+            <div className={`${styles.notice} ${styles.noticeError}`} role="alert">
               Selected orders could not be deleted. Please try again.
             </div>
           ) : null}
@@ -292,7 +266,11 @@ export default async function AdminOrdersPage({
               <div>
                 <span>ORDER HISTORY</span>
                 <h2>All orders</h2>
+                <p>
+                  Search, filter, review payment details, and open individual orders.
+                </p>
               </div>
+
               <small>
                 Showing {totalFilteredOrders === 0 ? 0 : from + 1}–
                 {Math.min(to + 1, totalFilteredOrders)} of {totalFilteredOrders}
@@ -342,13 +320,15 @@ export default async function AdminOrdersPage({
                 <option value="ETSY">Etsy</option>
               </select>
 
-              <button type="submit">Filter</button>
+              <button type="submit">Apply</button>
               <a href="/admin/orders">Reset</a>
             </form>
 
             {orders.length > 0 ? (
               <>
-                <BulkOrderActions returnTo={currentListUrl} />
+                <div className={styles.bulkActionsWrap}>
+                  <BulkOrderActions returnTo={currentListUrl} />
+                </div>
 
                 <div className={styles.tableWrap}>
                   <table className={styles.ordersTable}>
@@ -356,7 +336,7 @@ export default async function AdminOrdersPage({
                       <tr>
                         <th
                           aria-label="Select orders"
-                          style={{ width: "44px", textAlign: "center" }}
+                          className={styles.selectHead}
                         >
                           Select
                         </th>
@@ -374,7 +354,7 @@ export default async function AdminOrdersPage({
                     <tbody>
                       {orders.map((order: OrderRow) => (
                         <tr key={order.id}>
-                          <td style={{ textAlign: "center" }}>
+                          <td className={styles.selectCell}>
                             <input
                               type="checkbox"
                               name="order_ids"
@@ -382,11 +362,6 @@ export default async function AdminOrdersPage({
                               form="bulk-delete-orders-form"
                               data-order-select="true"
                               aria-label={`Select order ${order.order_number}`}
-                              style={{
-                                width: "16px",
-                                height: "16px",
-                                cursor: "pointer",
-                              }}
                             />
                           </td>
 
@@ -428,7 +403,10 @@ export default async function AdminOrdersPage({
                                     ? styles.completed
                                     : order.payment_status === "PENDING"
                                       ? styles.pending
-                                      : styles.muted
+                                      : order.payment_status === "CANCELLED" ||
+                                          order.payment_status === "FAILED"
+                                        ? styles.failed
+                                        : styles.muted
                                 }`}
                               >
                                 {order.payment_status}
@@ -466,12 +444,12 @@ export default async function AdminOrdersPage({
                             </div>
                           </td>
 
-                          <td>
+                          <td className={styles.actionCell}>
                             <a
                               className={styles.detailsButton}
                               href={`/admin/orders/${order.id}`}
                             >
-                              View
+                              Open →
                             </a>
                           </td>
                         </tr>
