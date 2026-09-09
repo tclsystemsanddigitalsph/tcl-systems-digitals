@@ -14,6 +14,75 @@ export default async function QuotePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  /*
+   * The custom-business-website quotation page must always be available.
+   * It is a permanent custom-service entry point used by the homepage,
+   * product page, and site header.
+   *
+   * We still try to load the catalog record so the displayed name/category
+   * stay synced with Admin when the product exists.
+   */
+  if (slug === "custom-business-website") {
+    const catalogProduct = await getCatalogProduct(slug);
+
+    const productName =
+      catalogProduct?.name?.trim() || "Custom Business Website";
+    const productCategory =
+      catalogProduct?.category?.trim() || "Websites";
+
+    return (
+      <>
+        <SiteHeader />
+
+        <main className={styles.page}>
+          <section className={styles.hero}>
+            <div className={`container ${styles.heroInner}`}>
+              <div>
+                <span className="section-kicker">Request a Quotation</span>
+                <h1>Tell us what your business needs.</h1>
+                <p>
+                  Answer the questions below so TCL can understand your setup,
+                  required features, and project scope before preparing a quote.
+                </p>
+              </div>
+
+              <aside className={styles.productCard}>
+                <small>Selected service</small>
+                <strong>{productName}</strong>
+                <span>{productCategory}</span>
+                <b>For Quotation</b>
+              </aside>
+            </div>
+          </section>
+
+          <section className={styles.formSection}>
+            <div className="container">
+              <div className={styles.topline}>
+                <Link
+                  href="/shop/custom-business-website"
+                  className={styles.back}
+                >
+                  ← Back to Product
+                </Link>
+
+                <span>Usually takes only a few minutes to complete.</span>
+              </div>
+
+              <QuoteForm
+                productName={productName}
+                productSlug="custom-business-website"
+                category={productCategory}
+              />
+            </div>
+          </section>
+        </main>
+
+        <SiteFooter />
+      </>
+    );
+  }
+
   const product = await getCatalogProduct(slug);
 
   if (!product) {
