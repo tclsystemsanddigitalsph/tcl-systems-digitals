@@ -6,7 +6,24 @@ const links = [
   { href: "/admin", label: "Dashboard", icon: "⌂", key: "dashboard" },
   { href: "/admin/products", label: "Products", icon: "◇", key: "products" },
   { href: "/admin/orders", label: "Orders", icon: "▣", key: "orders" },
-  { href: "/admin/deliveries", label: "Deliveries", icon: "↗", key: "deliveries" },
+  {
+    href: "/admin/quotation-requests",
+    label: "Quotations",
+    icon: "✦",
+    key: "quotations",
+  },
+  {
+    href: "/admin/project-requirements",
+    label: "Project Requirements",
+    icon: "◈",
+    key: "requirements",
+  },
+  {
+    href: "/admin/deliveries",
+    label: "Deliveries",
+    icon: "↗",
+    key: "deliveries",
+  },
   { href: "/admin/customers", label: "Customers", icon: "♡", key: "customers" },
   { href: "/admin/reviews", label: "Reviews", icon: "☆", key: "reviews" },
   { href: "/admin/settings", label: "Settings", icon: "⚙", key: "settings" },
@@ -33,27 +50,45 @@ export default function AdminNav({
       <aside className={`store-admin-sidebar ${styles.desktopNav}`}>
         <div className="store-admin-sidebar-brand">
           <div className="store-admin-sidebar-logo">TCL</div>
-          <div><strong>TCL Systems</strong><span>&amp; Digitals PH</span></div>
+          <div>
+            <strong>TCL Systems</strong>
+            <span>&amp; Digitals PH</span>
+          </div>
         </div>
 
         <div className="store-admin-sidebar-label">STORE ADMIN</div>
 
         <nav className="store-admin-nav">
           {links.map((item) => (
-            <a className={item.key === active ? "active" : undefined} href={item.href} key={item.key}>
-              <span>{item.icon}</span>{item.label}
+            <a
+              className={item.key === active ? "active" : undefined}
+              href={item.href}
+              key={item.key}
+            >
+              <span>{item.icon}</span>
+              {item.label}
             </a>
           ))}
         </nav>
 
         <div className="store-admin-sidebar-bottom">
-          <a href="/"><span>←</span>View Store</a>
+          <a href="/">
+            <span>←</span>
+            View Store
+          </a>
+
           <form action={signOut}>
-            <button className={styles.desktopSignOut} type="submit">Sign Out</button>
+            <button className={styles.desktopSignOut} type="submit">
+              Sign Out
+            </button>
           </form>
+
           <div className="store-admin-user">
             <div>{email?.charAt(0).toUpperCase() || "T"}</div>
-            <span><small>Signed in as</small><strong>{email}</strong></span>
+            <span>
+              <small>Signed in as</small>
+              <strong>{email}</strong>
+            </span>
           </div>
         </div>
       </aside>
@@ -63,16 +98,27 @@ export default function AdminNav({
           <summary>
             <span className={styles.mobileBrand}>
               <b>TCL</b>
-              <span><strong>TCL Admin</strong><small>{current.label}</small></span>
+              <span>
+                <strong>TCL Admin</strong>
+                <small>{current.label}</small>
+              </span>
             </span>
-            <span className={styles.menuButton}>Menu <b>⌄</b></span>
+
+            <span className={styles.menuButton}>
+              Menu <b>⌄</b>
+            </span>
           </summary>
 
           <div className={styles.menuPanel}>
             <nav>
               {links.map((item) => (
-                <a className={item.key === active ? styles.active : undefined} href={item.href} key={item.key}>
-                  <span>{item.icon}</span><strong>{item.label}</strong>
+                <a
+                  className={item.key === active ? styles.active : undefined}
+                  href={item.href}
+                  key={item.key}
+                >
+                  <span>{item.icon}</span>
+                  <strong>{item.label}</strong>
                   {item.key === active ? <small>Current</small> : null}
                 </a>
               ))}
@@ -80,8 +126,11 @@ export default function AdminNav({
 
             <div className={styles.mobileFooter}>
               <a href="/">← View Store</a>
-              <form action={signOut}><button type="submit">Sign Out</button></form>
+              <form action={signOut}>
+                <button type="submit">Sign Out</button>
+              </form>
             </div>
+
             <small className={styles.email}>{email}</small>
           </div>
         </details>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { capturePayPalOrder } from "@/lib/paypal";
+import { ensureProjectRequirementsForPaidOrder } from "@/lib/project-requirements";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,26 @@ function captureDetails(payload: unknown) {
     currency: capture?.amount?.currency_code ?? null,
     amount: Number(capture?.amount?.value ?? Number.NaN),
   };
+}
+
+function successUrl(origin: string, receipt: string) {
+  const url = new URL("/checkout/success", origin);
+  url.searchParams.set("receipt", receipt);
+  return url;
+}
+
+async function prepareProjectRequirements(orderId: string) {
+  try {
+    await ensureProjectRequirementsForPaidOrder(orderId);
+  } catch (error) {
+    // Payment must remain successful even if the project-requirements
+    // preparation encounters a temporary database/configuration issue.
+    // The normal success page will try the helper again.
+    console.error(
+      "Unable to prepare project requirements after custom checkout:",
+      error,
+    );
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -65,8 +86,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (order.payment_status === "COMPLETED") {
+      await prepareProjectRequirements(order.id);
+
       return NextResponse.redirect(
-        new URL(`/checkout/custom/${receipt}?paid=1`, origin),
+        successUrl(origin, receipt),
         303,
       );
     }
@@ -87,6 +110,7 @@ export async function GET(request: NextRequest) {
 
     if (!order.paypal_order_id || order.paypal_order_id !== paypalOrderId) {
       console.error("Custom checkout PayPal order mismatch.");
+
       return NextResponse.redirect(
         new URL(`/checkout/custom/${receipt}?error=1`, origin),
         303,
@@ -146,8 +170,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    await prepareProjectRequirements(completedOrder.id);
+
     return NextResponse.redirect(
-      new URL(`/checkout/custom/${receipt}?paid=1`, origin),
+      successUrl(origin, receipt),
       303,
     );
   } catch (error) {

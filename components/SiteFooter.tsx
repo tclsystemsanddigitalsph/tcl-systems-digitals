@@ -38,10 +38,11 @@ export default function SiteFooter() {
 
           <Link href="/shop">Shop</Link>
           <Link href="/#categories">Categories</Link>
+          <Link href="/order-status">Check Order Status</Link>
           <Link href="/#about">About Me</Link>
           <Link href="/#reviews">Reviews</Link>
-          <Link href="/#how-it-works">How It Works</Link>
-          <Link href="/#faq">FAQ</Link>
+          <Link href="/how-it-works">How It Works</Link>
+          <Link href="/faqs">FAQ</Link>
         </div>
 
         <div className="footer-column">
@@ -56,43 +57,37 @@ export default function SiteFooter() {
           <Link href="/shop">Business Resources</Link>
         </div>
 
+        <div className="footer-column">
+          <strong>Connect</strong>
 
+          <a
+            href="https://t.me/tclsystemsanddigitalsph"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Telegram
+          </a>
 
-         <div className="footer-column">
-  <strong>Connect</strong>
+          <a href="mailto:tclsystemsanddigitalsph@gmail.com">
+            Email Us
+          </a>
 
-  <a
-    href="https://t.me/tclsystemsanddigitalsph"
-    target="_blank"
-    rel="noreferrer"
-  >
-    Telegram
-  </a>
+          <a
+            href="https://www.facebook.com/tclsystemsanddigitalsph"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Facebook
+          </a>
 
-  <a href="mailto:tclsystemsanddigitalsph@gmail.com">
-    Email Us
-  </a>
-
-  <a
-  href="https://www.facebook.com/tclsystemsanddigitalsph"
-  target="_blank"
-  rel="noopener noreferrer"
->
-  Facebook
-</a>
-
-<a
-  href="https://www.instagram.com/theclawlabmnl.systems"
-  target="_blank"
-  rel="noopener noreferrer"
->
-  Instagram
-</a>
-  
-  
-</div>
-
-        
+          <a
+            href="https://www.instagram.com/theclawlabmnl.systems"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Instagram
+          </a>
+        </div>
       </div>
 
       <div className="container footer-bottom">

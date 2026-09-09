@@ -4,11 +4,11 @@ import styles from "./SiteHeader.module.css";
 
 const navItems = [
   { label: "Shop", href: "/shop" },
-  { label: "Categories", href: "/#categories" },
+  { label: "Order Status", href: "/order-status" },
   { label: "About Me", href: "/#about" },
   { label: "Reviews", href: "/#reviews" },
-  { label: "How It Works", href: "/#how-it-works" },
-  { label: "FAQ", href: "/#faq" },
+  { label: "How It Works", href: "/how-it-works" },
+  { label: "FAQ", href: "/faqs" },
 ];
 
 export default function SiteHeader() {

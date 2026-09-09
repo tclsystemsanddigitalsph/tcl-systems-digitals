@@ -9,13 +9,11 @@ import {
   uploadProductFile,
 } from "../actions";
 import AdminNav from "@/app/admin/AdminNav";
+import dashboardStyles from "../../dashboard.module.css";
 import styles from "./page.module.css";
 
 type EditProductPageProps = {
-  params: Promise<{
-    id: string;
-  }>;
-
+  params: Promise<{ id: string }>;
   searchParams: Promise<{
     error?: string;
     updated?: string;
@@ -25,6 +23,16 @@ type EditProductPageProps = {
     file_deleted?: string;
   }>;
 };
+
+const productCategories = [
+  "Booking Systems",
+  "Business Starter Kits",
+  "Digital Product Shops",
+  "Physical Product Shops",
+  "Customized Websites",
+  "Digital Products",
+  "Business Resources",
+];
 
 function getErrorMessage(error?: string) {
   switch (error) {
@@ -80,22 +88,14 @@ export default async function EditProductPage({
     data: { user },
   } = await authSupabase.auth.getUser();
 
-  if (!user) {
-    redirect("/admin/login");
-  }
+  if (!user) redirect("/admin/login");
 
   const { id } = await params;
   const query = await searchParams;
-
   const adminSupabase = createAdminSupabaseClient();
 
   const [productResult, filesResult] = await Promise.all([
-    adminSupabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle(),
-
+    adminSupabase.from("products").select("*").eq("id", id).maybeSingle(),
     adminSupabase
       .from("product_files")
       .select(
@@ -115,10 +115,7 @@ export default async function EditProductPage({
   }
 
   const product = productResult.data;
-
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
 
   const productFiles = filesResult.data ?? [];
   const errorMessage = getErrorMessage(query.error);
@@ -130,279 +127,278 @@ export default async function EditProductPage({
         <AdminNav active="products" email={user.email} />
 
         <section className="store-admin-main">
-          <header className="store-admin-topbar">
+          <header className={dashboardStyles.topbar}>
             <div>
-              <span className="store-admin-eyebrow">
-                PRODUCT CATALOG
-              </span>
-
+              <span className="store-admin-eyebrow">PRODUCT CATALOG</span>
               <h1>Edit Product</h1>
+              <p>Update {product.name} and its storefront settings.</p>
+            </div>
 
-              <p>
-                Update {product.name} and its storefront settings.
-              </p>
-
+            <div className={dashboardStyles.topbarActions}>
               <a
-                className="store-admin-page-back"
-                href="/admin/products"
+                href={`/shop/${product.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className={dashboardStyles.secondaryButton}
               >
-                ← Back to Products
+                View Product ↗
+              </a>
+              <a
+                href="/admin/products"
+                className={dashboardStyles.secondaryButton}
+              >
+                ← Products
               </a>
             </div>
           </header>
 
           {query.updated === "1" ? (
-            <div className="store-admin-form-success">
-              <strong>Product updated ♡</strong>
-              <span>
-                Your changes have been saved successfully.
-              </span>
+            <div className={styles.successCard}>
+              <div>✓</div>
+              <section>
+                <strong>Product updated</strong>
+                <p>Your changes have been saved successfully.</p>
+              </section>
             </div>
           ) : null}
 
           {errorMessage ? (
-            <div className="store-admin-form-error">
-              <strong>Couldn&apos;t update product</strong>
-              <span>{errorMessage}</span>
+            <div className={styles.errorCard}>
+              <div>!</div>
+              <section>
+                <strong>Couldn&apos;t update product</strong>
+                <p>{errorMessage}</p>
+              </section>
             </div>
           ) : null}
 
-          <form
-            action={updateProduct}
-            className="store-admin-product-form"
-          >
-            <input
-              type="hidden"
-              name="product_id"
-              value={product.id}
-            />
+          <form action={updateProduct} className={styles.formLayout}>
+            <input type="hidden" name="product_id" value={product.id} />
 
-            <div className="store-admin-form-main">
-              <section className="store-admin-form-card">
-                <div className="store-admin-form-card-heading">
+            <div className={styles.mainColumn}>
+              <section className={styles.formCard}>
+                <div className={styles.cardHeading}>
                   <span>PRODUCT DETAILS</span>
                   <h2>Basic information</h2>
-
                   <p>
-                    Update the information customers see about this
-                    product.
+                    Update the customer-facing name, descriptions, product
+                    family, and tier badge.
                   </p>
                 </div>
 
-                <div className="store-admin-form-fields">
-                  <label className="store-admin-field">
+                <div className={styles.fields}>
+                  <label className={styles.field}>
                     <span>Product name *</span>
-
                     <input
                       type="text"
                       name="name"
                       defaultValue={product.name}
                       required
                     />
+                    <small>
+                      Include the package or tier in the name for tiered
+                      products.
+                    </small>
                   </label>
 
-                  <label className="store-admin-field">
+                  <label className={styles.field}>
                     <span>Product slug *</span>
-
                     <input
                       type="text"
                       name="slug"
                       defaultValue={product.slug}
                       pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                      title="Use lowercase letters, numbers, and hyphens only."
                       required
                     />
-
-                    <small>Used in the product URL.</small>
+                    <small>
+                      Lowercase letters, numbers, and hyphens only.
+                    </small>
                   </label>
 
-                  <label className="store-admin-field">
+                  <label className={`${styles.field} ${styles.fullWidth}`}>
                     <span>Short description</span>
-
                     <textarea
                       name="short_description"
                       rows={3}
                       defaultValue={product.short_description ?? ""}
                     />
+                    <small>
+                      Shown on the product card while customers browse.
+                    </small>
                   </label>
 
-                  <label className="store-admin-field">
+                  <label className={`${styles.field} ${styles.fullWidth}`}>
                     <span>Full description</span>
-
                     <textarea
                       name="description"
-                      rows={7}
+                      rows={8}
                       defaultValue={product.description ?? ""}
                     />
+                    <small>
+                      Main overview shown on the individual product page.
+                    </small>
                   </label>
 
-                  <div className="store-admin-form-row">
-                    <label className="store-admin-field">
-                      <span>Category</span>
-
-                      <input
-                        type="text"
-                        name="category"
-                        defaultValue={
-                          product.category ?? "Digital Products"
-                        }
-                      />
-                    </label>
-
-                    <label className="store-admin-field">
-                      <span>Badge</span>
-
-                      <input
-                        type="text"
-                        name="badge"
-                        defaultValue={product.badge ?? ""}
-                        placeholder="e.g. Best Seller"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </section>
-
-              <section className="store-admin-form-card">
-                <div className="store-admin-form-card-heading">
-                  <span>POST-PURCHASE</span>
-                  <h2>Customer instructions</h2>
-
-                  <p>
-                    These instructions appear only after a verified
-                    successful payment.
-                  </p>
-                </div>
-
-                <div className="store-admin-form-fields">
-                  <label className="store-admin-field">
-                    <span>Post-purchase instructions</span>
-
-                    <textarea
-                      name="post_purchase_instructions"
-                      rows={8}
-                      defaultValue={
-                        product.post_purchase_instructions ?? ""
-                      }
-                      placeholder="Example: Download all included files below. Read the setup guide first, then follow the installation instructions..."
+                  <label className={styles.field}>
+                    <span>Product family / category</span>
+                    <input
+                      type="text"
+                      name="category"
+                      list="tcl-product-categories-edit"
+                      defaultValue={product.category ?? "Digital Products"}
                     />
+                    <datalist id="tcl-product-categories-edit">
+                      {productCategories.map((category) => (
+                        <option value={category} key={category} />
+                      ))}
+                    </datalist>
+                    <small>Keep related tiers under the same family.</small>
+                  </label>
 
+                  <label className={styles.field}>
+                    <span>Badge</span>
+                    <input
+                      type="text"
+                      name="badge"
+                      defaultValue={product.badge ?? ""}
+                      placeholder="e.g. Pro"
+                    />
                     <small>
-                      Keep private download links out of this field.
-                      Files are delivered separately through secure
-                      signed URLs.
+                      Tier, featured label, or For Quotation.
                     </small>
                   </label>
                 </div>
               </section>
 
-              <section className="store-admin-form-card">
-                <div className="store-admin-form-card-heading">
-                  <span>PRICING</span>
-
-                  <h2>Price &amp; fees</h2>
-
+              <section className={styles.formCard}>
+                <div className={styles.cardHeading}>
+                  <span>POST-PURCHASE</span>
+                  <h2>Customer instructions</h2>
                   <p>
-                    Update the regular price, sale price, and
-                    processing fee.
+                    These instructions appear only after a verified successful
+                    payment.
                   </p>
                 </div>
 
-                <div className="store-admin-form-fields">
-                  <div className="store-admin-form-row">
-                    <label className="store-admin-field">
-                      <span>Regular price (₱) *</span>
+                <div className={styles.fields}>
+                  <label className={`${styles.field} ${styles.fullWidth}`}>
+                    <span>Post-purchase instructions</span>
+                    <textarea
+                      name="post_purchase_instructions"
+                      rows={7}
+                      defaultValue={product.post_purchase_instructions ?? ""}
+                      placeholder="Add the instructions customers should see after payment."
+                    />
+                    <small>
+                      Keep private download links out of this field. Secure
+                      files are handled separately below.
+                    </small>
+                  </label>
+                </div>
+              </section>
 
-                      <input
-                        type="number"
-                        name="price"
-                        min="0"
-                        step="0.01"
-                        defaultValue={product.price ?? 0}
-                        required
-                      />
-                    </label>
+              <section className={styles.formCard}>
+                <div className={styles.cardHeading}>
+                  <span>PRICING</span>
+                  <h2>Price & fees</h2>
+                  <p>
+                    Quotation-only Service products should use a regular price
+                    of ₱0.
+                  </p>
+                </div>
 
-                    <label className="store-admin-field">
-                      <span>Sale price (₱)</span>
+                <div className={styles.fields}>
+                  <label className={styles.field}>
+                    <span>Regular price (₱) *</span>
+                    <input
+                      type="number"
+                      name="price"
+                      min="0"
+                      step="0.01"
+                      defaultValue={product.price ?? 0}
+                      required
+                    />
+                    <small>Use 0 only for quotation-only services.</small>
+                  </label>
 
-                      <input
-                        type="number"
-                        name="sale_price"
-                        min="0"
-                        step="0.01"
-                        defaultValue={product.sale_price ?? ""}
-                        placeholder="Optional"
-                      />
-                    </label>
-                  </div>
+                  <label className={styles.field}>
+                    <span>Sale price (₱)</span>
+                    <input
+                      type="number"
+                      name="sale_price"
+                      min="0"
+                      step="0.01"
+                      defaultValue={product.sale_price ?? ""}
+                      placeholder="Optional"
+                    />
+                    <small>Leave blank when there is no sale price.</small>
+                  </label>
 
-                  <label className="store-admin-field">
+                  <label className={styles.field}>
                     <span>Processing fee (%)</span>
-
                     <input
                       type="number"
                       name="processing_fee_percent"
                       min="0"
                       step="0.01"
-                      defaultValue={
-                        product.processing_fee_percent ?? 10
-                      }
+                      defaultValue={product.processing_fee_percent ?? 10}
                     />
+                    <small>Applied automatically to online checkout.</small>
                   </label>
+
+                  <div className={styles.quoteGuide}>
+                    <span>QUOTATION RULE</span>
+                    <strong>Service + ₱0</strong>
+                    <p>
+                      This makes the product quotation-only instead of sending
+                      the customer to normal checkout.
+                    </p>
+                  </div>
                 </div>
               </section>
 
-              <section className="store-admin-form-card">
-                <div className="store-admin-form-card-heading">
+              <section className={styles.formCard}>
+                <div className={styles.cardHeading}>
                   <span>LINKS</span>
-
-                  <h2>Product links</h2>
-
-                  <p>
-                    Update the product image and live demo
-                    destinations.
-                  </p>
+                  <h2>Product media & demo</h2>
                 </div>
 
-                <div className="store-admin-form-fields">
-                  <label className="store-admin-field">
+                <div className={styles.fields}>
+                  <label className={styles.field}>
                     <span>Image URL</span>
-
                     <input
                       type="url"
                       name="image_url"
                       defaultValue={product.image_url ?? ""}
                       placeholder="https://..."
                     />
+                    <small>Public product image URL.</small>
                   </label>
 
-                  <label className="store-admin-field">
+                  <label className={styles.field}>
                     <span>Live demo URL</span>
-
                     <input
                       type="url"
                       name="demo_url"
                       defaultValue={product.demo_url ?? ""}
                       placeholder="https://..."
                     />
+                    <small>Optional live demo for this product or tier.</small>
                   </label>
                 </div>
               </section>
             </div>
 
-            <aside className="store-admin-form-sidebar">
-              <section className="store-admin-form-card">
-                <div className="store-admin-form-card-heading">
+            <aside className={styles.sidebar}>
+              <section className={styles.formCard}>
+                <div className={styles.cardHeading}>
                   <span>SETTINGS</span>
-
                   <h2>Product setup</h2>
                 </div>
 
-                <div className="store-admin-form-fields">
-                  <label className="store-admin-field">
+                <div className={styles.sidebarFields}>
+                  <label className={styles.field}>
                     <span>Product type</span>
-
                     <select
                       name="product_type"
                       defaultValue={product.product_type}
@@ -412,11 +408,13 @@ export default async function EditProductPage({
                       <option value="SERVICE">Service</option>
                       <option value="MANUAL">Manual</option>
                     </select>
+                    <small>
+                      Customized systems and websites are usually Service.
+                    </small>
                   </label>
 
-                  <label className="store-admin-field">
+                  <label className={styles.field}>
                     <span>Delivery method</span>
-
                     <select
                       name="delivery_method"
                       defaultValue={product.delivery_method}
@@ -426,11 +424,11 @@ export default async function EditProductPage({
                       <option value="SERVICE">Service</option>
                       <option value="MANUAL">Manual</option>
                     </select>
+                    <small>How the customer receives the purchase.</small>
                   </label>
 
-                  <label className="store-admin-field">
+                  <label className={styles.field}>
                     <span>Display order</span>
-
                     <input
                       type="number"
                       name="display_order"
@@ -438,67 +436,66 @@ export default async function EditProductPage({
                       step="1"
                       defaultValue={product.display_order ?? 0}
                     />
-
                     <small>Lower numbers appear first.</small>
                   </label>
                 </div>
               </section>
 
-              <section className="store-admin-form-card">
-                <div className="store-admin-form-card-heading">
+              <section className={styles.formCard}>
+                <div className={styles.cardHeading}>
                   <span>VISIBILITY</span>
-
                   <h2>Store status</h2>
                 </div>
 
-                <div className="store-admin-toggle-list">
-                  <label className="store-admin-checkbox">
+                <div className={styles.toggleList}>
+                  <label className={styles.toggleCard}>
                     <input
                       type="checkbox"
                       name="is_active"
                       defaultChecked={product.is_active}
                     />
-
                     <span>
                       <strong>Active</strong>
-
-                      <small>
-                        Show this product publicly in the store.
-                      </small>
+                      <small>Show this product publicly.</small>
                     </span>
                   </label>
 
-                  <label className="store-admin-checkbox">
+                  <label className={styles.toggleCard}>
                     <input
                       type="checkbox"
                       name="is_featured"
                       defaultChecked={product.is_featured}
                     />
-
                     <span>
                       <strong>Featured</strong>
-
-                      <small>
-                        Highlight this product in featured
-                        sections.
-                      </small>
+                      <small>Highlight it in featured sections.</small>
                     </span>
                   </label>
                 </div>
               </section>
 
-              <section className="store-admin-save-card">
-                <p>
-                  Saving will update this product in your
-                  Supabase catalog.
-                </p>
+              <section className={styles.catalogGuide}>
+                <span>CATALOG ORDER GUIDE</span>
+                <div>
+                  <p><b>1–4</b> Booking Systems</p>
+                  <p><b>5–8</b> Business Starter Kits</p>
+                  <p><b>9–12</b> Digital Product Shops</p>
+                  <p><b>13–16</b> Physical Product Shops</p>
+                  <p><b>17</b> Customized Website</p>
+                </div>
+              </section>
 
-                <button
-                  className="store-admin-save-product"
-                  type="submit"
-                >
-                  Save Changes
-                  <span>→</span>
+              <section className={styles.saveCard}>
+                <div>
+                  <span>READY TO SAVE?</span>
+                  <h3>Update this product</h3>
+                  <p>
+                    Changes will update the storefront catalog immediately.
+                  </p>
+                </div>
+
+                <button type="submit">
+                  Save Changes <span>→</span>
                 </button>
 
                 <a href="/admin/products">Cancel</a>
@@ -506,29 +503,21 @@ export default async function EditProductPage({
             </aside>
           </form>
 
-          <section
-            id="product-files"
-            className={styles.filesSection}
-          >
+          <section id="product-files" className={styles.filesSection}>
             <div className={styles.filesHeader}>
-              <div className={styles.filesHeaderIcon}>
-                ⇩
-              </div>
-
+              <div className={styles.filesHeaderIcon}>⇩</div>
               <div className={styles.filesHeaderCopy}>
                 <span>SECURE DELIVERY</span>
                 <h2>Product files</h2>
                 <p>
-                  Upload the actual files buyers receive after a
+                  Upload and manage the private files buyers receive after a
                   verified payment.
                 </p>
               </div>
 
               <div className={styles.filesCount}>
                 <strong>{productFiles.length}</strong>
-                <span>
-                  {productFiles.length === 1 ? "file" : "files"}
-                </span>
+                <span>{productFiles.length === 1 ? "file" : "files"}</span>
               </div>
             </div>
 
@@ -538,9 +527,7 @@ export default async function EditProductPage({
                   <span>✓</span>
                   <div>
                     <strong>File uploaded</strong>
-                    <small>
-                      It is now assigned to this product.
-                    </small>
+                    <small>It is now assigned to this product.</small>
                   </div>
                 </div>
               ) : null}
@@ -550,9 +537,7 @@ export default async function EditProductPage({
                   <span>✓</span>
                   <div>
                     <strong>File updated</strong>
-                    <small>
-                      Delivery settings were saved.
-                    </small>
+                    <small>Delivery settings were saved.</small>
                   </div>
                 </div>
               ) : null}
@@ -562,9 +547,7 @@ export default async function EditProductPage({
                   <span>✓</span>
                   <div>
                     <strong>File deleted</strong>
-                    <small>
-                      The private file was removed.
-                    </small>
+                    <small>The private file was removed.</small>
                   </div>
                 </div>
               ) : null}
@@ -582,18 +565,14 @@ export default async function EditProductPage({
               <div className={styles.uploadCard}>
                 <div className={styles.uploadIntro}>
                   <div className={styles.uploadIcon}>＋</div>
-
                   <div>
                     <strong>Add a product file</strong>
                     <p>
-                      Files are stored privately in Supabase and
-                      delivered with temporary signed links.
+                      Stored privately in Supabase and delivered through
+                      temporary signed links.
                     </p>
                   </div>
-
-                  <span className={styles.privateBadge}>
-                    PRIVATE
-                  </span>
+                  <span className={styles.privateBadge}>PRIVATE</span>
                 </div>
 
                 <form
@@ -601,53 +580,33 @@ export default async function EditProductPage({
                   encType="multipart/form-data"
                   className={styles.uploadForm}
                 >
-                  <input
-                    type="hidden"
-                    name="product_id"
-                    value={product.id}
-                  />
+                  <input type="hidden" name="product_id" value={product.id} />
 
                   <label className={styles.uploadField}>
                     <span>Customer file name</span>
-
                     <input
                       type="text"
                       name="display_name"
                       placeholder="e.g. Complete Booking System"
                     />
-
                     <small>
-                      Optional — the original file name is used if
-                      blank.
+                      Optional — original file name is used if blank.
                     </small>
                   </label>
 
                   <label className={styles.filePicker}>
-                    <span className={styles.filePickerIcon}>
-                      ⇧
-                    </span>
-
+                    <span className={styles.filePickerIcon}>⇧</span>
                     <span className={styles.filePickerText}>
                       <strong>Choose file</strong>
                       <small>
-                        ZIP, PDF, images, documents and more · max
-                        50 MB
+                        ZIP, PDF, images, documents and more · max 50 MB
                       </small>
                     </span>
-
-                    <input
-                      type="file"
-                      name="file"
-                      required
-                    />
+                    <input type="file" name="file" required />
                   </label>
 
-                  <button
-                    type="submit"
-                    className={styles.uploadButton}
-                  >
-                    Upload File
-                    <span>→</span>
+                  <button type="submit" className={styles.uploadButton}>
+                    Upload File <span>→</span>
                   </button>
                 </form>
               </div>
@@ -657,28 +616,19 @@ export default async function EditProductPage({
                   <span>FILE LIBRARY</span>
                   <h3>Files assigned to this product</h3>
                 </div>
-
-                <small>
-                  Only active files are shown to buyers.
-                </small>
+                <small>Only active files are shown to buyers.</small>
               </div>
 
               {productFiles.length > 0 ? (
                 <div className={styles.fileList}>
                   {productFiles.map((file, index) => {
                     const storageFileName =
-                      file.storage_path.split("/").pop() ??
-                      file.storage_path;
+                      file.storage_path.split("/").pop() ?? file.storage_path;
 
                     return (
-                      <article
-                        key={file.id}
-                        className={styles.fileCard}
-                      >
+                      <article key={file.id} className={styles.fileCard}>
                         <div className={styles.fileCardTop}>
-                          <div className={styles.fileTypeIcon}>
-                            {index + 1}
-                          </div>
+                          <div className={styles.fileTypeIcon}>{index + 1}</div>
 
                           <div className={styles.fileTitle}>
                             <strong>{file.display_name}</strong>
@@ -707,16 +657,10 @@ export default async function EditProductPage({
                             name="product_id"
                             value={product.id}
                           />
-
-                          <input
-                            type="hidden"
-                            name="file_id"
-                            value={file.id}
-                          />
+                          <input type="hidden" name="file_id" value={file.id} />
 
                           <label className={styles.miniField}>
                             <span>Display name</span>
-
                             <input
                               type="text"
                               name="display_name"
@@ -727,7 +671,6 @@ export default async function EditProductPage({
 
                           <label className={styles.orderField}>
                             <span>Order</span>
-
                             <input
                               type="number"
                               name="display_order"
@@ -744,14 +687,10 @@ export default async function EditProductPage({
                               name="is_active"
                               defaultChecked={file.is_active}
                             />
-
                             <span className={styles.toggleTrack}>
                               <i />
                             </span>
-
-                            <span className={styles.toggleCopy}>
-                              Active
-                            </span>
+                            <span className={styles.toggleCopy}>Active</span>
                           </label>
 
                           <button
@@ -765,9 +704,7 @@ export default async function EditProductPage({
                         <div className={styles.fileCardFooter}>
                           <div className={styles.secureMeta}>
                             <span>🔒</span>
-                            <small>
-                              Private storage · signed links only
-                            </small>
+                            <small>Private storage · signed links only</small>
                           </div>
 
                           <form action={deleteProductFile}>
@@ -776,13 +713,11 @@ export default async function EditProductPage({
                               name="product_id"
                               value={product.id}
                             />
-
                             <input
                               type="hidden"
                               name="file_id"
                               value={file.id}
                             />
-
                             <button
                               type="submit"
                               className={styles.deleteFileButton}
@@ -800,40 +735,26 @@ export default async function EditProductPage({
                   <div>⇩</div>
                   <strong>No files uploaded yet</strong>
                   <p>
-                    Add the files customers should receive after
-                    purchasing {product.name}.
+                    Add the files customers should receive after purchasing{" "}
+                    {product.name}.
                   </p>
                 </div>
               )}
             </div>
           </section>
 
-          <section className="store-admin-danger-zone">
+          <section className={styles.dangerZone}>
             <div>
               <span>DANGER ZONE</span>
-
               <h2>Delete product</h2>
-
               <p>
-                Permanently delete this product from the catalog.
-                Its assigned private product files will also be
-                removed.
+                Permanently delete this product and its assigned private files.
               </p>
             </div>
 
             <form action={deleteProduct}>
-              <input
-                type="hidden"
-                name="product_id"
-                value={product.id}
-              />
-
-              <button
-                type="submit"
-                className="store-admin-delete-product"
-              >
-                Delete Product
-              </button>
+              <input type="hidden" name="product_id" value={product.id} />
+              <button type="submit">Delete Product</button>
             </form>
           </section>
         </section>

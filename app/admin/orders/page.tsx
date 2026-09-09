@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import AdminNav from "@/app/admin/AdminNav";
+import DeliveryStatusSelect from "./DeliveryStatusSelect";
+import BulkOrderActions from "./BulkOrderActions";
 import styles from "./orders.module.css";
 
 type OrdersPageProps = {
@@ -10,6 +12,10 @@ type OrdersPageProps = {
     status?: string;
     provider?: string;
     page?: string;
+    delivery_saved?: string;
+    delivery_error?: string;
+    bulk_deleted?: string;
+    bulk_delete_error?: string;
   }>;
 };
 
@@ -51,6 +57,20 @@ function formatDateTime(value: string) {
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function deliveryLabel(status: string | null) {
+  switch (status) {
+    case "IN_PROGRESS":
+      return "In Progress";
+    case "DELIVERED":
+      return "Delivered";
+    case "CANCELLED":
+      return "Cancelled";
+    case "NOT_STARTED":
+    default:
+      return "Not Started";
+  }
 }
 
 export default async function AdminOrdersPage({
@@ -150,6 +170,8 @@ export default async function AdminOrdersPage({
     return qs ? `/admin/orders?${qs}` : "/admin/orders";
   };
 
+  const currentListUrl = buildPageUrl(currentPage);
+
   return (
     <main className="store-admin-dashboard">
       <div className="store-admin-dashboard-shell">
@@ -195,6 +217,75 @@ export default async function AdminOrdersPage({
               <small>Completed orders only</small>
             </article>
           </section>
+
+          {query.delivery_saved === "1" ? (
+            <div
+              role="status"
+              style={{
+                margin: "0 0 16px",
+                padding: "12px 14px",
+                border: "1px solid rgba(128, 75, 94, 0.18)",
+                borderRadius: "12px",
+                background: "rgba(255, 247, 250, 0.9)",
+                fontSize: "13px",
+                fontWeight: 700,
+              }}
+            >
+              Delivery status updated.
+            </div>
+          ) : null}
+
+          {query.delivery_error ? (
+            <div
+              role="alert"
+              style={{
+                margin: "0 0 16px",
+                padding: "12px 14px",
+                border: "1px solid rgba(153, 52, 52, 0.2)",
+                borderRadius: "12px",
+                background: "rgba(255, 245, 245, 0.95)",
+                fontSize: "13px",
+                fontWeight: 700,
+              }}
+            >
+              Delivery status could not be updated. Please try again.
+            </div>
+          ) : null}
+
+          {query.bulk_deleted ? (
+            <div
+              role="status"
+              style={{
+                margin: "0 0 16px",
+                padding: "12px 14px",
+                border: "1px solid rgba(128, 75, 94, 0.18)",
+                borderRadius: "12px",
+                background: "rgba(255, 247, 250, 0.9)",
+                fontSize: "13px",
+                fontWeight: 700,
+              }}
+            >
+              {query.bulk_deleted} selected order
+              {query.bulk_deleted === "1" ? "" : "s"} deleted permanently.
+            </div>
+          ) : null}
+
+          {query.bulk_delete_error ? (
+            <div
+              role="alert"
+              style={{
+                margin: "0 0 16px",
+                padding: "12px 14px",
+                border: "1px solid rgba(153, 52, 52, 0.2)",
+                borderRadius: "12px",
+                background: "rgba(255, 245, 245, 0.95)",
+                fontSize: "13px",
+                fontWeight: 700,
+              }}
+            >
+              Selected orders could not be deleted. Please try again.
+            </div>
+          ) : null}
 
           <section className={styles.ordersPanel}>
             <div className={styles.panelHeader}>
@@ -257,10 +348,18 @@ export default async function AdminOrdersPage({
 
             {orders.length > 0 ? (
               <>
+                <BulkOrderActions returnTo={currentListUrl} />
+
                 <div className={styles.tableWrap}>
                   <table className={styles.ordersTable}>
                     <thead>
                       <tr>
+                        <th
+                          aria-label="Select orders"
+                          style={{ width: "44px", textAlign: "center" }}
+                        >
+                          Select
+                        </th>
                         <th>Order</th>
                         <th>Customer</th>
                         <th>Product</th>
@@ -275,6 +374,22 @@ export default async function AdminOrdersPage({
                     <tbody>
                       {orders.map((order: OrderRow) => (
                         <tr key={order.id}>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              name="order_ids"
+                              value={order.id}
+                              form="bulk-delete-orders-form"
+                              data-order-select="true"
+                              aria-label={`Select order ${order.order_number}`}
+                              style={{
+                                width: "16px",
+                                height: "16px",
+                                cursor: "pointer",
+                              }}
+                            />
+                          </td>
+
                           <td>
                             <div className={styles.orderNumber}>
                               <strong>{order.order_number}</strong>
@@ -329,9 +444,13 @@ export default async function AdminOrdersPage({
                           </td>
 
                           <td>
-                            <span className={styles.deliveryPill}>
-                              {order.delivery_status}
-                            </span>
+                            <DeliveryStatusSelect
+                              orderId={order.id}
+                              orderNumber={order.order_number}
+                              returnTo={currentListUrl}
+                              value={order.delivery_status || "NOT_STARTED"}
+                              label={deliveryLabel(order.delivery_status)}
+                            />
                           </td>
 
                           <td>

@@ -3,8 +3,10 @@ import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CopyReceiptLinkButton from "@/components/CopyReceiptLinkButton";
+import CopyOrderNumberButton from "@/components/CopyOrderNumberButton";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { getSiteSettings } from "@/lib/site-settings";
+import { ensureProjectRequirementsForPaidOrder } from "@/lib/project-requirements";
 import styles from "../checkout.module.css";
 import actionStyles from "./success-actions.module.css";
 
@@ -51,6 +53,12 @@ export default async function CheckoutSuccessPage({
   let files: Array<{ id: string; displayName: string; count: number }> = [];
   let downloadExpiryMinutes = 30;
   let accessExpiresAt: string | null = null;
+  let projectRequirements: {
+    id: string;
+    secureToken: string;
+    requirementsStatus: string;
+    projectStatus: string;
+  } | null = null;
 
   try {
     const settings = await getSiteSettings();
@@ -80,6 +88,16 @@ export default async function CheckoutSuccessPage({
         ...orderData,
         total_amount: Number(orderData.total_amount),
       };
+
+      try {
+        projectRequirements =
+          await ensureProjectRequirementsForPaidOrder(orderData.id);
+      } catch (requirementsError) {
+        console.error(
+          "Unable to prepare project requirements:",
+          requirementsError,
+        );
+      }
 
       if (!orderData.download_access_expires_at) {
         const base = new Date(orderData.paid_at || orderData.created_at);
@@ -156,6 +174,16 @@ export default async function CheckoutSuccessPage({
     alignItems: "center",
     justifyContent: "center",
   } as const;
+
+  const requirementsButtonLabel =
+    projectRequirements?.requirementsStatus === "SUBMITTED" ||
+    projectRequirements?.requirementsStatus === "RESUBMITTED" ||
+    projectRequirements?.requirementsStatus === "APPROVED"
+      ? "View Project Requirements →"
+      : projectRequirements?.requirementsStatus === "IN_PROGRESS" ||
+          projectRequirements?.requirementsStatus === "NEED_MORE_INFO"
+        ? "Continue Project Requirements →"
+        : "Complete Project Requirements →";
 
   return (
     <>
@@ -286,7 +314,17 @@ export default async function CheckoutSuccessPage({
                 <div>
                   <small>ORDER NUMBER</small>
                   <br />
-                  <strong>{order.order_number}</strong>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginTop: 4,
+                    }}
+                  >
+                    <strong>{order.order_number}</strong>
+                    <CopyOrderNumberButton orderNumber={order.order_number} />
+                  </span>
                 </div>
 
                 <div>
@@ -331,6 +369,107 @@ export default async function CheckoutSuccessPage({
                     "Your payment has been confirmed. TCL Systems & Digitals PH will contact you with the next steps for this purchase."}
                 </div>
               </section>
+
+              {projectRequirements ? (
+                <section
+                  aria-labelledby="project-requirements-heading"
+                  style={{
+                    marginTop: 24,
+                    padding: "clamp(24px,4vw,32px)",
+                    border: "1px solid rgba(217,86,139,.22)",
+                    borderRadius: 18,
+                    background:
+                      "linear-gradient(145deg, rgba(217,86,139,.08), rgba(255,255,255,.96))",
+                  }}
+                >
+                  <span className="section-kicker">Next step</span>
+
+                  <h2
+                    id="project-requirements-heading"
+                    style={{
+                      marginTop: 10,
+                      marginBottom: 10,
+                      fontSize: "clamp(1.4rem,4vw,1.9rem)",
+                    }}
+                  >
+                    Complete your project requirements
+                  </h2>
+
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "var(--text-soft)",
+                      lineHeight: 1.75,
+                    }}
+                  >
+                    Before we begin your customized setup, please tell us about
+                    your business, branding, content, workflow, and the options
+                    needed for your purchased package. Your form is connected
+                    directly to order <strong>{order.order_number}</strong>.
+                  </p>
+
+                  <div
+                    style={{
+                      marginTop: 18,
+                      padding: "13px 15px",
+                      borderRadius: 12,
+                      background: "rgba(255,255,255,.72)",
+                      border: "1px solid rgba(217,86,139,.15)",
+                    }}
+                  >
+                    <small
+                      style={{
+                        display: "block",
+                        marginBottom: 4,
+                        color: "var(--text-soft)",
+                        fontWeight: 700,
+                        letterSpacing: ".06em",
+                      }}
+                    >
+                      REQUIREMENTS STATUS
+                    </small>
+                    <strong>
+                      {projectRequirements.requirementsStatus
+                        .replaceAll("_", " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (letter) =>
+                          letter.toUpperCase(),
+                        )}
+                    </strong>
+                  </div>
+
+                  <Link
+                    href={`/project-requirements/${encodeURIComponent(
+                      projectRequirements.secureToken,
+                    )}`}
+                    className="button button-primary"
+                    style={{
+                      width: "100%",
+                      minHeight: 52,
+                      marginTop: 20,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                    }}
+                  >
+                    {requirementsButtonLabel}
+                  </Link>
+
+                  <p
+                    style={{
+                      margin: "12px 0 0",
+                      color: "var(--text-soft)",
+                      fontSize: ".86rem",
+                      lineHeight: 1.55,
+                      textAlign: "center",
+                    }}
+                  >
+                    Keep this receipt page private. Your project requirements
+                    link is unique to this purchase.
+                  </p>
+                </section>
+              ) : null}
 
               {files.length > 0 ? (
                 <section
@@ -464,6 +603,73 @@ export default async function CheckoutSuccessPage({
                   </div>
                 </section>
               ) : null}
+
+              <section
+                aria-labelledby="track-order-heading"
+                style={{
+                  marginTop: 24,
+                  padding: "clamp(22px,4vw,28px)",
+                  border: "1px solid rgba(217,86,139,.2)",
+                  borderRadius: 18,
+                  background:
+                    "linear-gradient(145deg, rgba(217,86,139,.07), rgba(255,255,255,.98))",
+                  textAlign: "center",
+                }}
+              >
+                <span className="section-kicker">Keep track of your purchase</span>
+
+                <h2
+                  id="track-order-heading"
+                  style={{
+                    marginTop: 10,
+                    marginBottom: 10,
+                    fontSize: "clamp(1.35rem,4vw,1.75rem)",
+                  }}
+                >
+                  Check your order status anytime
+                </h2>
+
+                <p
+                  style={{
+                    maxWidth: 620,
+                    margin: "0 auto",
+                    color: "var(--text-soft)",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  Use your order number{" "}
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 7,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <strong>{order.order_number}</strong>
+                    <CopyOrderNumberButton orderNumber={order.order_number} />
+                  </span>{" "}
+                  and the same email address used at checkout to view your payment,
+                  requirements, project, delivery, and download status.
+                </p>
+
+                <Link
+                  href="/order-status"
+                  className="button button-primary"
+                  style={{
+                    width: "100%",
+                    maxWidth: 360,
+                    minHeight: 52,
+                    marginTop: 20,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  Track Order Status →
+                </Link>
+              </section>
 
               <div className={actionStyles.actions}>
                 <div className={actionStyles.secondarySlot}>

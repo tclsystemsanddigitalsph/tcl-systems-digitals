@@ -20,8 +20,8 @@ const featuredProducts = [
     title: "Business Starter Kits",
     description:
       "A polished online booking or online shop website with an admin dashboard, service management, scheduling tools, and a professional client experience.",
-    price: "₱5,999",
-    tag: "Best Offer",
+    price: "₱1,999",
+    tag: "Customized Website",
     href: "#",
     available: false,
   },
@@ -82,29 +82,6 @@ const roles = [
   "Digital Creator",
   "Web Designer",
   "MOM",
-];
-
-const faqs = [
-  {
-    question: "Are these just Canva or website templates?",
-    answer:
-      "Not all of them. TCL offers both digital products and functional business systems. Product pages will clearly explain whether an item is editable, downloadable, a full system, or a custom service.",
-  },
-  {
-    question: "Do I need coding experience?",
-    answer:
-      "No. Products intended for business owners will include clear instructions, and systems are designed so normal business updates can be handled without editing code.",
-  },
-  {
-    question: "Are there monthly fees?",
-    answer:
-      "TCL products can be sold as one-time purchases, but some systems may still use third-party services such as hosting, email, payment providers, or databases depending on the product.",
-  },
-  {
-    question: "Can I request something customized?",
-    answer:
-      "Yes. If the ready-made option does not fully fit your business, customized systems and website services can also be offered separately.",
-  },
 ];
 
 export default async function Home() {
@@ -389,6 +366,61 @@ export default async function Home() {
           </div>
         </section>
 
+        <section className="section reviews-section" id="reviews">
+          <div className="container">
+            <div className="reviews-heading">
+              <div>
+                <span className="section-kicker">Client love ♡</span>
+                <h2>Reviews &amp; recommendations.</h2>
+                <p>
+                  Kind words from clients and business owners I&apos;ve had the
+                  pleasure of creating for.
+                </p>
+              </div>
+
+              <div className="reviews-rating-summary">
+                <strong>
+                  {reviews.length > 0
+                    ? (
+                        reviews.reduce(
+                          (sum, review) => sum + Number(review.rating || 0),
+                          0,
+                        ) / reviews.length
+                      ).toFixed(1)
+                    : "5.0"}
+                </strong>
+                <div>
+                  <span className="reviews-summary-stars">★★★★★</span>
+                </div>
+              </div>
+            </div>
+
+            {reviews.length > 0 ? (
+              <ReviewsSliderClient reviews={reviews} />
+            ) : (
+              <div className="reviews-empty-state">
+                Approved reviews will appear here.
+              </div>
+            )}
+
+            <div className="reviews-recommendation">
+              <div className="reviews-recommendation-icon">♡</div>
+              <div className="reviews-recommendation-copy">
+                <span>Have you worked with TCL?</span>
+                <strong>Your feedback means a lot.</strong>
+                <p>
+                  Reviews and recommendations help other small business owners
+                  feel more confident choosing the right digital solution.
+                </p>
+              </div>
+              <a className="button button-secondary" href="#contact">
+                Leave a Review
+                <span>→</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
         <section className="section categories-section" id="categories">
           <div className="container">
             <div className="section-heading centered-heading">
@@ -471,38 +503,6 @@ export default async function Home() {
                 Ask About Customization
                 <span>→</span>
               </a>
-            </div>
-          </div>
-        </section>
-
-        <section className="section process-section" id="how-it-works">
-          <div className="container">
-            <div className="section-heading centered-heading narrow-heading">
-              <span className="section-kicker">Simple from the start</span>
-              <h2>Find it. Purchase it. Make it yours.</h2>
-            </div>
-
-            <div className="process-grid">
-              <article className="process-card">
-                <span className="process-number">01</span>
-                <div className="process-icon">⌕</div>
-                <h3>Explore</h3>
-                <p>Browse systems, digital products, and business solutions built for different needs.</p>
-              </article>
-              <div className="process-line" />
-              <article className="process-card">
-                <span className="process-number">02</span>
-                <div className="process-icon">♡</div>
-                <h3>Choose</h3>
-                <p>Review the features, product details, pricing, and delivery method before purchasing.</p>
-              </article>
-              <div className="process-line" />
-              <article className="process-card">
-                <span className="process-number">03</span>
-                <div className="process-icon">✓</div>
-                <h3>Get Access</h3>
-                <p>Receive your product, setup instructions, or next steps based on the item you purchased.</p>
-              </article>
             </div>
           </div>
         </section>
@@ -622,86 +622,6 @@ export default async function Home() {
                 Let&apos;s Work Together
                 <span>→</span>
               </a>
-            </div>
-          </div>
-        </section>
-
-        <section className="section reviews-section" id="reviews">
-          <div className="container">
-            <div className="reviews-heading">
-              <div>
-                <span className="section-kicker">Client love ♡</span>
-                <h2>Reviews &amp; recommendations.</h2>
-                <p>
-                  Kind words from clients and business owners I&apos;ve had the
-                  pleasure of creating for.
-                </p>
-              </div>
-
-              <div className="reviews-rating-summary">
-                <strong>
-                  {reviews.length > 0
-                    ? (
-                        reviews.reduce(
-                          (sum, review) => sum + Number(review.rating || 0),
-                          0,
-                        ) / reviews.length
-                      ).toFixed(1)
-                    : "5.0"}
-                </strong>
-                <div>
-                  <span className="reviews-summary-stars">★★★★★</span>
-                </div>
-              </div>
-            </div>
-
-            {reviews.length > 0 ? (
-              <ReviewsSliderClient reviews={reviews} />
-            ) : (
-              <div className="reviews-empty-state">
-                Approved reviews will appear here.
-              </div>
-            )}
-
-            <div className="reviews-recommendation">
-              <div className="reviews-recommendation-icon">♡</div>
-              <div className="reviews-recommendation-copy">
-                <span>Have you worked with TCL?</span>
-                <strong>Your feedback means a lot.</strong>
-                <p>
-                  Reviews and recommendations help other small business owners
-                  feel more confident choosing the right digital solution.
-                </p>
-              </div>
-              <a className="button button-secondary" href="#contact">
-                Leave a Review
-                <span>→</span>
-              </a>
-            </div>
-          </div>
-        </section>
-
-        <section className="section faq-section" id="faq">
-          <div className="container faq-grid">
-            <div className="faq-heading">
-              <span className="section-kicker">Questions, answered</span>
-              <h2>Before you buy.</h2>
-              <p>
-                Every product will have its own complete details, but here are a
-                few things you may want to know first.
-              </p>
-            </div>
-
-            <div className="faq-list">
-              {faqs.map((faq) => (
-                <details key={faq.question}>
-                  <summary>
-                    <span>{faq.question}</span>
-                    <i>+</i>
-                  </summary>
-                  <p>{faq.answer}</p>
-                </details>
-              ))}
             </div>
           </div>
         </section>

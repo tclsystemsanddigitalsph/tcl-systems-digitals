@@ -35,6 +35,15 @@ function getOptionalNumber(formData: FormData, key: string) {
   return Number.isFinite(number) ? number : null;
 }
 
+function sanitizeSlug(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 function sanitizeFileName(name: string) {
   const cleaned = name
     .normalize("NFKD")
@@ -70,7 +79,7 @@ async function requireAdmin() {
 
 function validateProductFields(formData: FormData) {
   const name = getString(formData, "name");
-  const slug = getString(formData, "slug");
+  const slug = sanitizeSlug(getString(formData, "slug"));
   const productType = getString(formData, "product_type");
   const deliveryMethod = getString(formData, "delivery_method");
   const price = getNumber(formData, "price", 0);
@@ -82,6 +91,11 @@ function validateProductFields(formData: FormData) {
   );
   const displayOrder = getNumber(formData, "display_order", 0);
 
+  const isQuotationOnly =
+    productType === "SERVICE" &&
+    price === 0 &&
+    (salePrice === null || salePrice === 0);
+
   return {
     name,
     slug,
@@ -91,6 +105,7 @@ function validateProductFields(formData: FormData) {
     salePrice,
     processingFeePercent,
     displayOrder,
+    isQuotationOnly,
   };
 }
 
@@ -106,9 +121,20 @@ function getProductPayload(formData: FormData) {
       getString(formData, "category") || "Digital Products",
     product_type: fields.productType,
     price: fields.price,
-    sale_price: fields.salePrice,
-    processing_fee_percent: fields.processingFeePercent,
-    badge: getOptionalString(formData, "badge"),
+
+    // Quotation-only services intentionally have no sale price.
+    sale_price: fields.isQuotationOnly ? null : fields.salePrice,
+
+    // No payment processing fee is applicable until a quotation
+    // has been approved and a real payable order is created.
+    processing_fee_percent: fields.isQuotationOnly
+      ? 0
+      : fields.processingFeePercent,
+
+    badge:
+      getOptionalString(formData, "badge") ||
+      (fields.isQuotationOnly ? "For Quotation" : null),
+
     image_url: getOptionalString(formData, "image_url"),
     demo_url: getOptionalString(formData, "demo_url"),
     delivery_method: fields.deliveryMethod,
@@ -129,6 +155,10 @@ function validateProduct(formData: FormData, errorBaseUrl: string) {
     redirect(`${errorBaseUrl}?error=missing-required-fields`);
   }
 
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(fields.slug)) {
+    redirect(`${errorBaseUrl}?error=missing-required-fields`);
+  }
+
   if (!allowedTypes.includes(fields.productType)) {
     redirect(`${errorBaseUrl}?error=invalid-product-type`);
   }
@@ -145,6 +175,25 @@ function validateProduct(formData: FormData, errorBaseUrl: string) {
   ) {
     redirect(`${errorBaseUrl}?error=invalid-number`);
   }
+
+  if (
+    fields.salePrice !== null &&
+    fields.salePrice > fields.price &&
+    !fields.isQuotationOnly
+  ) {
+    redirect(`${errorBaseUrl}?error=invalid-number`);
+  }
+}
+
+function revalidateStoreProductPaths(slug?: string) {
+  revalidatePath("/admin");
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  revalidatePath("/");
+
+  if (slug) {
+    revalidatePath(`/shop/${slug}`);
+  }
 }
 
 export async function createProduct(formData: FormData) {
@@ -152,11 +201,12 @@ export async function createProduct(formData: FormData) {
 
   validateProduct(formData, "/admin/products/new");
 
+  const payload = getProductPayload(formData);
   const adminSupabase = createAdminSupabaseClient();
 
   const { error } = await adminSupabase
     .from("products")
-    .insert(getProductPayload(formData));
+    .insert(payload);
 
   if (error) {
     console.error("Create product error:", error);
@@ -168,9 +218,7 @@ export async function createProduct(formData: FormData) {
     redirect("/admin/products/new?error=save-failed");
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/products");
-  revalidatePath("/shop");
+  revalidateStoreProductPaths(payload.slug);
 
   redirect("/admin/products?created=1");
 }
@@ -190,9 +238,17 @@ export async function updateProduct(formData: FormData) {
 
   const adminSupabase = createAdminSupabaseClient();
 
+  const { data: existingProduct } = await adminSupabase
+    .from("products")
+    .select("slug")
+    .eq("id", productId)
+    .maybeSingle();
+
+  const payload = getProductPayload(formData);
+
   const { error } = await adminSupabase
     .from("products")
-    .update(getProductPayload(formData))
+    .update(payload)
     .eq("id", productId);
 
   if (error) {
@@ -205,10 +261,16 @@ export async function updateProduct(formData: FormData) {
     redirect(`${editUrl}?error=save-failed`);
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/products");
+  revalidateStoreProductPaths(existingProduct?.slug || undefined);
+
+  if (
+    payload.slug &&
+    payload.slug !== existingProduct?.slug
+  ) {
+    revalidatePath(`/shop/${payload.slug}`);
+  }
+
   revalidatePath(editUrl);
-  revalidatePath("/shop");
 
   redirect(`${editUrl}?updated=1`);
 }
@@ -224,10 +286,19 @@ export async function deleteProduct(formData: FormData) {
 
   const adminSupabase = createAdminSupabaseClient();
 
-  const { data: productFiles } = await adminSupabase
-    .from("product_files")
-    .select("storage_path")
-    .eq("product_id", productId);
+  const [{ data: product }, { data: productFiles }] =
+    await Promise.all([
+      adminSupabase
+        .from("products")
+        .select("slug")
+        .eq("id", productId)
+        .maybeSingle(),
+
+      adminSupabase
+        .from("product_files")
+        .select("storage_path")
+        .eq("product_id", productId),
+    ]);
 
   const storagePaths =
     productFiles
@@ -261,9 +332,7 @@ export async function deleteProduct(formData: FormData) {
     );
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/products");
-  revalidatePath("/shop");
+  revalidateStoreProductPaths(product?.slug || undefined);
 
   redirect("/admin/products?deleted=1");
 }

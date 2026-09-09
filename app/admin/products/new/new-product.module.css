@@ -1,0 +1,378 @@
+.formLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+.mainColumn,
+.sidebar {
+  display: grid;
+  gap: 22px;
+}
+
+.formCard,
+.catalogGuide,
+.saveCard,
+.errorCard {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 35px rgba(49, 37, 41, 0.055);
+}
+
+.formCard {
+  padding: 24px;
+}
+
+.cardHeading {
+  margin-bottom: 20px;
+}
+
+.cardHeading > span,
+.catalogGuide > span,
+.saveCard > div > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #b33a6b;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.cardHeading h2,
+.saveCard h3 {
+  margin: 0 0 6px;
+}
+
+.cardHeading h2 {
+  font-size: 1.28rem;
+}
+
+.cardHeading p,
+.saveCard p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.sidebarFields {
+  display: grid;
+  gap: 17px;
+}
+
+.field {
+  display: grid;
+  grid-template-rows: 20px auto minmax(34px, auto);
+  gap: 7px;
+  min-width: 0;
+  align-content: start;
+}
+
+.field > span {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 0 12px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  line-height: 1;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  outline: none;
+  resize: vertical;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #a79ba0;
+  font-size: 0.76rem;
+  opacity: 1;
+}
+
+.field select {
+  padding-right: 34px;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: rgba(217, 86, 139, 0.65);
+  box-shadow: 0 0 0 3px rgba(217, 86, 139, 0.08);
+}
+
+.field small {
+  display: block;
+  min-height: 34px;
+  color: var(--text-soft);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.fullWidth.field {
+  grid-template-rows: 20px auto minmax(20px, auto);
+}
+
+.quoteGuide {
+  min-height: 105px;
+  box-sizing: border-box;
+  padding: 15px 16px;
+  border: 1px solid rgba(217, 86, 139, 0.18);
+  border-radius: 13px;
+  background: rgba(217, 86, 139, 0.045);
+  align-self: start;
+}
+
+.quoteGuide > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #b33a6b;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.quoteGuide strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.86rem;
+}
+
+.quoteGuide p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.toggleList {
+  display: grid;
+  gap: 10px;
+}
+
+.toggleCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-height: 70px;
+  box-sizing: border-box;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fcfafb;
+  cursor: pointer;
+}
+
+.toggleCard input {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: #d9568b;
+}
+
+.toggleCard span {
+  display: grid;
+  gap: 2px;
+}
+
+.toggleCard strong {
+  font-size: 0.82rem;
+}
+
+.toggleCard small {
+  color: var(--text-soft);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.catalogGuide {
+  padding: 20px;
+}
+
+.catalogGuide > div {
+  display: grid;
+  gap: 7px;
+}
+
+.catalogGuide p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.catalogGuide b {
+  min-width: 44px;
+  color: var(--text);
+}
+
+.saveCard {
+  position: sticky;
+  top: 20px;
+  padding: 20px;
+}
+
+.saveCard h3 {
+  font-size: 1.08rem;
+}
+
+.saveCard button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 15px;
+  background: #d9568b;
+  color: #fff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.saveCard button:hover {
+  filter: brightness(0.97);
+}
+
+.saveCard > a {
+  display: block;
+  margin-top: 11px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.errorCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding: 15px 16px;
+  border-color: rgba(190, 55, 84, 0.18);
+  background: rgba(190, 55, 84, 0.045);
+}
+
+.errorCard > div {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(190, 55, 84, 0.1);
+  color: #b63758;
+  font-weight: 900;
+}
+
+.errorCard section {
+  display: grid;
+  gap: 3px;
+}
+
+.errorCard strong {
+  font-size: 0.86rem;
+}
+
+.errorCard p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 1050px) {
+  .formLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .saveCard {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .formLayout,
+  .mainColumn,
+  .sidebar {
+    gap: 16px;
+  }
+
+  .formCard,
+  .catalogGuide,
+  .saveCard {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .fullWidth {
+    grid-column: auto;
+  }
+
+  .field,
+  .fullWidth.field {
+    grid-template-rows: 20px auto auto;
+  }
+
+  .field small {
+    min-height: 0;
+  }
+}

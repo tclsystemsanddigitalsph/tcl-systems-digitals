@@ -72,6 +72,8 @@ export default async function AdminDashboardPage() {
     recentOrdersResult,
     productsResult,
     deliveriesResult,
+    quotationsResult,
+    projectRequirementsResult,
   ] = await Promise.all([
     adminSupabase
       .from("orders")
@@ -94,6 +96,14 @@ export default async function AdminDashboardPage() {
     adminSupabase
       .from("delivery_requests")
       .select("id,status"),
+
+    adminSupabase
+      .from("quotation_requests")
+      .select("id,status"),
+
+    adminSupabase
+      .from("project_requirements")
+      .select("id,requirements_status,project_status"),
   ]);
 
   if (ordersResult.error) {
@@ -112,10 +122,23 @@ export default async function AdminDashboardPage() {
     console.error("Dashboard deliveries error:", deliveriesResult.error);
   }
 
+  if (quotationsResult.error) {
+    console.error("Dashboard quotations error:", quotationsResult.error);
+  }
+
+  if (projectRequirementsResult.error) {
+    console.error(
+      "Dashboard project requirements error:",
+      projectRequirementsResult.error,
+    );
+  }
+
   const orders = ordersResult.data ?? [];
   const recentOrders = recentOrdersResult.data ?? [];
   const products = productsResult.data ?? [];
   const deliveries = deliveriesResult.data ?? [];
+  const quotations = quotationsResult.data ?? [];
+  const projectRequirements = projectRequirementsResult.data ?? [];
 
   const completedOrders = orders.filter(
     (order) => order.payment_status === "COMPLETED",
@@ -146,6 +169,22 @@ export default async function AdminDashboardPage() {
       delivery.status === "IN_PROGRESS",
   ).length;
 
+  const pendingQuotations = quotations.filter(
+    (quotation) =>
+      quotation.status === "NEW" ||
+      quotation.status === "REVIEWING",
+  ).length;
+
+  const pendingProjectRequirements = projectRequirements.filter(
+    (item) =>
+      item.requirements_status === "SUBMITTED" ||
+      item.requirements_status === "RESUBMITTED" ||
+      item.requirements_status === "NEED_MORE_INFO" ||
+      item.project_status === "REVIEWING",
+  ).length;
+
+  void completedOrders;
+
   return (
     <main className="store-admin-dashboard">
       <div className="store-admin-dashboard-shell">
@@ -161,7 +200,8 @@ export default async function AdminDashboardPage() {
               <h1>Dashboard</h1>
 
               <p>
-                Track sales, orders, customers, products, and fulfillment.
+                Track sales, orders, customers, products, fulfillment,
+                quotation requests, and project requirements.
               </p>
             </div>
 
@@ -233,7 +273,9 @@ export default async function AdminDashboardPage() {
             </article>
           </section>
 
-          <section className={`${styles.deliveryCard} ${styles.mobilePendingDelivery}`}>
+          <section
+            className={`${styles.deliveryCard} ${styles.mobilePendingDelivery}`}
+          >
             <div>
               <span>PENDING DELIVERY</span>
 
@@ -350,7 +392,9 @@ export default async function AdminDashboardPage() {
             </section>
 
             <aside className={styles.sideColumn}>
-              <section className={`${styles.quickCard} ${styles.mobileQuickActions}`}>
+              <section
+                className={`${styles.quickCard} ${styles.mobileQuickActions}`}
+              >
                 <span>QUICK ACTIONS</span>
                 <h2>Manage your store</h2>
 
@@ -388,6 +432,36 @@ export default async function AdminDashboardPage() {
                     <b>→</b>
                   </a>
 
+                  <a href="/admin/quotation-requests">
+                    <i>♡</i>
+                    <div>
+                      <strong>Quotation requests</strong>
+                      <small>
+                        {pendingQuotations}{" "}
+                        {pendingQuotations === 1
+                          ? "request needs"
+                          : "requests need"}{" "}
+                        review.
+                      </small>
+                    </div>
+                    <b>→</b>
+                  </a>
+
+                  <a href="/admin/project-requirements">
+                    <i>◈</i>
+                    <div>
+                      <strong>Project requirements</strong>
+                      <small>
+                        {pendingProjectRequirements}{" "}
+                        {pendingProjectRequirements === 1
+                          ? "project needs"
+                          : "projects need"}{" "}
+                        attention.
+                      </small>
+                    </div>
+                    <b>→</b>
+                  </a>
+
                   <a href="/admin/orders">
                     <i>▣</i>
                     <div>
@@ -401,7 +475,9 @@ export default async function AdminDashboardPage() {
                 </div>
               </section>
 
-              <section className={`${styles.deliveryCard} ${styles.desktopPendingDelivery}`}>
+              <section
+                className={`${styles.deliveryCard} ${styles.desktopPendingDelivery}`}
+              >
                 <div>
                   <span>PENDING DELIVERY</span>
 

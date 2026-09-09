@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
@@ -114,7 +115,7 @@ export default async function DeliveriesPage({
                 FULFILLMENT
               </span>
 
-              <h1>Deliveries</h1>
+              <h1>Manual Deliveries</h1>
 
               <p>
                 Manage manual product delivery and custom fulfillment
@@ -122,6 +123,121 @@ export default async function DeliveriesPage({
               </p>
             </div>
           </header>
+
+          <section
+            aria-labelledby="manual-deliveries-guide"
+            style={{
+              marginBottom: "18px",
+              padding: "18px",
+              border: "1px solid rgba(217, 86, 139, 0.2)",
+              borderRadius: "16px",
+              background:
+                "linear-gradient(145deg, rgba(217, 86, 139, 0.07), rgba(255, 255, 255, 0.98))",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: "18px",
+                flexWrap: "wrap",
+              }}
+            >
+              <div style={{ flex: "1 1 560px" }}>
+                <span
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    color: "var(--text-light)",
+                    fontSize: "0.56rem",
+                    fontWeight: 900,
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  WHAT THIS PAGE IS FOR
+                </span>
+
+                <h2
+                  id="manual-deliveries-guide"
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: "1rem",
+                  }}
+                >
+                  Manual fulfillment requests only
+                </h2>
+
+                <p
+                  style={{
+                    margin: 0,
+                    color: "var(--text-soft)",
+                    fontSize: "0.68rem",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  Use this page when a purchased product needs a manual
+                  handover, transfer, or fulfillment request. Customized
+                  websites and booking systems are managed in Project
+                  Requirements instead. Automatic digital downloads are
+                  handled through Digital Access and normally do not appear
+                  here.
+                </p>
+
+                <div
+                  style={{
+                    marginTop: "14px",
+                    padding: "12px 14px",
+                    borderRadius: "12px",
+                    background: "rgba(255,255,255,0.82)",
+                    border: "1px solid rgba(217, 86, 139, 0.12)",
+                  }}
+                >
+                  <strong
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "0.62rem",
+                    }}
+                  >
+                    Manual delivery flow
+                  </strong>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "var(--text-soft)",
+                      fontSize: "0.62rem",
+                      lineHeight: 1.65,
+                    }}
+                  >
+                    Request created → appears in this queue → TCL reviews and
+                    fulfills it → status is updated → request is completed.
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                href="/admin/project-requirements"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "38px",
+                  padding: "0 13px",
+                  border: "1px solid rgba(217, 86, 139, 0.24)",
+                  borderRadius: "10px",
+                  background: "#fff",
+                  color: "var(--text)",
+                  fontSize: "0.6rem",
+                  fontWeight: 850,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Go to Project Requirements →
+              </Link>
+            </div>
+          </section>
 
           <section className={styles.stats}>
             <article>
