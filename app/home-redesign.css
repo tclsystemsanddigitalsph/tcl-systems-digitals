@@ -2636,3 +2636,48 @@ main {
     color: #d8cbd0 !important;
   }
 }
+
+
+/* =========================================================
+   MOBILE ALIGNMENT FIX v9
+   Hero trust = 3 equal one-line columns
+   ========================================================= */
+@media (max-width: 640px) {
+  main .hero .hero-trust {
+    width: min(100%, 370px) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    column-gap: 0 !important;
+    padding-top: 17px !important;
+  }
+
+  main .hero .hero-trust > div:not(.hero-trust-divider) {
+    min-width: 0 !important;
+    padding: 0 5px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  main .hero .hero-trust strong {
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 0 5px !important;
+    white-space: nowrap !important;
+    font-size: clamp(.53rem, 2.45vw, .63rem) !important;
+    line-height: 1 !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust span {
+    width: 100% !important;
+    white-space: nowrap !important;
+    font-size: clamp(.43rem, 2vw, .51rem) !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust-divider {
+    display: none !important;
+  }
+}

@@ -99,10 +99,15 @@ export default function SiteFooter() {
 
         @media (max-width: 640px) {
           .site-footer .footer-grid {
-            display: block !important;
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            column-gap: 12px !important;
+            row-gap: 0 !important;
+            align-items: start !important;
           }
 
           .site-footer .footer-brand {
+            grid-column: 1 / -1 !important;
             width: 100% !important;
             margin: 0 0 22px !important;
             text-align: center !important;
@@ -120,37 +125,47 @@ export default function SiteFooter() {
           }
 
           .site-footer .footer-links-grid {
-            display: grid !important;
-            width: 100% !important;
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-            gap: 10px !important;
-            align-items: start !important;
+            display: contents !important;
           }
 
-          .site-footer .footer-links-grid .footer-column {
+          .site-footer .footer-column {
             display: flex !important;
             min-width: 0 !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 0 4px !important;
+            padding: 0 !important;
             flex-direction: column !important;
-            align-items: flex-start !important;
+            align-items: center !important;
             gap: 7px !important;
-            text-align: left !important;
+            text-align: center !important;
           }
 
-          .site-footer .footer-links-grid .footer-column > strong {
-            margin: 0 0 4px !important;
-            font-size: .66rem !important;
+          .site-footer .footer-column:nth-of-type(1) {
+            grid-column: 1 !important;
           }
 
-          .site-footer .footer-links-grid .footer-column a {
+          .site-footer .footer-column:nth-of-type(2) {
+            grid-column: 2 !important;
+          }
+
+          .site-footer .footer-column:nth-of-type(3) {
+            grid-column: 3 !important;
+          }
+
+          .site-footer .footer-column > strong {
+            margin: 0 0 5px !important;
+            white-space: nowrap !important;
+            font-size: .67rem !important;
+          }
+
+          .site-footer .footer-column a {
             display: block !important;
-            width: auto !important;
+            width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-            font-size: .54rem !important;
+            font-size: .53rem !important;
             line-height: 1.3 !important;
+            text-align: center !important;
             overflow-wrap: anywhere !important;
           }
 
