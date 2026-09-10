@@ -2320,3 +2320,319 @@ main {
     font-size: .6rem !important;
   }
 }
+
+
+/* =========================================================
+   RESPONSIVE POLISH v8
+   Mobile hero, Why TCL readability, About spacing
+   ========================================================= */
+
+@media (max-width: 640px) {
+  /* ---------- MOBILE HERO: larger, balanced, centered ---------- */
+  main .hero {
+    min-height: calc(100svh - 68px) !important;
+    padding: 34px 0 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  main .hero .hero-grid {
+    width: min(100% - 28px, 390px) !important;
+    min-height: auto !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+
+  main .hero .hero-copy {
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  main .hero .eyebrow {
+    margin: 0 auto 13px !important;
+    justify-content: center !important;
+  }
+
+  main .hero .hero-copy h1 {
+    max-width: 355px !important;
+    margin: 0 auto 13px !important;
+    font-size: clamp(2.45rem, 12.2vw, 3.25rem) !important;
+    line-height: .96 !important;
+    letter-spacing: -.045em !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-copy h1 span {
+    display: block !important;
+    margin-top: 3px !important;
+  }
+
+  main .hero .hero-description {
+    max-width: 338px !important;
+    margin: 0 auto !important;
+    font-size: .82rem !important;
+    line-height: 1.55 !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-actions {
+    width: min(100%, 338px) !important;
+    margin: 19px auto 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  main .hero .hero-actions .button {
+    width: 100% !important;
+    min-height: 42px !important;
+    padding: 10px 9px !important;
+    justify-content: center !important;
+    font-size: .67rem !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-actions .button:first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  main .hero .hero-trust {
+    width: min(100%, 338px) !important;
+    margin: 20px auto 0 !important;
+    padding: 15px 0 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    border-top: 1px solid rgba(45, 38, 41, .14) !important;
+  }
+
+  main .hero .hero-trust > div:not(.hero-trust-divider) {
+    min-width: 0 !important;
+    padding: 0 9px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust > div:not(.hero-trust-divider) + .hero-trust-divider {
+    align-self: stretch !important;
+  }
+
+  main .hero .hero-trust-divider {
+    width: 1px !important;
+    min-height: 38px !important;
+    margin: 0 !important;
+    background: rgba(45, 38, 41, .14) !important;
+  }
+
+  main .hero .hero-trust strong {
+    display: block !important;
+    min-height: 27px !important;
+    color: #282225 !important;
+    font-size: .62rem !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust span {
+    display: block !important;
+    color: #746a6e !important;
+    font-size: .5rem !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-visual,
+  main .hero .brand-strip {
+    display: none !important;
+  }
+
+  /* ---------- WHY TCL: readable on light homepage ---------- */
+  main .section.section-white:has(.why-grid) {
+    background: #f1ecee !important;
+  }
+
+  main .why-grid {
+    gap: 20px !important;
+  }
+
+  main .why-copy {
+    max-width: 340px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  main .why-stat-card {
+    max-width: 342px !important;
+    margin: 15px auto 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #2b2428 !important;
+    border-top: 0 !important;
+    border-radius: 16px !important;
+    background: #242022 !important;
+    box-shadow: 0 15px 32px rgba(34, 27, 31, .16) !important;
+  }
+
+  main .why-stat-top {
+    padding: 15px 16px 13px !important;
+    border-bottom: 1px solid #51464b !important;
+    background: #242022 !important;
+  }
+
+  main .why-stat-top span {
+    color: #efbfd0 !important;
+  }
+
+  main .why-stat-top strong {
+    color: #fff !important;
+    font-size: .92rem !important;
+  }
+
+  main .why-stat-middle {
+    background: #242022 !important;
+  }
+
+  main .why-stat-middle > div {
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    padding: 12px 15px !important;
+    gap: 10px !important;
+    border-bottom: 1px solid #493f43 !important;
+    background: #242022 !important;
+  }
+
+  main .why-stat-middle strong {
+    width: 29px !important;
+    height: 29px !important;
+    background: #f0d9e1 !important;
+    color: #74495a !important;
+    font-size: .6rem !important;
+  }
+
+  main .why-stat-middle span {
+    color: #fff !important;
+    font-size: .63rem !important;
+    opacity: 1 !important;
+  }
+
+  main .why-stat-bottom {
+    padding: 12px 15px !important;
+    border-top: 0 !important;
+    background: #332b2f !important;
+  }
+
+  main .why-stat-bottom span {
+    color: #d8cbd0 !important;
+  }
+
+  main .why-stat-bottom strong {
+    color: #fff !important;
+  }
+
+  /* ---------- ABOUT: photo directly with intro block ---------- */
+  main .about-section {
+    padding-top: 24px !important;
+  }
+
+  main .about-section .about-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+
+  main .about-section .about-photo-column {
+    width: 124px !important;
+    max-width: 124px !important;
+    margin: 0 auto 5px !important;
+    padding: 0 !important;
+  }
+
+  main .about-section .about-photo-frame {
+    width: 124px !important;
+    height: 124px !important;
+    margin: 0 auto !important;
+  }
+
+  main .about-section .about-copy {
+    width: min(100%, 345px) !important;
+    margin: 0 auto !important;
+    padding-top: 0 !important;
+  }
+
+  main .about-section .about-copy .section-kicker {
+    margin-top: 0 !important;
+    margin-bottom: 2px !important;
+  }
+
+  main .about-section .about-copy h2 {
+    margin-top: 0 !important;
+    margin-bottom: 6px !important;
+  }
+
+  main .about-section .about-intro {
+    margin-top: 0 !important;
+  }
+}
+
+@media (min-width: 641px) {
+  /* Why TCL remains high contrast on tablet/desktop too */
+  main .section.section-white:has(.why-grid) {
+    background: #f3eff0 !important;
+  }
+
+  main .why-stat-card {
+    border: 1px solid #2b2428 !important;
+    border-top: 4px solid #9a6679 !important;
+    background: #242022 !important;
+    color: #fff !important;
+  }
+
+  main .why-stat-top {
+    border-bottom-color: #51464b !important;
+    background: #242022 !important;
+  }
+
+  main .why-stat-top span {
+    color: #efbfd0 !important;
+  }
+
+  main .why-stat-top strong,
+  main .why-stat-middle span,
+  main .why-stat-bottom strong {
+    color: #fff !important;
+  }
+
+  main .why-stat-middle,
+  main .why-stat-middle > div {
+    background: #242022 !important;
+  }
+
+  main .why-stat-middle > div {
+    border-bottom-color: #493f43 !important;
+  }
+
+  main .why-stat-middle strong {
+    background: #f0d9e1 !important;
+    color: #74495a !important;
+  }
+
+  main .why-stat-bottom {
+    border-top-color: #51464b !important;
+    background: #332b2f !important;
+  }
+
+  main .why-stat-bottom span {
+    color: #d8cbd0 !important;
+  }
+}
