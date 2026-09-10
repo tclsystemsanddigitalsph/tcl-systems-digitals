@@ -4,6 +4,7 @@ import styles from "./SiteHeader.module.css";
 
 const navItems = [
   { label: "Shop", href: "/shop" },
+  { label: "Portfolio", href: "/portfolio" },
   { label: "Order Status", href: "/order-status" },
   { label: "About Me", href: "/#about" },
   { label: "Reviews", href: "/#reviews" },
@@ -43,13 +44,6 @@ export default function SiteHeader() {
 
         <div className={styles.actions}>
           <Link
-            href="/quote/custom-business-website"
-            className={`${styles.actionButton} ${styles.quoteButton}`}
-          >
-            Request a Quote
-          </Link>
-
-          <Link
             href="/admin/login"
             className={`${styles.actionButton} ${styles.adminButton}`}
           >
@@ -69,13 +63,6 @@ export default function SiteHeader() {
 
       <nav className={styles.mobileNav} aria-label="Mobile navigation">
         <div className={styles.mobileTrack}>
-          <Link
-            href="/quote/custom-business-website"
-            className={`${styles.mobilePill} ${styles.mobileQuotePill}`}
-          >
-            Request a Quote
-          </Link>
-
           {navItems.map((item) => (
             <Link href={item.href} key={item.href} className={styles.mobilePill}>
               {item.label}

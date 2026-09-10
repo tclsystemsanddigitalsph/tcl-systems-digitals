@@ -1,0 +1,414 @@
+
+/* =========================================================
+   TCL HOMEPAGE FIX v5
+   REPLACE the previous home-layout-polish.css with this file.
+   Load AFTER home-redesign.css and home-mobile-polish.css.
+   ========================================================= */
+
+/* ---------- DESKTOP HERO ---------- */
+@media (min-width: 901px) {
+  .hero {
+    display: block !important;
+    min-height: auto !important;
+    padding: 44px 0 34px !important;
+  }
+
+  .hero-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 520px) minmax(320px, 440px) !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 58px !important;
+    min-height: 470px !important;
+  }
+
+  .hero-copy {
+    width: 100% !important;
+    max-width: 520px !important;
+    margin: 0 !important;
+    justify-self: end !important;
+    text-align: left !important;
+  }
+
+  .hero-copy h1 {
+    max-width: 510px !important;
+    margin: 12px 0 11px !important;
+    font-size: clamp(3rem, 4.2vw, 4.7rem) !important;
+    line-height: .95 !important;
+  }
+
+  .hero-description {
+    max-width: 470px !important;
+  }
+
+  .hero-actions {
+    justify-content: flex-start !important;
+  }
+
+  .hero-trust {
+    margin-left: 0 !important;
+  }
+
+  .hero-visual {
+    display: block !important;
+    width: 440px !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    justify-self: start !important;
+    transform: scale(.88) !important;
+    transform-origin: center !important;
+  }
+
+  .brand-strip {
+    margin-top: 20px !important;
+  }
+}
+
+/* ---------- WHY TCL ---------- */
+.why-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 410px) !important;
+  align-items: center !important;
+  gap: clamp(34px, 6vw, 68px) !important;
+}
+
+.why-copy {
+  max-width: 560px !important;
+}
+
+.why-stat-card {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 410px !important;
+  margin: 0 auto !important;
+  padding: 20px !important;
+  overflow: hidden !important;
+  border: 1px solid #171315 !important;
+  border-radius: 15px !important;
+  background: #211c1f !important;
+  color: #fff !important;
+  box-shadow: 0 16px 34px rgba(28, 21, 24, .16) !important;
+}
+
+.why-stat-card::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(213, 142, 168, .22), transparent 35%),
+    linear-gradient(135deg, rgba(255,255,255,.035), transparent 42%) !important;
+}
+
+.why-stat-top,
+.why-stat-middle,
+.why-stat-bottom {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.why-stat-top {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding-bottom: 13px !important;
+  border-bottom: 1px solid #55484e !important;
+}
+
+.why-stat-top span {
+  color: #e5c5d0 !important;
+  font-size: .5rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .13em !important;
+}
+
+.why-stat-top strong {
+  max-width: 220px !important;
+  color: #fff !important;
+  font-size: 1rem !important;
+  line-height: 1.1 !important;
+  text-align: right !important;
+}
+
+.why-stat-middle {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  margin: 13px 0 !important;
+}
+
+.why-stat-middle > div {
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 86px !important;
+  padding: 10px 8px !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  border: 1px solid #5a4c52 !important;
+  border-radius: 10px !important;
+  background: #30282c !important;
+}
+
+.why-stat-middle strong {
+  display: block !important;
+  color: #f2b8ce !important;
+  font-size: 1.05rem !important;
+  font-weight: 850 !important;
+}
+
+.why-stat-middle span {
+  display: block !important;
+  color: #fff !important;
+  font-size: .54rem !important;
+  font-weight: 650 !important;
+  line-height: 1.3 !important;
+}
+
+.why-stat-bottom {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid #55484e !important;
+}
+
+.why-stat-bottom span {
+  color: #d5c7cc !important;
+  font-size: .56rem !important;
+}
+
+.why-stat-bottom strong {
+  color: #fff !important;
+  font-size: .72rem !important;
+  text-align: right !important;
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 640px) {
+  .hero {
+    display: flex !important;
+    min-height: calc(100svh - 62px) !important;
+    padding: 20px 0 18px !important;
+    align-items: center !important;
+  }
+
+  .hero-grid {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  .hero-copy {
+    width: 100% !important;
+    max-width: 350px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  .eyebrow {
+    margin: 0 auto 12px !important;
+  }
+
+  .hero-copy h1 {
+    max-width: 330px !important;
+    margin: 0 auto 10px !important;
+  }
+
+  .hero-description {
+    max-width: 320px !important;
+    margin: 0 auto !important;
+  }
+
+  .hero-actions {
+    width: min(100%, 320px) !important;
+    margin: 15px auto 0 !important;
+  }
+
+  .hero-trust {
+    width: min(100%, 330px) !important;
+    margin: 17px auto 0 !important;
+  }
+
+  /* Why TCL */
+  .why-grid {
+    display: block !important;
+  }
+
+  .why-copy {
+    max-width: 340px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  .why-list {
+    grid-template-columns: 1fr 1fr !important;
+    max-width: 340px !important;
+    margin: 13px auto 0 !important;
+    text-align: left !important;
+  }
+
+  .why-stat-card {
+    max-width: 340px !important;
+    margin: 15px auto 0 !important;
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .why-stat-top {
+    align-items: center !important;
+  }
+
+  .why-stat-top strong {
+    max-width: 175px !important;
+    font-size: .8rem !important;
+  }
+
+  .why-stat-middle {
+    gap: 5px !important;
+    margin: 10px 0 !important;
+  }
+
+  .why-stat-middle > div {
+    min-height: 64px !important;
+    padding: 7px 6px !important;
+  }
+
+  .why-stat-middle strong {
+    font-size: .8rem !important;
+  }
+
+  .why-stat-middle span {
+    font-size: .45rem !important;
+  }
+
+  /* Clear divider between Why TCL and About */
+  .about-section {
+    position: relative !important;
+    margin-top: 18px !important;
+    padding-top: 30px !important;
+    border-top: 1px solid #d9d1d4 !important;
+  }
+
+  .about-section::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -1px !important;
+    left: 50% !important;
+    width: 52px !important;
+    height: 3px !important;
+    transform: translateX(-50%) !important;
+    border-radius: 999px !important;
+    background: #9b687b !important;
+  }
+
+  /* About — centered photo with only a small gap to introduction */
+  .about-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+
+  .about-photo-column {
+    float: none !important;
+    width: 128px !important;
+    max-width: 128px !important;
+    margin: 0 auto 9px !important;
+  }
+
+  .about-photo-frame {
+    width: 128px !important;
+    height: 128px !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+    aspect-ratio: 1 / 1 !important;
+    border: 3px solid #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 8px 22px rgba(44, 34, 38, .1) !important;
+  }
+
+  .about-photo {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  .about-photo-badge,
+  .about-photo-decoration {
+    display: none !important;
+  }
+
+  .about-copy {
+    width: 100% !important;
+    max-width: 345px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  .about-copy .section-kicker {
+    display: block !important;
+    margin-bottom: 4px !important;
+  }
+
+  .about-copy h2 {
+    margin: 0 0 7px !important;
+    padding: 0 !important;
+    text-align: center !important;
+  }
+
+  .about-copy h2 span {
+    display: block !important;
+    margin-top: 2px !important;
+  }
+
+  .about-copy p,
+  .about-intro {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+
+  .about-intro {
+    margin-top: 0 !important;
+  }
+
+  .about-roles {
+    justify-content: center !important;
+  }
+
+  .about-quote {
+    border-left: 0 !important;
+    border-top: 3px solid #9b687b !important;
+    text-align: center !important;
+  }
+
+  .about-copy .button {
+    width: min(100%, 260px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+@media (max-width: 640px) and (max-height: 700px) {
+  .hero {
+    min-height: calc(100svh - 56px) !important;
+    padding: 14px 0 !important;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(1.7rem, 8.5vw, 2.2rem) !important;
+  }
+
+  .hero-actions {
+    margin-top: 11px !important;
+  }
+
+  .hero-trust {
+    margin-top: 12px !important;
+  }
+}

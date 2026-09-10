@@ -1,0 +1,2322 @@
+/* Consolidated TCL homepage styles — single file, no extra imports needed. */
+
+
+/* TCL Homepage Refresh v2
+   Goal: significantly smaller scale + stronger contrast + softer pink usage.
+   Homepage only. */
+
+main {
+  background: #f7f5f3;
+  color: #211d1f;
+}
+
+/* ---------- HERO ---------- */
+
+.hero {
+  min-height: auto !important;
+  padding: 28px 0 20px !important;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(187, 132, 151, 0.09), transparent 24%),
+    linear-gradient(180deg, #fbfaf9 0%, #f4f1f0 100%) !important;
+}
+
+.hero-decoration {
+  opacity: 0.12 !important;
+  filter: grayscale(0.35) saturate(0.35);
+}
+
+.hero-grid {
+  min-height: 0 !important;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 390px) !important;
+  gap: 28px !important;
+  align-items: center !important;
+}
+
+.hero-copy {
+  max-width: 620px !important;
+}
+
+.eyebrow {
+  width: fit-content;
+  padding: 5px 8px !important;
+  border: 1px solid #dcd5d7;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #6d6266;
+  font-size: 0.56rem !important;
+  letter-spacing: 0.09em;
+}
+
+.eyebrow-dot {
+  width: 6px !important;
+  height: 6px !important;
+  background: #a86d82 !important;
+}
+
+.hero-copy h1 {
+  max-width: 590px !important;
+  margin: 11px 0 10px !important;
+  color: #211d1f !important;
+  font-size: clamp(2.1rem, 4.1vw, 4.1rem) !important;
+  line-height: 0.96 !important;
+  letter-spacing: -0.058em !important;
+}
+
+.hero-copy h1 span {
+  display: block;
+  color: #8e5e71 !important;
+}
+
+.hero-description {
+  max-width: 560px !important;
+  margin: 0 !important;
+  color: #655b5f !important;
+  font-size: 0.8rem !important;
+  line-height: 1.55 !important;
+}
+
+.hero-actions {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 6px !important;
+  margin-top: 14px !important;
+}
+
+.button,
+.hero .button {
+  min-height: 34px !important;
+  padding: 0 11px !important;
+  border-radius: 8px !important;
+  font-size: 0.64rem !important;
+  font-weight: 750 !important;
+}
+
+.button-primary {
+  background: #211d1f !important;
+  border-color: #211d1f !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.button-primary:hover {
+  background: #000 !important;
+  border-color: #000 !important;
+}
+
+.button-secondary {
+  background: #ffffff !important;
+  border-color: #d8d0d3 !important;
+  color: #3b3437 !important;
+}
+
+.hero-trust {
+  width: fit-content !important;
+  gap: 12px !important;
+  margin-top: 15px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid #ddd6d8 !important;
+}
+
+.hero-trust > div:not(.hero-trust-divider) {
+  gap: 1px !important;
+}
+
+.hero-trust strong {
+  color: #2d2729 !important;
+  font-size: 0.65rem !important;
+}
+
+.hero-trust span {
+  color: #7e7377 !important;
+  font-size: 0.53rem !important;
+}
+
+.hero-trust-divider {
+  width: 1px !important;
+  height: 25px !important;
+  background: #d8d0d3 !important;
+}
+
+.hero-visual {
+  width: 100%;
+  max-width: 390px !important;
+  transform: scale(0.76) !important;
+  transform-origin: center right !important;
+  margin-left: auto !important;
+}
+
+.hero-glow {
+  opacity: 0.14 !important;
+}
+
+.browser-card,
+.floating-card {
+  box-shadow: 0 10px 30px rgba(37, 29, 33, 0.09) !important;
+}
+
+.brand-strip {
+  margin-top: 10px !important;
+  padding-top: 11px !important;
+  border-top: 1px solid #ddd6d8 !important;
+  color: #756c70 !important;
+}
+
+.brand-strip span {
+  font-size: 0.5rem !important;
+  letter-spacing: 0.11em !important;
+}
+
+/* ---------- GENERAL SECTIONS ---------- */
+
+.section {
+  padding: 38px 0 !important;
+}
+
+.section-white {
+  background: #ffffff !important;
+}
+
+.section-heading {
+  margin-bottom: 18px !important;
+}
+
+.section-heading-row {
+  gap: 18px !important;
+}
+
+.section-heading h2,
+.custom-copy h2,
+.why-copy h2,
+.about-copy h2 {
+  margin-top: 5px !important;
+  color: #252022 !important;
+  font-size: clamp(1.45rem, 2.3vw, 2.15rem) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.section-heading p,
+.custom-copy > p,
+.why-copy > p,
+.about-copy > p {
+  color: #71676a !important;
+  font-size: 0.76rem !important;
+  line-height: 1.55 !important;
+}
+
+.section-kicker {
+  color: #936477 !important;
+  font-size: 0.53rem !important;
+  letter-spacing: 0.12em !important;
+}
+
+.text-link {
+  font-size: 0.66rem !important;
+}
+
+/* ---------- PRODUCTS ---------- */
+
+.product-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.product-card {
+  border: 1px solid #ddd6d8 !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  box-shadow: 0 5px 14px rgba(42, 33, 37, 0.035) !important;
+}
+
+.product-preview {
+  min-height: 135px !important;
+  filter: saturate(0.55) contrast(0.96);
+}
+
+.product-tag {
+  top: 7px !important;
+  left: 7px !important;
+  padding: 4px 6px !important;
+  border-radius: 6px !important;
+  font-size: 0.47rem !important;
+}
+
+.product-content {
+  padding: 12px !important;
+}
+
+.product-category {
+  font-size: 0.49rem !important;
+  color: #8a6674 !important;
+}
+
+.product-content h3 {
+  margin: 4px 0 !important;
+  font-size: 0.93rem !important;
+}
+
+.product-content p {
+  margin: 0 !important;
+  color: #6f6568 !important;
+  font-size: 0.64rem !important;
+  line-height: 1.42 !important;
+}
+
+.product-footer {
+  margin-top: 9px !important;
+  padding-top: 8px !important;
+}
+
+.product-price small {
+  font-size: 0.48rem !important;
+}
+
+.product-price strong {
+  font-size: 0.82rem !important;
+}
+
+.product-arrow {
+  width: 27px !important;
+  height: 27px !important;
+  font-size: 0.8rem !important;
+}
+
+/* ---------- REVIEWS: high contrast ---------- */
+
+.reviews-section {
+  background: #262124 !important;
+  color: #fff !important;
+}
+
+.reviews-section .section-kicker,
+.reviews-heading .section-kicker {
+  color: #e5b9c8 !important;
+}
+
+.reviews-heading h2,
+.reviews-heading strong {
+  color: #fff !important;
+}
+
+.reviews-heading p {
+  color: #c8bec2 !important;
+  font-size: 0.74rem !important;
+}
+
+.reviews-rating-summary {
+  transform: scale(0.86);
+  transform-origin: right center;
+}
+
+.reviews-recommendation {
+  margin-top: 14px !important;
+  padding: 13px 15px !important;
+  border: 1px solid #4b4246 !important;
+  border-radius: 12px !important;
+  background: #30292d !important;
+}
+
+.reviews-recommendation-copy span,
+.reviews-recommendation-copy strong {
+  color: #fff !important;
+}
+
+.reviews-recommendation-copy p {
+  color: #c5babe !important;
+  font-size: 0.64rem !important;
+}
+
+/* ---------- CATEGORIES ---------- */
+
+.categories-section {
+  background: #f2efed !important;
+}
+
+.category-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.category-card {
+  min-height: 108px !important;
+  padding: 13px !important;
+  border: 1px solid #ded7d9 !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.category-number {
+  font-size: 0.5rem !important;
+  color: #996879 !important;
+}
+
+.category-card h3 {
+  margin: 18px 0 3px !important;
+  font-size: 0.8rem !important;
+}
+
+.category-card p {
+  font-size: 0.59rem !important;
+  line-height: 1.35 !important;
+}
+
+.category-arrow {
+  font-size: 0.72rem !important;
+}
+
+/* ---------- CUSTOM ---------- */
+
+.custom-grid {
+  grid-template-columns: 0.72fr 1fr !important;
+  gap: 28px !important;
+  align-items: center !important;
+}
+
+.custom-visual {
+  max-width: 360px !important;
+  margin: 0 auto !important;
+  transform: scale(0.75) !important;
+}
+
+.custom-shape {
+  opacity: 0.12 !important;
+  filter: saturate(0.3);
+}
+
+.custom-window {
+  box-shadow: 0 10px 30px rgba(36, 28, 32, 0.07) !important;
+}
+
+.custom-points {
+  gap: 5px !important;
+  margin: 12px 0 14px !important;
+}
+
+.custom-points div,
+.why-list div {
+  color: #5f5659 !important;
+  font-size: 0.66rem !important;
+}
+
+.custom-points span,
+.why-list span {
+  color: #8f6172 !important;
+}
+
+/* ---------- WHY TCL: dark contrast block ---------- */
+
+.why-grid {
+  gap: 28px !important;
+}
+
+.why-stat-card {
+  padding: 18px !important;
+  border: 1px solid #2d2729 !important;
+  border-radius: 13px !important;
+  background: #262124 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.why-stat-top span,
+.why-stat-bottom span {
+  color: #cdbfc4 !important;
+}
+
+.why-stat-top strong,
+.why-stat-bottom strong {
+  color: #fff !important;
+}
+
+.why-stat-middle {
+  gap: 6px !important;
+  margin: 12px 0 !important;
+}
+
+.why-stat-middle > div {
+  min-height: 74px !important;
+  padding: 10px !important;
+  border: 1px solid #473d41 !important;
+  border-radius: 9px !important;
+  background: #312b2e !important;
+}
+
+.why-stat-middle strong {
+  color: #e6b8c8 !important;
+  font-size: 0.93rem !important;
+}
+
+.why-stat-middle span {
+  color: #d5cbd0 !important;
+  font-size: 0.54rem !important;
+}
+
+/* ---------- ABOUT ---------- */
+
+.about-section {
+  background: #ffffff !important;
+}
+
+.about-grid {
+  grid-template-columns: minmax(250px, 330px) minmax(0, 1fr) !important;
+  gap: 34px !important;
+}
+
+.about-photo-column {
+  width: 100% !important;
+  max-width: 290px !important;
+  margin: 0 auto !important;
+}
+
+.about-photo-decoration {
+  opacity: 0.1 !important;
+  filter: saturate(0.25);
+}
+
+.about-photo-frame {
+  border-radius: 16px !important;
+  box-shadow: 0 10px 28px rgba(43, 33, 38, 0.08) !important;
+}
+
+.about-photo-badge {
+  right: -20px !important;
+  bottom: 14px !important;
+  padding: 7px 9px !important;
+  border-radius: 9px !important;
+  transform: scale(0.8);
+}
+
+.about-copy h2 span {
+  color: #8f6173 !important;
+}
+
+.about-copy p,
+.about-intro {
+  font-size: 0.7rem !important;
+  line-height: 1.52 !important;
+}
+
+.about-roles {
+  gap: 4px !important;
+  margin: 11px 0 !important;
+}
+
+.about-roles span {
+  padding: 4px 6px !important;
+  border: 1px solid #ddd6d8 !important;
+  background: #f7f5f3 !important;
+  color: #62595d !important;
+  font-size: 0.5rem !important;
+}
+
+.about-quote {
+  margin: 12px 0 14px !important;
+  padding: 10px 11px !important;
+  border: 1px solid #ded7d9 !important;
+  border-radius: 10px !important;
+  background: #f7f5f3 !important;
+}
+
+.about-quote p {
+  font-size: 0.65rem !important;
+}
+
+/* ---------- FINAL CTA ---------- */
+
+.final-cta {
+  padding: 34px 0 !important;
+  background: #181517 !important;
+}
+
+.final-cta-inner {
+  gap: 22px !important;
+}
+
+.final-cta h2 {
+  margin: 5px 0 !important;
+  color: #fff !important;
+  font-size: clamp(1.6rem, 3vw, 2.6rem) !important;
+  line-height: 1 !important;
+}
+
+.final-cta h2 span {
+  color: #ddaabd !important;
+}
+
+.final-cta p {
+  color: #c8bec2 !important;
+  font-size: 0.7rem !important;
+}
+
+.final-cta-kicker {
+  font-size: 0.5rem !important;
+}
+
+/* ---------- TABLET ---------- */
+
+@media (max-width: 900px) {
+  .hero {
+    padding: 24px 0 17px !important;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .hero-copy {
+    max-width: 580px !important;
+  }
+
+  .hero-visual {
+    display: none !important;
+  }
+
+  .brand-strip {
+    margin-top: 12px !important;
+  }
+
+  .section {
+    padding: 30px 0 !important;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .custom-grid,
+  .why-grid,
+  .about-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .custom-visual {
+    display: none !important;
+  }
+
+  .about-photo-column {
+    max-width: 230px !important;
+  }
+}
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 18px 0 14px !important;
+  }
+
+  .hero-decoration,
+  .hero-visual,
+  .brand-strip {
+    display: none !important;
+  }
+
+  .hero-copy h1 {
+    margin: 8px 0 7px !important;
+    font-size: clamp(1.82rem, 9.4vw, 2.55rem) !important;
+    line-height: 0.99 !important;
+  }
+
+  .hero-description {
+    max-width: 94% !important;
+    font-size: 0.7rem !important;
+    line-height: 1.48 !important;
+  }
+
+  .eyebrow {
+    padding: 4px 7px !important;
+    font-size: 0.49rem !important;
+  }
+
+  .hero-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px !important;
+    margin-top: 11px !important;
+  }
+
+  .hero-actions .button {
+    width: 100% !important;
+    min-height: 31px !important;
+    padding: 0 7px !important;
+    font-size: 0.57rem !important;
+  }
+
+  .hero-actions .button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .hero-trust {
+    width: 100% !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+    margin-top: 12px !important;
+    padding-top: 10px !important;
+  }
+
+  .hero-trust strong {
+    font-size: 0.57rem !important;
+  }
+
+  .hero-trust span {
+    font-size: 0.46rem !important;
+  }
+
+  .hero-trust-divider {
+    height: 20px !important;
+  }
+
+  .section {
+    padding: 25px 0 !important;
+  }
+
+  .section-heading {
+    margin-bottom: 13px !important;
+  }
+
+  .section-heading h2,
+  .custom-copy h2,
+  .why-copy h2,
+  .about-copy h2 {
+    font-size: clamp(1.35rem, 6.8vw, 1.7rem) !important;
+  }
+
+  .section-heading p,
+  .custom-copy > p,
+  .why-copy > p,
+  .about-copy > p {
+    font-size: 0.67rem !important;
+    line-height: 1.48 !important;
+  }
+
+  .section-kicker {
+    font-size: 0.46rem !important;
+  }
+
+  .section-heading-row {
+    align-items: flex-end !important;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+  }
+
+  .product-card {
+    display: grid !important;
+    grid-template-columns: 90px minmax(0, 1fr) !important;
+    min-height: 114px !important;
+    border-radius: 10px !important;
+  }
+
+  .product-preview {
+    min-height: 100% !important;
+    border-radius: 9px 0 0 9px !important;
+  }
+
+  .product-preview > *:not(.product-tag) {
+    transform: scale(0.46) !important;
+  }
+
+  .product-tag {
+    top: 5px !important;
+    left: 5px !important;
+    padding: 3px 4px !important;
+    font-size: 0.39rem !important;
+  }
+
+  .product-content {
+    padding: 9px !important;
+  }
+
+  .product-category {
+    font-size: 0.42rem !important;
+  }
+
+  .product-content h3 {
+    margin: 2px 0 3px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .product-content p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 0.55rem !important;
+    line-height: 1.32 !important;
+  }
+
+  .product-footer {
+    margin-top: 5px !important;
+    padding-top: 5px !important;
+  }
+
+  .product-price small {
+    font-size: 0.41rem !important;
+  }
+
+  .product-price strong {
+    font-size: 0.7rem !important;
+  }
+
+  .product-arrow {
+    width: 23px !important;
+    height: 23px !important;
+    font-size: 0.65rem !important;
+  }
+
+  .reviews-rating-summary {
+    display: none !important;
+  }
+
+  .reviews-recommendation {
+    padding: 10px !important;
+  }
+
+  .reviews-recommendation-icon {
+    display: none !important;
+  }
+
+  .reviews-recommendation-copy strong {
+    font-size: 0.76rem !important;
+  }
+
+  .reviews-recommendation-copy p {
+    font-size: 0.55rem !important;
+  }
+
+  .category-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .category-card {
+    min-height: 92px !important;
+    padding: 10px !important;
+    border-radius: 9px !important;
+  }
+
+  .category-card h3 {
+    margin: 13px 0 3px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .category-card p {
+    font-size: 0.52rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .category-arrow {
+    display: none !important;
+  }
+
+  .custom-points {
+    gap: 4px !important;
+    margin: 9px 0 11px !important;
+  }
+
+  .custom-points div,
+  .why-list div {
+    font-size: 0.59rem !important;
+  }
+
+  .why-stat-card {
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .why-stat-middle {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .why-stat-middle > div {
+    min-height: 58px !important;
+    padding: 7px 4px !important;
+  }
+
+  .why-stat-middle strong {
+    font-size: 0.78rem !important;
+  }
+
+  .why-stat-middle span {
+    font-size: 0.44rem !important;
+  }
+
+  .about-grid {
+    gap: 16px !important;
+  }
+
+  .about-photo-column {
+    width: min(170px, 54vw) !important;
+  }
+
+  .about-photo-badge {
+    right: -28px !important;
+    bottom: 8px !important;
+    transform: scale(0.65) !important;
+  }
+
+  .about-copy p,
+  .about-intro {
+    font-size: 0.62rem !important;
+    line-height: 1.42 !important;
+  }
+
+  .about-roles {
+    margin: 8px 0 !important;
+  }
+
+  .about-roles span {
+    padding: 3px 5px !important;
+    font-size: 0.44rem !important;
+  }
+
+  .about-quote {
+    margin: 8px 0 10px !important;
+    padding: 8px !important;
+  }
+
+  .about-quote p {
+    font-size: 0.56rem !important;
+  }
+
+  .final-cta {
+    padding: 25px 0 !important;
+  }
+
+  .final-cta-inner {
+    gap: 13px !important;
+  }
+
+  .final-cta h2 {
+    font-size: 1.42rem !important;
+  }
+
+  .final-cta p {
+    font-size: 0.6rem !important;
+  }
+
+  .final-cta-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    gap: 5px !important;
+  }
+
+  .final-cta-actions .button {
+    min-height: 31px !important;
+    padding: 0 6px !important;
+    font-size: 0.54rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   TCL HOMEPAGE — MOBILE UI POLISH v3
+   Add this AFTER the existing homepage redesign styles.
+   Keeps current compact sizing, but fixes mobile composition.
+   ========================================================= */
+
+@media (max-width: 640px) {
+  main {
+    overflow: hidden;
+    background: #f8f6f4 !important;
+  }
+
+  /* HERO: clean editorial layout instead of squeezed desktop UI */
+  .hero {
+    padding: 22px 0 18px !important;
+    background:
+      linear-gradient(180deg, #ffffff 0%, #f6f2f1 100%) !important;
+    border-bottom: 1px solid #e5dfe0;
+  }
+
+  .hero-grid {
+    display: block !important;
+  }
+
+  .hero-copy {
+    max-width: none !important;
+  }
+
+  .eyebrow {
+    margin-bottom: 11px !important;
+    background: #f4efef !important;
+    border-color: #e2d9dc !important;
+  }
+
+  .hero-copy h1 {
+    max-width: 330px !important;
+    margin: 0 0 10px !important;
+  }
+
+  .hero-copy h1 span {
+    display: inline !important;
+    color: #8d5f70 !important;
+  }
+
+  .hero-description {
+    max-width: 335px !important;
+    color: #62595c !important;
+  }
+
+  .hero-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+    margin-top: 15px !important;
+  }
+
+  .hero-actions .button,
+  .hero-actions .button:first-child {
+    grid-column: auto !important;
+    width: 100% !important;
+    min-height: 36px !important;
+  }
+
+  .hero-actions .button-primary {
+    background: #241f21 !important;
+  }
+
+  .hero-actions .button-secondary {
+    background: transparent !important;
+  }
+
+  /* Trust points become one clean strip, not tiny separated columns */
+  .hero-trust {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    width: 100% !important;
+    margin-top: 17px !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid #ddd6d8 !important;
+  }
+
+  .hero-trust > div:not(.hero-trust-divider) {
+    min-width: 0 !important;
+    padding: 0 7px !important;
+    text-align: center !important;
+  }
+
+  .hero-trust > div:not(.hero-trust-divider):first-child {
+    padding-left: 0 !important;
+  }
+
+  .hero-trust > div:not(.hero-trust-divider):last-child {
+    padding-right: 0 !important;
+  }
+
+  .hero-trust-divider {
+    display: none !important;
+  }
+
+  .hero-trust strong,
+  .hero-trust span {
+    display: block !important;
+  }
+
+  .hero-trust strong {
+    margin-bottom: 2px !important;
+  }
+
+  /* SECTION HEADINGS */
+  .section-heading-row {
+    display: block !important;
+  }
+
+  .section-heading-row .text-link {
+    display: inline-flex !important;
+    margin-top: 9px !important;
+  }
+
+  .centered-heading {
+    text-align: left !important;
+  }
+
+  /* FEATURED PRODUCTS:
+     vertical mini-cards are cleaner than the previous 90px split cards */
+  .product-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .product-card {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+  }
+
+  .product-preview {
+    min-height: 100px !important;
+    height: 100px !important;
+    border-radius: 0 !important;
+  }
+
+  .product-preview > *:not(.product-tag) {
+    transform: scale(0.56) !important;
+  }
+
+  .product-content {
+    display: flex !important;
+    flex: 1 !important;
+    flex-direction: column !important;
+    padding: 10px !important;
+  }
+
+  .product-content h3 {
+    min-height: 0 !important;
+    font-size: 0.76rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .product-content p {
+    -webkit-line-clamp: 2 !important;
+    min-height: 0 !important;
+    font-size: 0.54rem !important;
+  }
+
+  .product-footer {
+    margin-top: auto !important;
+    padding-top: 7px !important;
+  }
+
+  /* REVIEWS: full-bleed dark contrast block */
+  .reviews-section {
+    position: relative;
+    background: #252124 !important;
+  }
+
+  .reviews-section .section-heading,
+  .reviews-heading {
+    text-align: left !important;
+  }
+
+  .reviews-recommendation {
+    border-color: #494145 !important;
+    background: #302a2d !important;
+  }
+
+  /* CATEGORY UI:
+     list cards are easier to scan on a phone than tiny square tiles */
+  .category-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .category-card {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: 28px minmax(0, 1fr) 20px !important;
+    align-items: center !important;
+    min-height: 0 !important;
+    padding: 10px 11px !important;
+    border-radius: 10px !important;
+  }
+
+  .category-number {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    align-self: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 7px !important;
+    background: #f2e9ec !important;
+  }
+
+  .category-card h3 {
+    grid-column: 2 !important;
+    margin: 0 0 2px !important;
+  }
+
+  .category-card p {
+    grid-column: 2 !important;
+    margin: 0 !important;
+  }
+
+  .category-arrow {
+    display: block !important;
+    grid-column: 3 !important;
+    grid-row: 1 / span 2 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    color: #8d6574 !important;
+  }
+
+  /* CUSTOM SERVICE:
+     turn it into a distinct compact callout */
+  .custom-grid {
+    display: block !important;
+  }
+
+  .custom-copy {
+    padding: 17px !important;
+    border: 1px solid #ddd5d8 !important;
+    border-radius: 13px !important;
+    background: #fff !important;
+  }
+
+  .custom-copy h2 {
+    max-width: 300px !important;
+  }
+
+  .custom-points {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    padding: 10px 0 !important;
+    border-top: 1px solid #eee9ea;
+    border-bottom: 1px solid #eee9ea;
+  }
+
+  .custom-copy .button {
+    width: 100% !important;
+    margin-top: 2px !important;
+  }
+
+  /* WHY TCL:
+     combine text and stats into one intentional dark panel */
+  .why-grid {
+    display: grid !important;
+    gap: 12px !important;
+  }
+
+  .why-copy {
+    padding: 0 1px !important;
+  }
+
+  .why-list {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px !important;
+    margin-top: 12px !important;
+  }
+
+  .why-list div {
+    padding: 8px !important;
+    border: 1px solid #e3dcde !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+  }
+
+  .why-stat-card {
+    margin-top: 2px !important;
+  }
+
+  .why-stat-top {
+    padding-bottom: 9px !important;
+    border-bottom: 1px solid #463d41 !important;
+  }
+
+  .why-stat-middle {
+    margin: 9px 0 !important;
+  }
+
+  .why-stat-bottom {
+    padding-top: 9px !important;
+    border-top: 1px solid #463d41 !important;
+  }
+
+  /* ABOUT:
+     use a horizontal intro card instead of a floating portrait composition */
+  .about-grid {
+    display: block !important;
+  }
+
+  .about-photo-column {
+    float: left !important;
+    width: 82px !important;
+    max-width: 82px !important;
+    margin: 0 14px 8px 0 !important;
+  }
+
+  .about-photo-frame {
+    overflow: hidden !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 12px !important;
+  }
+
+  .about-photo {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .about-photo-badge,
+  .about-photo-decoration {
+    display: none !important;
+  }
+
+  .about-copy {
+    display: block !important;
+  }
+
+  .about-copy::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+
+  .about-copy h2 {
+    padding-top: 2px !important;
+  }
+
+  .about-copy h2 span {
+    display: block !important;
+    margin-top: 2px !important;
+  }
+
+  .about-intro {
+    color: #4f474a !important;
+    font-weight: 650 !important;
+  }
+
+  .about-roles,
+  .about-quote,
+  .about-copy .button {
+    clear: both !important;
+  }
+
+  .about-roles {
+    padding-top: 7px !important;
+  }
+
+  .about-quote {
+    border-left: 3px solid #9b6a7c !important;
+    background: #f4f1f0 !important;
+  }
+
+  .about-copy .button {
+    width: 100% !important;
+  }
+
+  /* FINAL CTA:
+     centered, simple, high contrast */
+  .final-cta-inner {
+    display: block !important;
+    text-align: center !important;
+  }
+
+  .final-cta-copy {
+    max-width: 310px !important;
+    margin: 0 auto !important;
+  }
+
+  .final-cta-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    max-width: 310px !important;
+    margin: 13px auto 0 !important;
+  }
+
+  .final-cta-actions .button {
+    width: 100% !important;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width: 380px) {
+  .product-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .product-card {
+    display: grid !important;
+    grid-template-columns: 86px minmax(0, 1fr) !important;
+  }
+
+  .product-preview {
+    height: auto !important;
+    min-height: 108px !important;
+  }
+
+  .product-content {
+    min-width: 0 !important;
+  }
+
+  .hero-trust {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .hero-trust > div:not(.hero-trust-divider) {
+    padding: 4px 0 !important;
+    text-align: left !important;
+    border-bottom: 1px solid #e2dcde;
+  }
+
+  .hero-trust > div:not(.hero-trust-divider):last-child {
+    border-bottom: 0;
+  }
+
+  .why-list {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+
+/* =========================================================
+   TCL HOMEPAGE FIX v5
+   REPLACE the previous home-layout-polish.css with this file.
+   Load AFTER home-redesign.css and home-mobile-polish.css.
+   ========================================================= */
+
+/* ---------- DESKTOP HERO ---------- */
+@media (min-width: 901px) {
+  .hero {
+    display: block !important;
+    min-height: auto !important;
+    padding: 44px 0 34px !important;
+  }
+
+  .hero-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 520px) minmax(320px, 440px) !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 58px !important;
+    min-height: 470px !important;
+  }
+
+  .hero-copy {
+    width: 100% !important;
+    max-width: 520px !important;
+    margin: 0 !important;
+    justify-self: end !important;
+    text-align: left !important;
+  }
+
+  .hero-copy h1 {
+    max-width: 510px !important;
+    margin: 12px 0 11px !important;
+    font-size: clamp(3rem, 4.2vw, 4.7rem) !important;
+    line-height: .95 !important;
+  }
+
+  .hero-description {
+    max-width: 470px !important;
+  }
+
+  .hero-actions {
+    justify-content: flex-start !important;
+  }
+
+  .hero-trust {
+    margin-left: 0 !important;
+  }
+
+  .hero-visual {
+    display: block !important;
+    width: 440px !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    justify-self: start !important;
+    transform: scale(.88) !important;
+    transform-origin: center !important;
+  }
+
+  .brand-strip {
+    margin-top: 20px !important;
+  }
+}
+
+/* ---------- WHY TCL ---------- */
+.why-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 410px) !important;
+  align-items: center !important;
+  gap: clamp(34px, 6vw, 68px) !important;
+}
+
+.why-copy {
+  max-width: 560px !important;
+}
+
+.why-stat-card {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 410px !important;
+  margin: 0 auto !important;
+  padding: 20px !important;
+  overflow: hidden !important;
+  border: 1px solid #171315 !important;
+  border-radius: 15px !important;
+  background: #211c1f !important;
+  color: #fff !important;
+  box-shadow: 0 16px 34px rgba(28, 21, 24, .16) !important;
+}
+
+.why-stat-card::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(213, 142, 168, .22), transparent 35%),
+    linear-gradient(135deg, rgba(255,255,255,.035), transparent 42%) !important;
+}
+
+.why-stat-top,
+.why-stat-middle,
+.why-stat-bottom {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.why-stat-top {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding-bottom: 13px !important;
+  border-bottom: 1px solid #55484e !important;
+}
+
+.why-stat-top span {
+  color: #e5c5d0 !important;
+  font-size: .5rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .13em !important;
+}
+
+.why-stat-top strong {
+  max-width: 220px !important;
+  color: #fff !important;
+  font-size: 1rem !important;
+  line-height: 1.1 !important;
+  text-align: right !important;
+}
+
+.why-stat-middle {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  margin: 13px 0 !important;
+}
+
+.why-stat-middle > div {
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 86px !important;
+  padding: 10px 8px !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  border: 1px solid #5a4c52 !important;
+  border-radius: 10px !important;
+  background: #30282c !important;
+}
+
+.why-stat-middle strong {
+  display: block !important;
+  color: #f2b8ce !important;
+  font-size: 1.05rem !important;
+  font-weight: 850 !important;
+}
+
+.why-stat-middle span {
+  display: block !important;
+  color: #fff !important;
+  font-size: .54rem !important;
+  font-weight: 650 !important;
+  line-height: 1.3 !important;
+}
+
+.why-stat-bottom {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid #55484e !important;
+}
+
+.why-stat-bottom span {
+  color: #d5c7cc !important;
+  font-size: .56rem !important;
+}
+
+.why-stat-bottom strong {
+  color: #fff !important;
+  font-size: .72rem !important;
+  text-align: right !important;
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 640px) {
+  .hero {
+    display: flex !important;
+    min-height: calc(100svh - 62px) !important;
+    padding: 20px 0 18px !important;
+    align-items: center !important;
+  }
+
+  .hero-grid {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  .hero-copy {
+    width: 100% !important;
+    max-width: 350px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  .eyebrow {
+    margin: 0 auto 12px !important;
+  }
+
+  .hero-copy h1 {
+    max-width: 330px !important;
+    margin: 0 auto 10px !important;
+  }
+
+  .hero-description {
+    max-width: 320px !important;
+    margin: 0 auto !important;
+  }
+
+  .hero-actions {
+    width: min(100%, 320px) !important;
+    margin: 15px auto 0 !important;
+  }
+
+  .hero-trust {
+    width: min(100%, 330px) !important;
+    margin: 17px auto 0 !important;
+  }
+
+  /* Why TCL */
+  .why-grid {
+    display: block !important;
+  }
+
+  .why-copy {
+    max-width: 340px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  .why-list {
+    grid-template-columns: 1fr 1fr !important;
+    max-width: 340px !important;
+    margin: 13px auto 0 !important;
+    text-align: left !important;
+  }
+
+  .why-stat-card {
+    max-width: 340px !important;
+    margin: 15px auto 0 !important;
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .why-stat-top {
+    align-items: center !important;
+  }
+
+  .why-stat-top strong {
+    max-width: 175px !important;
+    font-size: .8rem !important;
+  }
+
+  .why-stat-middle {
+    gap: 5px !important;
+    margin: 10px 0 !important;
+  }
+
+  .why-stat-middle > div {
+    min-height: 64px !important;
+    padding: 7px 6px !important;
+  }
+
+  .why-stat-middle strong {
+    font-size: .8rem !important;
+  }
+
+  .why-stat-middle span {
+    font-size: .45rem !important;
+  }
+
+  /* Clear divider between Why TCL and About */
+  .about-section {
+    position: relative !important;
+    margin-top: 18px !important;
+    padding-top: 30px !important;
+    border-top: 1px solid #d9d1d4 !important;
+  }
+
+  .about-section::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -1px !important;
+    left: 50% !important;
+    width: 52px !important;
+    height: 3px !important;
+    transform: translateX(-50%) !important;
+    border-radius: 999px !important;
+    background: #9b687b !important;
+  }
+
+  /* About — centered photo with only a small gap to introduction */
+  .about-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+
+  .about-photo-column {
+    float: none !important;
+    width: 128px !important;
+    max-width: 128px !important;
+    margin: 0 auto 9px !important;
+  }
+
+  .about-photo-frame {
+    width: 128px !important;
+    height: 128px !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+    aspect-ratio: 1 / 1 !important;
+    border: 3px solid #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 8px 22px rgba(44, 34, 38, .1) !important;
+  }
+
+  .about-photo {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  .about-photo-badge,
+  .about-photo-decoration {
+    display: none !important;
+  }
+
+  .about-copy {
+    width: 100% !important;
+    max-width: 345px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  .about-copy .section-kicker {
+    display: block !important;
+    margin-bottom: 4px !important;
+  }
+
+  .about-copy h2 {
+    margin: 0 0 7px !important;
+    padding: 0 !important;
+    text-align: center !important;
+  }
+
+  .about-copy h2 span {
+    display: block !important;
+    margin-top: 2px !important;
+  }
+
+  .about-copy p,
+  .about-intro {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+
+  .about-intro {
+    margin-top: 0 !important;
+  }
+
+  .about-roles {
+    justify-content: center !important;
+  }
+
+  .about-quote {
+    border-left: 0 !important;
+    border-top: 3px solid #9b687b !important;
+    text-align: center !important;
+  }
+
+  .about-copy .button {
+    width: min(100%, 260px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+@media (max-width: 640px) and (max-height: 700px) {
+  .hero {
+    min-height: calc(100svh - 56px) !important;
+    padding: 14px 0 !important;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(1.7rem, 8.5vw, 2.2rem) !important;
+  }
+
+  .hero-actions {
+    margin-top: 11px !important;
+  }
+
+  .hero-trust {
+    margin-top: 12px !important;
+  }
+}
+
+
+
+
+/* =========================================================
+   FINAL MOBILE OVERRIDES
+   These are intentionally last so they win against all
+   earlier homepage rules.
+   ========================================================= */
+
+@media (max-width: 640px) {
+  /* clear divider before About */
+  main .about-section {
+    position: relative !important;
+    margin-top: 16px !important;
+    padding-top: 30px !important;
+    border-top: 1px solid #cfc5c9 !important;
+    background: #fff !important;
+  }
+
+  main .about-section::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -2px !important;
+    left: 50% !important;
+    width: 52px !important;
+    height: 3px !important;
+    transform: translateX(-50%) !important;
+    border-radius: 999px !important;
+    background: #916173 !important;
+  }
+
+  /* centered About image with only a small gap to intro */
+  main .about-section .about-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+
+  main .about-section .about-photo-column {
+    float: none !important;
+    position: relative !important;
+    width: 130px !important;
+    max-width: 130px !important;
+    margin: 8px auto 8px !important;
+    align-self: center !important;
+  }
+
+  main .about-section .about-photo-frame {
+    width: 130px !important;
+    height: 130px !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+    border: 3px solid #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 8px 22px rgba(42, 31, 36, .12) !important;
+  }
+
+  main .about-section .about-photo {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  main .about-section .about-photo-badge,
+  main .about-section .about-photo-decoration {
+    display: none !important;
+  }
+
+  main .about-section .about-copy {
+    width: 100% !important;
+    max-width: 345px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  main .about-section .about-copy .section-kicker {
+    display: block !important;
+    margin: 0 0 3px !important;
+    text-align: center !important;
+  }
+
+  main .about-section .about-copy h2 {
+    margin: 0 0 7px !important;
+    padding: 0 !important;
+    text-align: center !important;
+  }
+
+  main .about-section .about-copy p,
+  main .about-section .about-intro {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+
+  main .about-section .about-intro {
+    margin-top: 0 !important;
+  }
+
+  main .about-section .about-roles {
+    justify-content: center !important;
+  }
+
+  /* Why TCL: much stronger readability */
+  main .why-stat-card {
+    border-color: #171316 !important;
+    background: #1d191b !important;
+    color: #fff !important;
+    box-shadow: 0 12px 28px rgba(26, 19, 22, .16) !important;
+  }
+
+  main .why-stat-top {
+    border-bottom-color: #5a4a51 !important;
+  }
+
+  main .why-stat-top span {
+    color: #f0c8d6 !important;
+  }
+
+  main .why-stat-top strong {
+    color: #fff !important;
+  }
+
+  main .why-stat-middle > div {
+    border-color: #5b4b52 !important;
+    background: #32292d !important;
+  }
+
+  main .why-stat-middle strong {
+    color: #ffc4d8 !important;
+  }
+
+  main .why-stat-middle span {
+    color: #fff !important;
+    opacity: 1 !important;
+  }
+
+  main .why-stat-bottom {
+    border-top-color: #5a4a51 !important;
+  }
+
+  main .why-stat-bottom span {
+    color: #ded1d6 !important;
+  }
+
+  main .why-stat-bottom strong {
+    color: #fff !important;
+  }
+}
+
+
+/* =========================================================
+   HERO ALIGNMENT PATCH v6
+   Desktop: keep copy + graphic centered as one tight group.
+   Mobile: remove dead space and keep hero balanced.
+   ========================================================= */
+
+@media (min-width: 901px) {
+  main .hero {
+    padding: 34px 0 28px !important;
+  }
+
+  main .hero .hero-grid {
+    width: min(1040px, calc(100% - 48px)) !important;
+    max-width: 1040px !important;
+    min-height: 430px !important;
+    margin: 0 auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    grid-template-columns: minmax(0, 500px) 390px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    column-gap: 26px !important;
+  }
+
+  main .hero .hero-copy {
+    width: 100% !important;
+    max-width: 500px !important;
+    margin: 0 !important;
+    justify-self: end !important;
+  }
+
+  main .hero .hero-visual {
+    width: 390px !important;
+    max-width: 390px !important;
+    margin: 0 !important;
+    justify-self: start !important;
+    transform: scale(.88) !important;
+    transform-origin: center left !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  main .hero .hero-grid {
+    grid-template-columns: 510px 400px !important;
+    column-gap: 30px !important;
+  }
+
+  main .hero .hero-copy {
+    max-width: 510px !important;
+  }
+
+  main .hero .hero-visual {
+    width: 400px !important;
+    max-width: 400px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  main .hero {
+    display: flex !important;
+    min-height: calc(100svh - 122px) !important;
+    padding: 26px 0 24px !important;
+    align-items: center !important;
+  }
+
+  main .hero .hero-grid {
+    display: flex !important;
+    width: 100% !important;
+    min-height: auto !important;
+    margin: 0 auto !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  main .hero .hero-copy {
+    width: 100% !important;
+    max-width: 350px !important;
+    margin: 0 auto !important;
+  }
+
+  main .hero .eyebrow {
+    margin: 0 auto 10px !important;
+  }
+
+  main .hero .hero-copy h1 {
+    max-width: 340px !important;
+    margin: 0 auto 9px !important;
+    line-height: .96 !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-copy h1 span {
+    display: block !important;
+  }
+
+  main .hero .hero-description {
+    max-width: 325px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-actions {
+    width: min(100%, 325px) !important;
+    margin: 14px auto 0 !important;
+    gap: 6px !important;
+  }
+
+  main .hero .hero-actions .button {
+    min-height: 34px !important;
+  }
+
+  main .hero .hero-trust {
+    width: min(100%, 325px) !important;
+    margin: 15px auto 0 !important;
+    padding-top: 11px !important;
+  }
+
+  main .hero .hero-trust > div:not(.hero-trust-divider) {
+    display: flex !important;
+    min-width: 0 !important;
+    padding: 0 6px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust strong,
+  main .hero .hero-trust span {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust strong {
+    min-height: 27px !important;
+    line-height: 1.15 !important;
+  }
+
+  main .hero .hero-trust span {
+    line-height: 1.25 !important;
+  }
+
+  main .hero .hero-visual,
+  main .hero .brand-strip {
+    display: none !important;
+  }
+}
+
+@media (max-width: 380px) {
+  main .hero {
+    min-height: calc(100svh - 112px) !important;
+  }
+
+  main .hero .hero-trust {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+  }
+
+  main .hero .hero-trust > div:not(.hero-trust-divider) {
+    border-bottom: 0 !important;
+    text-align: center !important;
+  }
+}
+
+
+/* =========================================================
+   WHY TCL REDESIGN v7 — ALL DEVICES
+   Replaces the previous dark stat-card treatment with a
+   cleaner, higher-contrast editorial metrics panel.
+   ========================================================= */
+
+.why-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px) !important;
+  align-items: center !important;
+  gap: clamp(34px, 5vw, 64px) !important;
+}
+
+.why-copy {
+  max-width: 560px !important;
+}
+
+.why-stat-card {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 420px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #d7cfd2 !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+  color: #211d1f !important;
+  box-shadow: 0 14px 34px rgba(37, 29, 33, .08) !important;
+}
+
+.why-stat-card::before,
+.why-stat-card::after {
+  display: none !important;
+}
+
+/* top header */
+.why-stat-top {
+  display: block !important;
+  padding: 18px 20px 15px !important;
+  border-bottom: 1px solid #ded7da !important;
+  background: #231f21 !important;
+}
+
+.why-stat-top span {
+  display: block !important;
+  margin-bottom: 6px !important;
+  color: #e7bccb !important;
+  font-size: .5rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .14em !important;
+  text-align: left !important;
+}
+
+.why-stat-top strong {
+  display: block !important;
+  max-width: none !important;
+  color: #ffffff !important;
+  font-size: 1.08rem !important;
+  line-height: 1.15 !important;
+  text-align: left !important;
+}
+
+/* metric rows instead of three boxed tiles */
+.why-stat-middle {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  background: #fff !important;
+}
+
+.why-stat-middle > div {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  min-height: 0 !important;
+  padding: 14px 18px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #ebe5e7 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+}
+
+.why-stat-middle > div:last-child {
+  border-bottom: 0 !important;
+}
+
+.why-stat-middle strong {
+  display: grid !important;
+  place-items: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  background: #f2e7eb !important;
+  color: #8e5d70 !important;
+  font-size: .72rem !important;
+  font-weight: 850 !important;
+}
+
+.why-stat-middle span {
+  display: block !important;
+  color: #2a2527 !important;
+  font-size: .72rem !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+}
+
+/* footer statement */
+.why-stat-bottom {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 14px 18px !important;
+  border-top: 1px solid #ddd5d8 !important;
+  background: #f6f2f3 !important;
+}
+
+.why-stat-bottom span {
+  color: #75696e !important;
+  font-size: .6rem !important;
+  font-weight: 650 !important;
+}
+
+.why-stat-bottom strong {
+  color: #231f21 !important;
+  font-size: .68rem !important;
+  font-weight: 850 !important;
+  text-align: right !important;
+}
+
+/* subtle accent line */
+.why-stat-card {
+  border-top: 4px solid #9a6679 !important;
+}
+
+/* ---------- TABLET ---------- */
+@media (max-width: 900px) {
+  .why-grid {
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+  }
+
+  .why-copy {
+    max-width: 620px !important;
+  }
+
+  .why-stat-card {
+    max-width: 520px !important;
+  }
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 640px) {
+  .why-copy {
+    max-width: 340px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  .why-stat-card {
+    max-width: 340px !important;
+    margin: 16px auto 0 !important;
+    border-radius: 14px !important;
+    border-top-width: 3px !important;
+  }
+
+  .why-stat-top {
+    padding: 14px 15px 12px !important;
+  }
+
+  .why-stat-top span {
+    margin-bottom: 4px !important;
+    font-size: .45rem !important;
+  }
+
+  .why-stat-top strong {
+    font-size: .88rem !important;
+  }
+
+  .why-stat-middle > div {
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    gap: 9px !important;
+    padding: 10px 13px !important;
+  }
+
+  .why-stat-middle strong {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+    font-size: .58rem !important;
+  }
+
+  .why-stat-middle span {
+    font-size: .59rem !important;
+  }
+
+  .why-stat-bottom {
+    grid-template-columns: 1fr !important;
+    gap: 3px !important;
+    padding: 11px 13px !important;
+  }
+
+  .why-stat-bottom span,
+  .why-stat-bottom strong {
+    text-align: left !important;
+  }
+
+  .why-stat-bottom span {
+    font-size: .5rem !important;
+  }
+
+  .why-stat-bottom strong {
+    font-size: .6rem !important;
+  }
+}

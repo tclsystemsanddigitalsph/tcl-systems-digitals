@@ -3,6 +3,7 @@ import Link from "next/link";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import ReviewsSliderClient from "@/components/ReviewsSliderClient";
+import "./home-redesign.css";
 
 const featuredProducts = [
   {
@@ -494,7 +495,7 @@ export default async function Home() {
                 <div><span>✓</span>Additional features available when needed</div>
               </div>
 
-              <Link className="button button-primary" href="/quote/custom-business-website">
+              <Link className="button button-primary" href="/shop/custom-business-website">
                 Ask About Customization
                 <span>→</span>
               </Link>
@@ -613,7 +614,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <Link className="button button-primary" href="/quote/custom-business-website">
+              <Link className="button button-primary" href="/shop/custom-business-website">
                 Let&apos;s Work Together
                 <span>→</span>
               </Link>
@@ -640,7 +641,7 @@ export default async function Home() {
                 Browse Products
                 <span>→</span>
               </Link>
-              <Link className="button button-outline-light" href="/quote/custom-business-website">
+              <Link className="button button-outline-light" href="/shop/custom-business-website">
                 Request a Custom Quote
               </Link>
             </div>

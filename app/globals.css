@@ -10556,3 +10556,64 @@ main {
     font-size: 0.68rem;
   }
 }
+
+/* =========================================================
+   TCL FOOTER MOBILE — 3 COLUMN NAV
+   Add to the BOTTOM of SiteFooter.module.css if the footer
+   uses CSS modules, or your footer stylesheet if global.
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .footer-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 18px 10px !important;
+    align-items: start !important;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1 !important;
+    margin-bottom: 2px !important;
+    text-align: center !important;
+  }
+
+  .footer-brand .brand {
+    justify-content: center !important;
+  }
+
+  .footer-brand p {
+    max-width: 290px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .origin-label {
+    justify-content: center !important;
+  }
+
+  .footer-column {
+    min-width: 0 !important;
+    gap: 7px !important;
+  }
+
+  .footer-column > strong {
+    margin-bottom: 3px !important;
+    font-size: .65rem !important;
+  }
+
+  .footer-column a {
+    overflow-wrap: anywhere !important;
+    font-size: .55rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .footer-bottom {
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: center !important;
+  }
+
+  .footer-bottom > div {
+    justify-content: center !important;
+  }
+}
