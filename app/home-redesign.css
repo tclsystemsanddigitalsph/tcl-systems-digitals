@@ -2734,3 +2734,58 @@ main {
     display: none !important;
   }
 }
+
+
+/* =========================================================
+   MOBILE HERO TRUST — CENTER DIRECTLY UNDER BUTTONS v11
+   ========================================================= */
+@media (max-width: 640px) {
+  main .hero .hero-actions,
+  main .hero .hero-trust {
+    width: min(100%, 338px) !important;
+    max-width: 338px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  main .hero .hero-trust {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  main .hero .hero-trust-divider {
+    display: none !important;
+  }
+
+  main .hero .hero-trust > div:not(.hero-trust-divider) {
+    flex: 1 1 0 !important;
+    width: 33.333333% !important;
+    max-width: 33.333333% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 3px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust strong,
+  main .hero .hero-trust span {
+    display: block !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust strong {
+    margin-bottom: 5px !important;
+  }
+}
