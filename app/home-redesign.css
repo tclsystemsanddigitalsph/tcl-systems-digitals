@@ -2681,3 +2681,56 @@ main {
     display: none !important;
   }
 }
+
+
+/* =========================================================
+   MOBILE HERO TRUST — FINAL EQUAL CENTERING v10
+   ========================================================= */
+@media (max-width: 640px) {
+  main .hero .hero-trust {
+    width: min(100%, 360px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    align-items: start !important;
+    justify-items: stretch !important;
+    gap: 0 !important;
+  }
+
+  main .hero .hero-trust > div:not(.hero-trust-divider) {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    display: grid !important;
+    grid-template-rows: auto auto !important;
+    justify-items: center !important;
+    align-content: start !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust > div:not(.hero-trust-divider):nth-of-type(1),
+  main .hero .hero-trust > div:not(.hero-trust-divider):nth-of-type(2),
+  main .hero .hero-trust > div:not(.hero-trust-divider):nth-of-type(3) {
+    justify-self: stretch !important;
+  }
+
+  main .hero .hero-trust strong,
+  main .hero .hero-trust span {
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  main .hero .hero-trust strong {
+    margin-bottom: 5px !important;
+  }
+
+  main .hero .hero-trust-divider {
+    display: none !important;
+  }
+}
