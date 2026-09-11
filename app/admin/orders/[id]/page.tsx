@@ -70,7 +70,7 @@ export default async function OrderDetailsPage({
   const { data: order, error } = await adminSupabase
     .from("orders")
     .select(
-      "id,order_number,customer_id,customer_name,customer_email,product_id,product_name,base_price,processing_fee_percent,processing_fee,total_amount,currency,payment_provider,payment_status,payment_terms,amount_paid,balance_due,deposit_percent,deposit_paid_at,final_payment_requested_at,order_status,cancellation_reason,cancelled_at,refund_status,refunded_amount,refunded_at,refund_note,paypal_order_id,paypal_capture_id,paymongo_checkout_session_id,paymongo_payment_id,paymongo_checkout_url,delivery_status,notes,paid_at,delivered_at,created_at,updated_at,receipt_token,download_access_expires_at",
+      "id,order_number,customer_id,customer_name,customer_email,product_id,product_name,selected_design_slug,selected_design_name,base_price,processing_fee_percent,processing_fee,total_amount,currency,payment_provider,payment_status,payment_terms,amount_paid,balance_due,deposit_percent,deposit_paid_at,final_payment_requested_at,order_status,cancellation_reason,cancelled_at,refund_status,refunded_amount,refunded_at,refund_note,paypal_order_id,paypal_capture_id,paymongo_checkout_session_id,paymongo_payment_id,paymongo_checkout_url,delivery_status,notes,paid_at,delivered_at,created_at,updated_at,receipt_token,download_access_expires_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -337,7 +337,56 @@ export default async function OrderDetailsPage({
               <section className={styles.card}>
                 <div className={styles.cardHeader}><span>PRODUCT</span><h2>Purchase breakdown</h2></div>
                 <div className={styles.productBlock}>
-                  <div><strong>{order.product_name}</strong><small>{order.product_id || "No product ID"}</small></div>
+                  <div style={{ marginBottom: order.selected_design_name ? "16px" : "0" }}>
+                    <strong>{order.product_name}</strong>
+                    <small>{order.product_id || "No product ID"}</small>
+                  </div>
+
+                  {order.selected_design_name ? (
+                    <div
+                      style={{
+                        marginBottom: "16px",
+                        padding: "14px 16px",
+                        border: "1px solid #ead5de",
+                        borderRadius: "11px",
+                        background: "#fff8fa",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "block",
+                          marginBottom: "4px",
+                          color: "var(--text-light)",
+                          fontSize: "0.52rem",
+                          fontWeight: 900,
+                          letterSpacing: "0.08em",
+                        }}
+                      >
+                        SELECTED DESIGN
+                      </span>
+                      <strong
+                        style={{
+                          display: "block",
+                          color: "var(--text)",
+                          fontSize: "0.76rem",
+                        }}
+                      >
+                        {order.selected_design_name}
+                      </strong>
+                      {order.selected_design_slug ? (
+                        <small
+                          style={{
+                            display: "block",
+                            marginTop: "3px",
+                            color: "var(--text-light)",
+                            fontSize: "0.54rem",
+                          }}
+                        >
+                          {order.selected_design_slug}
+                        </small>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <div className={styles.breakdown}>
                     <div><span>Project price</span><strong>{formatMoney(Number(order.base_price ?? 0))}</strong></div>
                     <div><span>Processing fee ({Number(order.processing_fee_percent ?? 0)}%)</span><strong>{formatMoney(Number(order.processing_fee ?? 0))}</strong></div>

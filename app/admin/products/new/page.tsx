@@ -13,10 +13,11 @@ type AdminNewProductPageProps = {
 
 const productCategories = [
   "Booking Systems",
+  "Customized Websites",
+  "DIY Templates",
   "Business Starter Kits",
   "Digital Product Shops",
   "Physical Product Shops",
-  "Customized Websites",
   "Digital Products",
   "Business Resources",
 ];

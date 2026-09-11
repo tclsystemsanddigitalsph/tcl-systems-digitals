@@ -16,6 +16,14 @@ type QuotePayload = {
   staffCount?: unknown;
   locationCount?: unknown;
   currentLink?: unknown;
+  existingWebsite?: unknown;
+  visitorActions?: unknown;
+  selfManage?: unknown;
+  userAccounts?: unknown;
+  sellOnline?: unknown;
+  onlinePayments?: unknown;
+  integrationNeeded?: unknown;
+  uncertaintyNotes?: unknown;
   offerings?: unknown;
   currentProcess?: unknown;
   mainProblems?: unknown;
@@ -35,40 +43,25 @@ type QuotePayload = {
   notes?: unknown;
 };
 
-const CUSTOM_BUSINESS_WEBSITE_SLUG = "custom-business-website";
-
 function cleanString(value: unknown, maxLength = 4000) {
-  if (typeof value !== "string") {
-    return "";
-  }
-
+  if (typeof value !== "string") return "";
   return value.trim().slice(0, maxLength);
 }
 
-function requiredString(
-  value: unknown,
-  fieldName: string,
-  maxLength = 4000,
-) {
+function requiredString(value: unknown, fieldName: string, maxLength = 4000) {
   const cleaned = cleanString(value, maxLength);
-
-  if (!cleaned) {
-    throw new Error(`${fieldName} is required.`);
-  }
-
+  if (!cleaned) throw new Error(`${fieldName} is required.`);
   return cleaned;
 }
 
 function cleanFeatures(value: unknown) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
+  if (!Array.isArray(value)) return [];
 
   return value
     .filter((item): item is string => typeof item === "string")
     .map((item) => item.trim())
     .filter(Boolean)
-    .slice(0, 50)
+    .slice(0, 100)
     .map((item) => item.slice(0, 200));
 }
 
@@ -81,21 +74,17 @@ function getAdminClient() {
   }
 
   return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+    auth: { autoRefreshToken: false, persistSession: false },
   });
 }
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as QuotePayload;
-
     const productSlug = requiredString(body.productSlug, "Product", 200);
     const supabase = getAdminClient();
 
-    const { data: catalogProduct, error: productError } = await supabase
+    const { data: product, error: productError } = await supabase
       .from("products")
       .select("slug,name,category,price,sale_price,product_type,is_active")
       .eq("slug", productSlug)
@@ -110,77 +99,49 @@ export async function POST(request: Request) {
       );
     }
 
-    const isCustomBusinessWebsite =
-      productSlug === CUSTOM_BUSINESS_WEBSITE_SLUG;
-
-    if (!catalogProduct && !isCustomBusinessWebsite) {
+    if (!product) {
       return NextResponse.json(
         { error: "This service could not be found." },
         { status: 404 },
       );
     }
 
-    if (catalogProduct && !isCustomBusinessWebsite) {
-      const effectivePrice = Number(
-        catalogProduct.sale_price ?? catalogProduct.price ?? 0,
+    const effectivePrice = Number(product.sale_price ?? product.price ?? 0);
+    const isQuotationOnly =
+      product.product_type === "SERVICE" &&
+      Number.isFinite(effectivePrice) &&
+      effectivePrice === 0;
+
+    if (!isQuotationOnly) {
+      return NextResponse.json(
+        { error: "This product does not use quotation requests." },
+        { status: 400 },
       );
-
-      const isQuotationOnly =
-        catalogProduct.product_type === "SERVICE" &&
-        Number.isFinite(effectivePrice) &&
-        effectivePrice === 0;
-
-      if (!isQuotationOnly) {
-        return NextResponse.json(
-          { error: "This product does not use quotation requests." },
-          { status: 400 },
-        );
-      }
     }
-
-    const product = {
-      slug: catalogProduct?.slug ?? CUSTOM_BUSINESS_WEBSITE_SLUG,
-      name:
-        catalogProduct?.name?.trim() ||
-        cleanString(body.productName, 200) ||
-        "Custom Business Website",
-      category:
-        catalogProduct?.category?.trim() ||
-        cleanString(body.category, 200) ||
-        "Websites",
-    };
 
     const fullName = requiredString(body.fullName, "Full name", 200);
     const businessName = requiredString(
       body.businessName,
-      "Business name",
+      "Business / project name",
       200,
     );
     const email = requiredString(body.email, "Email", 320);
-    const contactNumber = requiredString(
-      body.contactNumber,
-      "Contact number",
-      200,
-    );
-    const businessType = requiredString(
-      body.businessType,
-      "Business type",
-      300,
-    );
+    const contactNumber = requiredString(body.contactNumber, "Contact number", 200);
+    const businessType = requiredString(body.businessType, "Project type", 300);
     const offerings = requiredString(
       body.offerings,
-      "Products or services",
+      "Website purpose / content",
     );
-    const mainProblems = requiredString(
-      body.mainProblems,
-      "Business problems",
+    const visitorActions = requiredString(
+      body.visitorActions,
+      "What visitors should be able to do",
     );
+    const mainProblems = requiredString(body.mainProblems, "Project needs");
     const mainGoal = requiredString(body.mainGoal, "Project goal");
     const budget = requiredString(body.budget, "Budget", 200);
     const timeline = requiredString(body.timeline, "Timeline", 200);
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!emailPattern.test(email)) {
       return NextResponse.json(
         { error: "Please enter a valid email address." },
@@ -205,6 +166,14 @@ export async function POST(request: Request) {
         staff_count: cleanString(body.staffCount, 100),
         location_count: cleanString(body.locationCount, 100),
         current_link: cleanString(body.currentLink, 1000),
+        existing_website: cleanString(body.existingWebsite, 200),
+        visitor_actions: visitorActions,
+        self_manage: cleanString(body.selfManage, 300),
+        user_accounts: cleanString(body.userAccounts, 200),
+        sell_online: cleanString(body.sellOnline, 300),
+        online_payments: cleanString(body.onlinePayments, 200),
+        integration_needed: cleanString(body.integrationNeeded, 200),
+        uncertainty_notes: cleanString(body.uncertaintyNotes),
         offerings,
         current_process: cleanString(body.currentProcess),
         main_problems: mainProblems,

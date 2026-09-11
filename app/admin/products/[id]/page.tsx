@@ -25,11 +25,12 @@ type EditProductPageProps = {
 };
 
 const productCategories = [
+  "Customized Websites",
+  "DIY Templates",
   "Booking Systems",
   "Business Starter Kits",
   "Digital Product Shops",
   "Physical Product Shops",
-  "Customized Websites",
   "Digital Products",
   "Business Resources",
 ];
@@ -127,14 +128,14 @@ export default async function EditProductPage({
         <AdminNav active="products" email={user.email} />
 
         <section className="store-admin-main">
-          <header className={dashboardStyles.topbar}>
+          <header className={`${dashboardStyles.topbar} ${styles.editTopbar}`}>
             <div>
               <span className="store-admin-eyebrow">PRODUCT CATALOG</span>
               <h1>Edit Product</h1>
               <p>Update {product.name} and its storefront settings.</p>
             </div>
 
-            <div className={dashboardStyles.topbarActions}>
+            <div className={`${dashboardStyles.topbarActions} ${styles.editTopbarActions}`}>
               <a
                 href={`/shop/${product.slug}`}
                 target="_blank"
@@ -241,18 +242,17 @@ export default async function EditProductPage({
 
                   <label className={styles.field}>
                     <span>Product family / category</span>
-                    <input
-                      type="text"
+                    <select
                       name="category"
-                      list="tcl-product-categories-edit"
                       defaultValue={product.category ?? "Digital Products"}
-                    />
-                    <datalist id="tcl-product-categories-edit">
+                    >
                       {productCategories.map((category) => (
-                        <option value={category} key={category} />
+                        <option value={category} key={category}>
+                          {category}
+                        </option>
                       ))}
-                    </datalist>
-                    <small>Keep related tiers under the same family.</small>
+                    </select>
+                    <small>Select the storefront category for this product.</small>
                   </label>
 
                   <label className={styles.field}>
@@ -364,17 +364,6 @@ export default async function EditProductPage({
                 </div>
 
                 <div className={styles.fields}>
-                  <label className={styles.field}>
-                    <span>Image URL</span>
-                    <input
-                      type="url"
-                      name="image_url"
-                      defaultValue={product.image_url ?? ""}
-                      placeholder="https://..."
-                    />
-                    <small>Public product image URL.</small>
-                  </label>
-
                   <label className={styles.field}>
                     <span>Live demo URL</span>
                     <input

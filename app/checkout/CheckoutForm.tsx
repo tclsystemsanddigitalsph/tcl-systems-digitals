@@ -141,6 +141,8 @@ export default function CheckoutForm({
             productSlug,
             customerName,
             customerEmail,
+            selectedDesignSlug,
+            selectedDesignName: selectedDesignLabel,
             policyConsent,
           }),
         });
@@ -168,6 +170,8 @@ export default function CheckoutForm({
           productSlug,
           customerName,
           customerEmail,
+          selectedDesignSlug,
+          selectedDesignName: selectedDesignLabel,
           policyConsent,
         }),
       });

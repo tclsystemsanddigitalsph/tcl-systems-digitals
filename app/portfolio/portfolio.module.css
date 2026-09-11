@@ -1,321 +1,486 @@
-.page {
-  background: #fffafb;
-  color: #32262b;
+.main {
+  background: #faf8f8;
+  color: #272124;
+}
+
+.container {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
 }
 
 .hero {
-  padding: 58px 0 42px;
-  background: linear-gradient(180deg, #fff8fb 0%, #fff 100%);
-  border-bottom: 1px solid #f2e3e9;
+  padding: 72px 0 58px;
+  border-bottom: 1px solid #ece5e8;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(215, 176, 191, 0.13), transparent 34%),
+    #f8f5f6;
 }
 
 .heroInner {
-  width: min(700px, 100%);
+  width: min(760px, calc(100% - 40px));
   margin: 0 auto;
   text-align: center;
 }
 
-.heroInner h1 {
-  margin: 10px auto 13px;
-  font-size: clamp(2rem, 4vw, 3.4rem);
-  line-height: 1;
-  letter-spacing: -0.05em;
+.kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: #956b7a;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
-.heroInner > p {
-  max-width: 590px;
-  margin: 0 auto;
-  color: #78656d;
-  font-size: 0.9rem;
-  line-height: 1.65;
-}
-
-.heroNote {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  max-width: 570px;
-  margin: 19px auto 0;
-  padding: 11px 13px;
-  text-align: left;
-  border: 1px solid #efdce4;
-  border-radius: 13px;
-  background: #fff;
-}
-
-.heroNote > span {
-  flex: 0 0 26px;
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #f9eaf0;
-  color: #af6380;
-  font-size: 0.72rem;
-}
-
-.heroNote p {
+.hero h1,
+.intro h2,
+.cta h2 {
   margin: 0;
-  color: #6f5d65;
-  font-size: 0.76rem;
-  line-height: 1.55;
-}
-
-.workSection {
-  padding: 46px 0 64px;
-}
-
-.sectionHeading {
-  max-width: 560px;
-  margin-bottom: 22px;
-}
-
-.sectionHeading h2 {
-  margin: 7px 0 8px;
-  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
   letter-spacing: -0.04em;
 }
 
-.sectionHeading p {
-  margin: 0;
-  color: #78656d;
-  font-size: 0.84rem;
-  line-height: 1.6;
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+  line-height: 0.98;
 }
 
-/* Compact portfolio cards: up to 3 per row on wide screens */
-.workGrid {
+.hero p {
+  max-width: 620px;
+  margin: 18px auto 0;
+  color: #766b70;
+  line-height: 1.7;
+}
+
+.portfolioSection {
+  padding: 56px 0 70px;
+}
+
+.intro {
+  max-width: 690px;
+  margin: 0 auto 28px;
+  text-align: center;
+}
+
+.intro h2 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+
+.intro p {
+  margin: 12px auto 0;
+  color: #756a6f;
+  line-height: 1.7;
+}
+
+.grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 310px));
+  grid-template-columns: repeat(3, minmax(0, 310px));
+  justify-content: center;
   gap: 18px;
-  justify-content: start;
-  align-items: start;
 }
 
-.workCard {
+.card {
   width: 100%;
   max-width: 310px;
   overflow: hidden;
-  border: 1px solid #eedfe5;
-  border-radius: 17px;
+  border: 1px solid #e4dcdf;
+  border-radius: 16px;
   background: #fff;
-  box-shadow: 0 10px 28px rgba(78, 46, 59, 0.055);
+  box-shadow: 0 10px 26px rgba(47, 38, 42, 0.06);
+
+  /* Button alignment behavior only */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .preview {
-  min-height: 138px;
-  margin: 9px 9px 0;
-  overflow: hidden;
-  border: 1px solid #ead9e0;
-  border-radius: 11px;
-  background:
-    radial-gradient(circle at 82% 18%, rgba(255,255,255,.9), transparent 24%),
-    linear-gradient(145deg, #f7dce7 0%, #fdf0f5 52%, #ead4dd 100%);
+  min-height: 124px;
+  background: linear-gradient(145deg, #efe7ea, #f8f5f6);
 }
 
 .browserBar {
   display: flex;
-  gap: 4px;
-  padding: 7px 9px;
-  background: rgba(255,255,255,.65);
-  border-bottom: 1px solid rgba(142,96,114,.12);
+  gap: 5px;
+  padding: 9px 11px;
+  border-bottom: 1px solid rgba(86, 65, 73, 0.09);
 }
 
 .browserBar span {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: rgba(101,67,80,.28);
+  background: rgba(103, 77, 87, 0.28);
 }
 
 .previewBody {
-  min-height: 112px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 15px 17px;
+  padding: 17px 16px;
 }
 
-.previewBody small {
-  margin-bottom: 13px;
-  color: #a45f79;
-  font-size: 0.5rem;
+.previewLabel {
+  margin-bottom: 14px;
+  color: #7d5b68;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: .13em;
 }
 
-.previewBody > span {
-  margin-bottom: 4px;
-  color: #9f6178;
-  font-size: 0.51rem;
-  font-weight: 800;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+.previewLineLarge,
+.previewLine,
+.previewLineShort {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(91, 69, 77, 0.13);
 }
 
-.previewBody strong {
-  margin-bottom: 10px;
-  font-size: 1.25rem;
-  line-height: 1;
-  letter-spacing: -.04em;
+.previewLineLarge {
+  width: 78%;
+  margin-bottom: 8px;
 }
 
 .previewLine {
-  width: 67%;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(113,72,88,.12);
+  width: 93%;
+  margin-bottom: 8px;
 }
 
-.previewLine.short {
-  width: 40%;
-  margin-top: 5px;
+.previewLineShort {
+  width: 58%;
 }
 
-.cardContent {
-  padding: 15px 16px 17px;
+.cardBody {
+  padding: 18px;
+
+  /* Button alignment behavior only */
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 
-.type {
-  display: block;
-  margin-bottom: 5px;
-  color: #a65f7a;
-  font-size: 0.52rem;
-  font-weight: 850;
-  letter-spacing: .08em;
+.projectType {
+  color: #956b7a;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.cardContent h3 {
-  margin: 0 0 6px;
-  font-size: 1.2rem;
-  letter-spacing: -.03em;
+.cardBody h3 {
+  margin: 6px 0 8px;
+  font-size: 1.05rem;
 }
 
-.cardContent > p {
+.cardBody p {
   margin: 0;
-  color: #76636b;
-  font-size: 0.76rem;
-  line-height: 1.5;
+  color: #766b70;
+  font-size: 0.77rem;
+  line-height: 1.55;
 }
 
-.features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin: 12px 0 14px;
-}
-
-.features span {
-  padding: 4px 7px;
-  border: 1px solid #eddde3;
-  border-radius: 999px;
-  background: #fff9fb;
-  color: #66535b;
-  font-size: 0.59rem;
-  font-weight: 650;
-}
-
-.viewButton,
-.ctaButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.featureList {
+  display: grid;
   gap: 6px;
-  min-height: 35px;
-  padding: 0 12px;
-  border-radius: 999px;
-  text-decoration: none;
+  margin-top: 14px;
+}
+
+.featureList span {
+  color: #51474b;
+  font-size: 0.68rem;
+}
+
+.projectButton {
+  display: inline-flex;
+  margin-top: auto;
+  padding: 9px 13px;
+  border-radius: 10px;
+  background: #272124;
+  color: #fff;
   font-size: 0.68rem;
   font-weight: 800;
+  text-decoration: none;
+
+  /* Keeps desktop button from stretching and leaves space above it */
+  align-self: flex-start;
+  margin-top: 22px;
 }
 
-.viewButton {
-  background: #32262b;
-  color: #fff;
-}
-
-.customCta {
+.cta {
+  max-width: 760px;
+  margin: 42px auto 0;
+  padding: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 22px;
-  margin-top: 30px;
-  padding: 20px 22px;
-  border: 1px solid #ecdce2;
+  border: 1px solid #e4dcdf;
   border-radius: 16px;
-  background: #fdf3f7;
+  background: #f1ebed;
 }
 
-.customCta > div {
-  max-width: 570px;
+.cta h2 {
+  font-size: 1.35rem;
 }
 
-.customCta h2 {
-  margin: 6px 0 7px;
-  font-size: clamp(1.3rem, 2.2vw, 1.75rem);
-  letter-spacing: -.035em;
-}
-
-.customCta p {
-  margin: 0;
-  color: #77636c;
-  font-size: 0.79rem;
-  line-height: 1.55;
-}
-
-.ctaButton {
+.cta a {
   flex: 0 0 auto;
-  background: #c87997;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #272124;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 310px));
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: min(100% - 28px, 390px);
+  }
+
+  .hero {
+    padding: 44px 0 38px;
+  }
+
+  .heroInner {
+    width: min(100% - 28px, 360px);
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 10vw, 2.8rem);
+  }
+
+  .portfolioSection {
+    padding: 38px 0 50px;
+  }
+
+  .intro {
+    max-width: 340px;
+    margin-bottom: 24px;
+  }
+
+  .grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .card {
+    width: min(100%, 310px);
+    max-width: 310px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cardBody {
+    text-align: center;
+  }
+
+  .featureList {
+    justify-items: center;
+  }
+
+  .projectButton {
+    justify-content: center;
+  }
+
+  .cta {
+    margin-top: 30px;
+    padding: 20px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+
+/* Portfolio pagination + fixed two-column layout */
+.grid {
+  grid-template-columns: repeat(2, minmax(0, 310px)) !important;
+  justify-content: center !important;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 28px auto 0;
+}
+
+.pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #d9d0d4;
+  border-radius: 10px;
+  background: #fff;
+  color: #4c4246;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pageButton:hover {
+  border-color: #bbaab1;
+  background: #f7f2f4;
+}
+
+.pageButtonActive {
+  border-color: #272124;
+  background: #272124;
   color: #fff;
 }
 
-@media (max-width: 760px) {
-  .workGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 640px) {
+  .grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
   }
 
-  .workCard {
-    max-width: none;
+  .card {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
   }
 
-  .customCta {
-    align-items: flex-start;
-    flex-direction: column;
+  .pagination {
+    margin-top: 22px;
   }
 }
 
-@media (max-width: 560px) {
-  .hero {
-    padding: 44px 0 34px;
+
+/* Mobile compact portfolio cards */
+@media (max-width: 640px) {
+  .grid {
+    gap: 8px !important;
   }
 
-  .workSection {
-    padding: 38px 0 52px;
-  }
-
-  .workGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .workCard {
-    max-width: 340px;
+  .card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
   }
 
   .preview {
-    min-height: 130px;
+    min-height: 92px !important;
+    height: 92px !important;
+  }
+
+  .browserBar {
+    padding: 6px 7px !important;
+  }
+
+  .browserBar span {
+    width: 5px !important;
+    height: 5px !important;
   }
 
   .previewBody {
-    min-height: 104px;
+    padding: 10px !important;
   }
 
-  .customCta {
-    padding: 18px;
+  .previewLabel {
+    font-size: 0.6rem !important;
   }
 
-  .ctaButton {
-    width: 100%;
+  .cardBody {
+    display: flex !important;
+    flex: 1 !important;
+    flex-direction: column !important;
+    padding: 11px 10px !important;
+  }
+
+  .projectType {
+    margin-bottom: 5px !important;
+    font-size: 0.52rem !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  .cardBody h3 {
+    margin: 0 0 5px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .cardBody > p {
+    margin: 0 0 8px !important;
+    font-size: 0.61rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .featureList {
+    gap: 4px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .featureList span {
+    font-size: 0.56rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .projectButton {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-height: 34px !important;
+    margin-top: auto !important;
+    padding: 7px 8px !important;
+    border-radius: 8px !important;
+    font-size: 0.6rem !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    align-self: stretch !important;
+  }
+}
+
+
+/* Restore boxed mobile portfolio cards */
+@media (max-width: 640px) {
+  .card {
+    border: 1px solid #ddd4d8 !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    box-shadow: 0 5px 14px rgba(52, 40, 46, 0.07) !important;
+    overflow: hidden !important;
+  }
+
+  .preview {
+    border-bottom: 1px solid #e8e1e4 !important;
+  }
+}
+
+
+/* Box the portfolio intro note about TCL's own site and live demos */
+.intro p {
+  max-width: 760px;
+  margin: 16px auto 0;
+  padding: 16px 18px;
+  border: 1px solid #ddd4d8;
+  border-radius: 12px;
+  background: #faf8f9;
+  box-shadow: 0 4px 12px rgba(52, 40, 46, 0.04);
+}
+
+@media (max-width: 640px) {
+  .intro p {
+    margin-top: 12px;
+    padding: 12px 13px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    line-height: 1.55;
   }
 }

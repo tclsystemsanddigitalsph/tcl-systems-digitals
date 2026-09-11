@@ -8,14 +8,33 @@ type CheckoutBody = {
   productSlug?: string;
   customerName?: string;
   customerEmail?: string;
+  selectedDesignSlug?: string;
+  selectedDesignName?: string;
+};
+
+const SIMPLE_WEBSITE_TEMPLATE_SLUG =
+  "simple-business-website-template";
+
+const SIMPLE_WEBSITE_DESIGNS: Record<string, string> = {
+  "aesthetic-soft": "Aesthetic & Soft",
+  "clean-minimal": "Clean & Minimal",
+  "professional-business": "Professional Business",
+  "bold-creative": "Bold & Creative",
+  "modern-monochrome": "Modern Monochrome",
+  "modern-refined": "Modern & Refined",
 };
 
 function moneyToCentavos(value: number) {
-  return Math.round((value + Number.EPSILON) * 100);
+  return Math.round(
+    (value + Number.EPSILON) * 100,
+  );
 }
 
 function createOrderNumber() {
-  const timestamp = Date.now().toString(36).toUpperCase();
+  const timestamp = Date.now()
+    .toString(36)
+    .toUpperCase();
+
   const random = Math.random()
     .toString(36)
     .slice(2, 8)
@@ -53,6 +72,9 @@ export async function POST(request: Request) {
     ?.trim()
     .toLowerCase();
 
+  const requestedDesignSlug =
+    body.selectedDesignSlug?.trim() || "";
+
   if (
     !productSlug ||
     !customerName ||
@@ -65,6 +87,27 @@ export async function POST(request: Request) {
       },
       { status: 400 },
     );
+  }
+
+  let selectedDesignSlug: string | null = null;
+  let selectedDesignName: string | null = null;
+
+  if (productSlug === SIMPLE_WEBSITE_TEMPLATE_SLUG) {
+    const validatedDesignName =
+      SIMPLE_WEBSITE_DESIGNS[requestedDesignSlug];
+
+    if (!requestedDesignSlug || !validatedDesignName) {
+      return NextResponse.json(
+        {
+          error:
+            "Please choose a valid website design before checkout.",
+        },
+        { status: 400 },
+      );
+    }
+
+    selectedDesignSlug = requestedDesignSlug;
+    selectedDesignName = validatedDesignName;
   }
 
   const supabase = createAdminSupabaseClient();
@@ -106,7 +149,8 @@ export async function POST(request: Request) {
     product.processing_fee_percent ?? 0,
   );
 
-  const baseCentavos = moneyToCentavos(basePrice);
+  const baseCentavos =
+    moneyToCentavos(basePrice);
 
   const processingFeeCentavos = Math.round(
     (baseCentavos * processingFeePercent) /
@@ -154,6 +198,8 @@ export async function POST(request: Request) {
       payment_provider: "PAYMONGO",
       payment_status: "PENDING",
       delivery_status: "NOT_STARTED",
+      selected_design_slug: selectedDesignSlug,
+      selected_design_name: selectedDesignName,
     })
     .select(
       "id,order_number,receipt_token",
@@ -183,16 +229,25 @@ export async function POST(request: Request) {
       order.receipt_token,
     )}`;
 
-  const cancelUrl =
+  let cancelUrl =
     `${siteUrl}/checkout` +
     `?product=${encodeURIComponent(
       product.slug,
     )}` +
     "&payment_cancelled=1";
 
+  if (selectedDesignSlug) {
+    cancelUrl +=
+      `&design=${encodeURIComponent(
+        selectedDesignSlug,
+      )}`;
+  }
+
   const lineItems = [
     {
-      name: product.name,
+      name: selectedDesignName
+        ? `${product.name} — ${selectedDesignName}`
+        : product.name,
       amount: baseCentavos,
       currency: "PHP",
       quantity: 1,
@@ -220,7 +275,6 @@ export async function POST(request: Request) {
             line_items: lineItems,
             payment_method_types: [
               "qrph",
-            
             ],
             success_url: successUrl,
             cancel_url: cancelUrl,
@@ -229,19 +283,33 @@ export async function POST(request: Request) {
             send_email_receipt: true,
             show_description: true,
             show_line_items: true,
-            description: `Purchase from TCL Systems & Digitals PH: ${product.name}`,
+            description:
+              selectedDesignName
+                ? `Purchase from TCL Systems & Digitals PH: ${product.name} — ${selectedDesignName}`
+                : `Purchase from TCL Systems & Digitals PH: ${product.name}`,
             metadata: {
               local_order_id: order.id,
               product_slug: product.slug,
               receipt_token:
                 order.receipt_token,
+              ...(selectedDesignSlug
+                ? {
+                    selected_design_slug:
+                      selectedDesignSlug,
+                  }
+                : {}),
+              ...(selectedDesignName
+                ? {
+                    selected_design_name:
+                      selectedDesignName,
+                  }
+                : {}),
             },
           },
         },
       });
 
-    const sessionId =
-      paymongo?.data?.id;
+    const sessionId = paymongo?.data?.id;
 
     const checkoutUrl =
       paymongo?.data?.attributes?.checkout_url;

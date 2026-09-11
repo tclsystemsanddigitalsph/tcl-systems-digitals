@@ -7,23 +7,37 @@ import styles from "./portfolio.module.css";
 export const metadata: Metadata = {
   title: "Portfolio | TCL Systems & Digitals PH",
   description:
-    "A selection of recent websites and business systems created by TCL Systems & Digitals PH.",
+    "Recent client projects built by TCL Systems & Digitals PH, including custom websites and booking systems.",
 };
 
 const recentWorks = [
   {
     name: "Point ZR Studio",
-    type: "Custom Booking Website & System",
+    type: "Custom Booking System",
     description:
-      "A custom booking website and admin system created for Point ZR Studio, built around their actual appointment workflow and business needs.",
+      "A custom booking website and admin system designed for a solo service business, with booking management, services, schedules, and a responsive customer experience.",
     features: [
       "Customer booking experience",
-      "Service and schedule management",
+      "Service & schedule management",
       "Admin dashboard",
       "Booking management workflow",
       "Responsive website",
     ],
     href: "https://pointzrstudio.vercel.app",
+  },
+  {
+    name: "TheClawLabMNL",
+    type: "Business Website",
+    description:
+      "A business website created for TheClawLabMNL, designed with a clean branded layout to present the business professionally online.",
+    features: [
+      "Branded business website",
+      "Responsive layout",
+      "Service-focused presentation",
+      "Mobile-friendly experience",
+      "Custom visual direction",
+    ],
+    href: "https://theclawlabmnl.vercel.app",
   },
 ];
 
@@ -32,102 +46,79 @@ export default function PortfolioPage() {
     <>
       <SiteHeader />
 
-      <main className={styles.page}>
+      <main className={styles.main}>
         <section className={styles.hero}>
-          <div className="container">
-            <div className={styles.heroInner}>
-              <span className="section-kicker">Recent Work</span>
-              <h1>Projects I&apos;ve built for real businesses.</h1>
-              <p>
-                A look at some of my recent client work — websites and systems
-                designed around each business&apos;s actual needs, workflow, and
-                customer experience.
-              </p>
-
-              <div className={styles.heroNote}>
-                <span>♡</span>
-                <p>
-                  This TCL Systems &amp; Digitals PH website and the live demo
-                  websites you see across the shop were also designed and built
-                  by me. I keep this portfolio focused only on recent client
-                  projects.
-                </p>
-              </div>
-            </div>
+          <div className={styles.heroInner}>
+            <span className={styles.kicker}>Recent Work</span>
+            <h1>Projects I&apos;ve built for real businesses.</h1>
+            <p>
+              A selection of recent client projects created by TCL Systems &amp;
+              Digitals PH.
+            </p>
           </div>
         </section>
 
-        <section className={styles.workSection}>
-          <div className="container">
-            <div className={styles.sectionHeading}>
-              <span className="section-kicker">Selected Projects</span>
-              <h2>Recent client work</h2>
+        <section className={styles.portfolioSection}>
+          <div className={styles.container}>
+            <div className={styles.intro}>
+              <span className={styles.kicker}>Portfolio</span>
+              <h2>Recent client projects</h2>
               <p>
-                Each project is created based on the client&apos;s business,
-                required features, and workflow rather than simply changing the
-                name on one fixed design.
+                This TCL Systems &amp; Digitals PH website and the live demo
+                websites you see across the shop were also designed and built
+                by me. I keep this portfolio focused on recent business
+                projects.
               </p>
             </div>
 
-            <div className={styles.workGrid}>
-              {recentWorks.map((work, index) => (
-                <article className={styles.workCard} key={work.name}>
-                  <div className={styles.preview}>
+            <div className={styles.grid}>
+              {recentWorks.map((project) => (
+                <article className={styles.card} key={project.name}>
+                  <div className={styles.preview} aria-hidden="true">
                     <div className={styles.browserBar}>
                       <span />
                       <span />
                       <span />
                     </div>
-
                     <div className={styles.previewBody}>
-                      <small>{String(index + 1).padStart(2, "0")}</small>
-                      <span>{work.type}</span>
-                      <strong>{work.name}</strong>
+                      <div className={styles.previewLabel}>{project.name}</div>
+                      <div className={styles.previewLineLarge} />
                       <div className={styles.previewLine} />
-                      <div className={`${styles.previewLine} ${styles.short}`} />
+                      <div className={styles.previewLineShort} />
                     </div>
                   </div>
 
-                  <div className={styles.cardContent}>
-                    <span className={styles.type}>{work.type}</span>
-                    <h3>{work.name}</h3>
-                    <p>{work.description}</p>
+                  <div className={styles.cardBody}>
+                    <span className={styles.projectType}>{project.type}</span>
+                    <h3>{project.name}</h3>
+                    <p>{project.description}</p>
 
-                    <div className={styles.features}>
-                      {work.features.map((feature) => (
+                    <div className={styles.featureList}>
+                      {project.features.map((feature) => (
                         <span key={feature}>✓ {feature}</span>
                       ))}
                     </div>
 
                     <a
-                      href={work.href}
+                      className={styles.projectButton}
+                      href={project.href}
                       target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.viewButton}
+                      rel="noreferrer"
                     >
-                      View Project <span>↗</span>
+                      View Project
                     </a>
                   </div>
                 </article>
               ))}
             </div>
 
-            <div className={styles.customCta}>
+            <div className={styles.cta}>
               <div>
-                <span className="section-kicker">Have Something In Mind?</span>
-                <h2>Want something built for your business?</h2>
-                <p>
-                  View the customized business website service first to see how
-                  custom projects work, what can be included, and how to request
-                  your quotation.
-                </p>
+                <span className={styles.kicker}>Have a project in mind?</span>
+                <h2>Let&apos;s build something for your business.</h2>
               </div>
-
-              <Link
-                href="/shop/custom-business-website"
-                className={styles.ctaButton}
-              >
-                View Custom Business Website →
+              <Link href="/shop/custom-business-website">
+                View Custom Website
               </Link>
             </div>
           </div>

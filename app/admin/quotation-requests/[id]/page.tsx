@@ -94,9 +94,7 @@ export default async function AdminQuotationRequestDetailPage({
     data: { user },
   } = await authSupabase.auth.getUser();
 
-  if (!user) {
-    redirect("/admin/login");
-  }
+  if (!user) redirect("/admin/login");
 
   const { id } = await params;
   const adminSupabase = createAdminSupabaseClient();
@@ -107,13 +105,8 @@ export default async function AdminQuotationRequestDetailPage({
     .eq("id", id)
     .maybeSingle();
 
-  if (error) {
-    console.error("Quotation request detail error:", error);
-  }
-
-  if (!request) {
-    notFound();
-  }
+  if (error) console.error("Quotation request detail error:", error);
+  if (!request) notFound();
 
   const features = Array.isArray(request.selected_features)
     ? request.selected_features
@@ -146,11 +139,8 @@ export default async function AdminQuotationRequestDetailPage({
       .eq("id", request.order_id)
       .maybeSingle();
 
-    if (orderError) {
-      console.error("Quotation linked order load error:", orderError);
-    } else {
-      order = orderData;
-    }
+    if (orderError) console.error("Quotation linked order load error:", orderError);
+    else order = orderData;
 
     const { data: projectData, error: projectError } = await adminSupabase
       .from("project_requirements")
@@ -158,11 +148,8 @@ export default async function AdminQuotationRequestDetailPage({
       .eq("order_id", request.order_id)
       .maybeSingle();
 
-    if (projectError) {
-      console.error("Quotation linked project load error:", projectError);
-    } else {
-      project = projectData;
-    }
+    if (projectError) console.error("Quotation linked project load error:", projectError);
+    else project = projectData;
   }
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/+$/, "");
@@ -240,44 +227,86 @@ export default async function AdminQuotationRequestDetailPage({
                 <section className={detailStyles.card}>
                   <div className={detailStyles.cardHeader}>
                     <span>CUSTOMER</span>
-                    <h2>Contact & business details</h2>
-                    <p>Basic information submitted with the request.</p>
+                    <h2>Contact & project details</h2>
+                    <p>Who submitted the request and what they are building.</p>
                   </div>
 
                   <div className={detailStyles.fieldGrid}>
                     <Field label="Full name" value={request.full_name} />
-                    <Field label="Business name" value={request.business_name} />
+                    <Field label="Business / project name" value={request.business_name} />
                     <Field label="Email" value={request.email} />
                     <Field label="Mobile / Telegram" value={request.contact_number} />
                     <Field label="Preferred contact" value={request.preferred_contact} />
-                    <Field label="Business type" value={request.business_type} />
-                    <Field label="Business location" value={request.business_location} />
-                    <Field label="How long operating" value={request.business_age} />
-                    <Field label="Staff / team size" value={request.staff_count} />
-                    <Field label="Number of locations" value={request.location_count} />
+                    <Field label="Project type" value={request.business_type} />
+                    <Field label="Location / audience area" value={request.business_location} />
+                    <Field label="Project / business stage" value={request.business_age} />
+                    <Field label="Team size" value={request.staff_count} />
+                    <Field label="Physical locations" value={request.location_count} />
                     <Field label="Website / social page" value={request.current_link} />
+                    <Field label="Already has a website" value={request.existing_website} />
                   </div>
 
-                  <Field label="Products / services offered" value={request.offerings} />
+                  <Field
+                    label="Website purpose / products / services / content"
+                    value={request.offerings}
+                  />
+                </section>
+
+                <section className={detailStyles.card}>
+                  <div className={detailStyles.cardHeader}>
+                    <span>FUNCTION</span>
+                    <h2>How the website should work</h2>
+                    <p>Direct answers that help determine the actual project scope.</p>
+                  </div>
+
+                  <Field
+                    label="What visitors should be able to do"
+                    value={request.visitor_actions}
+                  />
+
+                  <div className={detailStyles.fieldGrid}>
+                    <Field
+                      label="Needs to update website themselves"
+                      value={request.self_manage}
+                    />
+                    <Field
+                      label="User / customer accounts"
+                      value={request.user_accounts}
+                    />
+                    <Field label="Will sell online" value={request.sell_online} />
+                    <Field
+                      label="Needs online payments"
+                      value={request.online_payments}
+                    />
+                    <Field
+                      label="Needs platform integrations"
+                      value={request.integration_needed}
+                    />
+                  </div>
+
+                  <Field
+                    label="Unsure about / wants TCL to recommend"
+                    value={request.uncertainty_notes}
+                  />
                 </section>
 
                 <section className={detailStyles.card}>
                   <div className={detailStyles.cardHeader}>
                     <span>WORKFLOW</span>
-                    <h2>Current setup & problems</h2>
+                    <h2>Current setup & goals</h2>
                     <p>What the customer currently uses and what they want to improve.</p>
                   </div>
 
-                  <Field label="Current process / system" value={request.current_process} />
-                  <Field label="Main problems" value={request.main_problems} />
+                  <Field label="Current process / setup" value={request.current_process} />
+                  <Field label="Main problems / needs" value={request.main_problems} />
                   <Field label="Main project goal" value={request.main_goal} />
                 </section>
 
                 <section className={detailStyles.card}>
                   <div className={detailStyles.cardHeader}>
                     <span>REQUIREMENTS</span>
-                    <h2>Requested features</h2>
-                    <p>Features and functionality the customer selected for the project.</p>
+                    <h2>Requested pages & features</h2>
+                    <p>Potential functionality selected by the customer.</p>
                   </div>
 
                   {features.length > 0 ? (
@@ -293,20 +322,20 @@ export default async function AdminQuotationRequestDetailPage({
                   )}
 
                   <div className={detailStyles.fieldGrid}>
-                    <Field label="Expected monthly volume" value={request.expected_volume} />
+                    <Field label="Expected activity" value={request.expected_volume} />
                     <Field label="Payment methods" value={request.payment_methods} />
                     <Field label="Delivery / fulfillment" value={request.delivery_needs} />
-                    <Field label="Admin / staff access" value={request.admin_access} />
+                    <Field label="Admin / editor access" value={request.admin_access} />
                   </div>
 
-                  <Field label="Integrations" value={request.integrations} />
+                  <Field label="Integrations / tools" value={request.integrations} />
                 </section>
 
                 <section className={detailStyles.card}>
                   <div className={detailStyles.cardHeader}>
                     <span>BRANDING</span>
                     <h2>Branding & content readiness</h2>
-                    <p>Assets the customer already has and what may still need to be prepared.</p>
+                    <p>Assets already available and what may still need preparation.</p>
                   </div>
 
                   <div className={detailStyles.fieldGrid}>

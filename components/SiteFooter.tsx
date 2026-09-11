@@ -17,8 +17,7 @@ export default function SiteFooter() {
               />
             </span>
             <span className="brand-copy">
-              <strong>TCL Systems & Digitals</strong>
-              <small>PH</small>
+              <strong>TCL Systems & Digitals PH</strong>
             </span>
           </Link>
 

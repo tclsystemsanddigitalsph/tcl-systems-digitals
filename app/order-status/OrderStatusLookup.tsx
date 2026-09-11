@@ -9,6 +9,8 @@ type SafeFile = {
   name: string;
   downloadCount: number;
   remainingDownloads: number;
+  downloadUrl: string | null;
+  fileType: "PRODUCT" | "ORDER";
 };
 
 type OrderStatusResult = {
@@ -20,22 +22,36 @@ type OrderStatusResult = {
     productSlug: string | null;
     productCategory: string | null;
     productType: string | null;
+
+    selectedDesignSlug: string | null;
+    selectedDesignName: string | null;
+
     createdAt: string;
     paidAt: string | null;
+
     totalAmount: number;
     basePrice: number;
     processingFee: number;
     processingFeePercent: number;
     currency: string;
+
     paymentProvider: string | null;
     paymentStatus: string;
+
     orderStatus: string | null;
+
     deliveryStatus: string | null;
     deliveredAt: string | null;
+
     refundStatus: string | null;
     refundedAmount: number;
+
     downloadAccessExpiresAt: string | null;
+
+    isPersonalizedWebsitePackage: boolean;
+    websitePackageStatus: string | null;
   };
+
   project: {
     requirementsStatus: string;
     projectStatus: string;
@@ -46,30 +62,40 @@ type OrderStatusResult = {
     requirementsUrl: string;
     requirementsButtonLabel: string;
   } | null;
+
   digitalAccess: {
     hasFiles: boolean;
     accessActive: boolean;
     accessExpiresAt: string | null;
     maxDownloadsPerFile: number;
     files: SafeFile[];
+
+    isPersonalizedWebsitePackage: boolean;
+    status: string | null;
   };
+
   product: {
     postPurchaseInstructions: string | null;
     deliveryMethod: string | null;
   } | null;
+
   actions: {
     receiptUrl: string | null;
     supportUrl: string;
   };
 };
 
-function titleCase(value: string | null | undefined) {
+function titleCase(
+  value: string | null | undefined,
+) {
   if (!value) return "—";
 
   return value
     .replaceAll("_", " ")
     .toLowerCase()
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    .replace(/\b\w/g, (letter) =>
+      letter.toUpperCase(),
+    );
 }
 
 function formatDate(value: string | null) {
@@ -81,53 +107,101 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function formatMoney(value: number, currency: string) {
+function formatMoney(
+  value: number,
+  currency: string,
+) {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: currency || "PHP",
   }).format(value);
 }
 
-function statusTone(value: string | null | undefined) {
-  const status = String(value || "").toUpperCase();
+function statusTone(
+  value: string | null | undefined,
+) {
+  const status = String(
+    value || "",
+  ).toUpperCase();
 
   if (
-    ["COMPLETED", "DELIVERED", "APPROVED", "RESUBMITTED", "SUBMITTED"].includes(
-      status,
-    )
+    [
+      "COMPLETED",
+      "DELIVERED",
+      "APPROVED",
+      "RESUBMITTED",
+      "SUBMITTED",
+      "READY_FOR_DOWNLOAD",
+      "ACTIVE",
+    ].includes(status)
   ) {
     return styles.good;
   }
 
-  if (["FAILED", "CANCELLED", "REFUNDED", "REJECTED"].includes(status)) {
+  if (
+    [
+      "FAILED",
+      "CANCELLED",
+      "REFUNDED",
+      "REJECTED",
+      "ACCESS_EXPIRED",
+      "EXPIRED",
+    ].includes(status)
+  ) {
     return styles.bad;
   }
 
   return styles.waiting;
 }
 
-function stepState(value: string | null | undefined) {
-  const status = String(value || "").toUpperCase();
+function stepState(
+  value: string | null | undefined,
+) {
+  const status = String(
+    value || "",
+  ).toUpperCase();
 
   if (
-    ["COMPLETED", "DELIVERED", "APPROVED", "SUBMITTED", "RESUBMITTED"].includes(
-      status,
-    )
+    [
+      "COMPLETED",
+      "DELIVERED",
+      "APPROVED",
+      "SUBMITTED",
+      "RESUBMITTED",
+      "READY_FOR_DOWNLOAD",
+      "ACTIVE",
+    ].includes(status)
   ) {
     return styles.stepDone;
   }
 
-  if (["FAILED", "CANCELLED", "REJECTED", "REFUNDED"].includes(status)) {
+  if (
+    [
+      "FAILED",
+      "CANCELLED",
+      "REJECTED",
+      "REFUNDED",
+      "ACCESS_EXPIRED",
+      "EXPIRED",
+    ].includes(status)
+  ) {
     return styles.stepIssue;
   }
 
   return styles.stepCurrent;
 }
 
-function requirementsProgressLabel(value: string | null | undefined) {
-  const status = String(value || "").toUpperCase();
+function requirementsProgressLabel(
+  value: string | null | undefined,
+) {
+  const status = String(
+    value || "",
+  ).toUpperCase();
 
-  if (status === "SUBMITTED" || status === "RESUBMITTED") {
+  if (
+    status === "SUBMITTED" ||
+    status === "RESUBMITTED"
+  ) {
     return "Submitted";
   }
 
@@ -142,20 +216,34 @@ function requirementsProgressLabel(value: string | null | undefined) {
   return "";
 }
 
-function projectProgressLabel(value: string | null | undefined) {
-  const status = String(value || "").toUpperCase();
+function projectProgressLabel(
+  value: string | null | undefined,
+) {
+  const status = String(
+    value || "",
+  ).toUpperCase();
 
-  if (!status || status === "WAITING_REQUIREMENTS") {
+  if (
+    !status ||
+    status === "WAITING_REQUIREMENTS"
+  ) {
     return "";
   }
 
   return titleCase(status);
 }
 
-function deliveryProgressLabel(value: string | null | undefined) {
-  const status = String(value || "").toUpperCase();
+function deliveryProgressLabel(
+  value: string | null | undefined,
+) {
+  const status = String(
+    value || "",
+  ).toUpperCase();
 
-  if (!status || status === "NOT_STARTED") {
+  if (
+    !status ||
+    status === "NOT_STARTED"
+  ) {
     return "";
   }
 
@@ -166,23 +254,44 @@ function progressStepClass(
   label: string,
   rawStatus: string | null | undefined,
 ) {
-  if (!label) return styles.stepPending;
+  if (!label) {
+    return styles.stepPending;
+  }
+
   return stepState(rawStatus);
 }
 
-
 function renderInlineMarkdown(text: string) {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>;
-    }
+  return text
+    .split(/(\*\*[^*]+\*\*)/g)
+    .map((part, index) => {
+      if (
+        part.startsWith("**") &&
+        part.endsWith("**")
+      ) {
+        return (
+          <strong key={`${part}-${index}`}>
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
 
-    return <Fragment key={`${part}-${index}`}>{part}</Fragment>;
-  });
+      return (
+        <Fragment key={`${part}-${index}`}>
+          {part}
+        </Fragment>
+      );
+    });
 }
 
-function PostPurchaseInstructions({ text }: { text: string }) {
-  const lines = text.replace(/\r\n/g, "\n").split("\n");
+function PostPurchaseInstructions({
+  text,
+}: {
+  text: string;
+}) {
+  const lines = text
+    .replace(/\r\n/g, "\n")
+    .split("\n");
 
   return (
     <>
@@ -190,21 +299,40 @@ function PostPurchaseInstructions({ text }: { text: string }) {
         const line = rawLine.trim();
 
         if (!line) {
-          return <div key={`space-${index}`} style={{ height: "8px" }} />;
+          return (
+            <div
+              key={`space-${index}`}
+              style={{ height: "8px" }}
+            />
+          );
         }
 
         if (line.startsWith("### ")) {
           return (
-            <h4 key={`h4-${index}`} style={{ margin: "10px 0 4px" }}>
-              {renderInlineMarkdown(line.slice(4))}
+            <h4
+              key={`h4-${index}`}
+              style={{
+                margin: "10px 0 4px",
+              }}
+            >
+              {renderInlineMarkdown(
+                line.slice(4),
+              )}
             </h4>
           );
         }
 
         if (line.startsWith("## ")) {
           return (
-            <h3 key={`h3-${index}`} style={{ margin: "12px 0 5px" }}>
-              {renderInlineMarkdown(line.slice(3))}
+            <h3
+              key={`h3-${index}`}
+              style={{
+                margin: "12px 0 5px",
+              }}
+            >
+              {renderInlineMarkdown(
+                line.slice(3),
+              )}
             </h3>
           );
         }
@@ -215,18 +343,36 @@ function PostPurchaseInstructions({ text }: { text: string }) {
           line.startsWith("- ") ||
           line.startsWith("• ")
         ) {
-          const itemText = line.replace(/^(✓|✔|-|•)\s*/, "");
+          const itemText = line.replace(
+            /^(✓|✔|-|•)\s*/,
+            "",
+          );
 
           return (
-            <p key={`item-${index}`} style={{ margin: "5px 0" }}>
-              <span aria-hidden="true">✓ </span>
-              {renderInlineMarkdown(itemText)}
+            <p
+              key={`item-${index}`}
+              style={{
+                margin: "5px 0",
+              }}
+            >
+              <span aria-hidden="true">
+                ✓{" "}
+              </span>
+
+              {renderInlineMarkdown(
+                itemText,
+              )}
             </p>
           );
         }
 
         return (
-          <p key={`line-${index}`} style={{ margin: "6px 0" }}>
+          <p
+            key={`line-${index}`}
+            style={{
+              margin: "6px 0",
+            }}
+          >
             {renderInlineMarkdown(line)}
           </p>
         );
@@ -236,38 +382,67 @@ function PostPurchaseInstructions({ text }: { text: string }) {
 }
 
 export default function OrderStatusLookup() {
-  const [orderNumber, setOrderNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [result, setResult] = useState<OrderStatusResult | null>(null);
+  const [orderNumber, setOrderNumber] =
+    useState("");
 
-  async function lookup(event: React.FormEvent<HTMLFormElement>) {
+  const [email, setEmail] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [result, setResult] =
+    useState<OrderStatusResult | null>(
+      null,
+    );
+
+  async function lookup(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
+
     setLoading(true);
     setMessage("");
     setResult(null);
 
     try {
-      const response = await fetch("/api/order-status", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "/api/order-status",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          cache: "no-store",
+
+          body: JSON.stringify({
+            orderNumber:
+              orderNumber.trim(),
+
+            email:
+              email.trim(),
+          }),
         },
-        cache: "no-store",
-        body: JSON.stringify({
-          orderNumber: orderNumber.trim(),
-          email: email.trim(),
-        }),
-      });
+      );
 
-      const payload = (await response.json()) as {
-        ok?: boolean;
-        error?: string;
-        data?: OrderStatusResult;
-      };
+      const payload =
+        (await response.json()) as {
+          ok?: boolean;
+          error?: string;
+          data?: OrderStatusResult;
+        };
 
-      if (!response.ok || !payload.ok || !payload.data) {
+      if (
+        !response.ok ||
+        !payload.ok ||
+        !payload.data
+      ) {
         throw new Error(
           payload.error ||
             "We could not find an order matching those details.",
@@ -288,45 +463,114 @@ export default function OrderStatusLookup() {
 
   const order = result?.order;
   const project = result?.project;
-  const digitalAccess = result?.digitalAccess;
+  const digitalAccess =
+    result?.digitalAccess;
 
   const shownRequirements = project
-    ? requirementsProgressLabel(project.requirementsStatus)
+    ? requirementsProgressLabel(
+        project.requirementsStatus,
+      )
     : "";
+
   const shownProject = project
-    ? projectProgressLabel(project.projectStatus)
+    ? projectProgressLabel(
+        project.projectStatus,
+      )
     : "";
-  const shownDelivery = deliveryProgressLabel(order?.deliveryStatus);
+
+  const shownDelivery =
+    deliveryProgressLabel(
+      order?.deliveryStatus,
+    );
+
   const hasRefund =
-    ["PARTIALLY_REFUNDED", "REFUNDED"].includes(
-      String(order?.refundStatus || "").toUpperCase(),
-    ) || Number(order?.refundedAmount || 0) > 0;
+    [
+      "PARTIALLY_REFUNDED",
+      "REFUNDED",
+    ].includes(
+      String(
+        order?.refundStatus || "",
+      ).toUpperCase(),
+    ) ||
+    Number(
+      order?.refundedAmount || 0,
+    ) > 0;
+
+  const isPersonalizedWebsite =
+    Boolean(
+      order?.isPersonalizedWebsitePackage,
+    );
+
+  const websitePackageStatus =
+    order?.websitePackageStatus ||
+    digitalAccess?.status ||
+    null;
+
+  const websitePackageLabel =
+    websitePackageStatus
+      ? titleCase(
+          websitePackageStatus,
+        )
+      : "Processing";
+
   const isDigitalAccessProgress =
-    !project && Boolean(digitalAccess?.hasFiles);
-  const digitalAccessProgressLabel = isDigitalAccessProgress
-    ? digitalAccess?.accessActive
-      ? "Active"
-      : "Expired"
-    : "";
+    !project &&
+    !isPersonalizedWebsite &&
+    Boolean(
+      digitalAccess?.hasFiles,
+    );
+
+  const digitalAccessProgressLabel =
+    isDigitalAccessProgress
+      ? digitalAccess?.accessActive
+        ? "Active"
+        : "Expired"
+      : "";
+
+  const currentStatus =
+    isPersonalizedWebsite
+      ? websitePackageLabel
+      : titleCase(
+          order?.orderStatus ||
+            order?.paymentStatus,
+        );
 
   return (
     <div className={styles.shell}>
-      <section className={styles.lookupCard}>
-        <div className={styles.lookupHeading}>
+      <section
+        className={styles.lookupCard}
+      >
+        <div
+          className={
+            styles.lookupHeading
+          }
+        >
           <span>SECURE LOOKUP</span>
+
           <h2>Find your purchase</h2>
+
           <p>
-            Use the exact order number and purchase email shown on your order.
+            Use the exact order number
+            and purchase email shown on
+            your order.
           </p>
         </div>
 
-        <form className={styles.lookupForm} onSubmit={lookup}>
+        <form
+          className={styles.lookupForm}
+          onSubmit={lookup}
+        >
           <label>
             <span>Order number</span>
+
             <input
               type="text"
               value={orderNumber}
-              onChange={(event) => setOrderNumber(event.target.value)}
+              onChange={(event) =>
+                setOrderNumber(
+                  event.target.value,
+                )
+              }
               placeholder="TCL-2026..."
               autoComplete="off"
               required
@@ -334,24 +578,41 @@ export default function OrderStatusLookup() {
           </label>
 
           <label>
-            <span>Purchase email</span>
+            <span>
+              Purchase email
+            </span>
+
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) =>
+                setEmail(
+                  event.target.value,
+                )
+              }
               placeholder="you@example.com"
               autoComplete="email"
               required
             />
           </label>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Checking..." : "Check Order Status"}
+          <button
+            type="submit"
+            disabled={loading}
+          >
+            {loading
+              ? "Checking..."
+              : "Check Order Status"}
           </button>
         </form>
 
         {message ? (
-          <div className={styles.errorMessage} role="alert">
+          <div
+            className={
+              styles.errorMessage
+            }
+            role="alert"
+          >
             {message}
           </div>
         ) : null}
@@ -359,12 +620,37 @@ export default function OrderStatusLookup() {
 
       {result && order ? (
         <div className={styles.results}>
-          <section className={styles.resultTop}>
-            <div className={styles.resultTopMain}>
-              <div className={styles.successMark}>✓</div>
+          <section
+            className={
+              styles.resultTop
+            }
+          >
+            <div
+              className={
+                styles.resultTopMain
+              }
+            >
+              <div
+                className={
+                  styles.successMark
+                }
+              >
+                ✓
+              </div>
+
               <div>
-                <span className={styles.resultEyebrow}>ORDER FOUND</span>
-                <h2>{order.productName}</h2>
+                <span
+                  className={
+                    styles.resultEyebrow
+                  }
+                >
+                  ORDER FOUND
+                </span>
+
+                <h2>
+                  {order.productName}
+                </h2>
+
                 <p
                   style={{
                     display: "flex",
@@ -374,33 +660,83 @@ export default function OrderStatusLookup() {
                   }}
                 >
                   <span>
-                    {order.customerName || "Customer"} · {order.orderNumber}
+                    {order.customerName ||
+                      "Customer"}{" "}
+                    ·{" "}
+                    {order.orderNumber}
                   </span>
-                  <CopyOrderNumberButton orderNumber={order.orderNumber} />
+
+                  <CopyOrderNumberButton
+                    orderNumber={
+                      order.orderNumber
+                    }
+                  />
                 </p>
               </div>
             </div>
 
-            <div className={styles.resultTopMeta}>
-              <span>Current status</span>
-              <strong className={statusTone(order.orderStatus)}>
-                {titleCase(order.orderStatus || order.paymentStatus)}
+            <div
+              className={
+                styles.resultTopMeta
+              }
+            >
+              <span>
+                Current status
+              </span>
+
+              <strong
+                className={statusTone(
+                  isPersonalizedWebsite
+                    ? websitePackageStatus
+                    : order.orderStatus ||
+                        order.paymentStatus,
+                )}
+              >
+                {currentStatus}
               </strong>
             </div>
           </section>
 
-          <section className={styles.progressCard}>
-            <div className={styles.sectionIntro}>
-              <span>ORDER PROGRESS</span>
-              <h2>Here’s where your order stands</h2>
+          <section
+            className={
+              styles.progressCard
+            }
+          >
+            <div
+              className={
+                styles.sectionIntro
+              }
+            >
+              <span>
+                ORDER PROGRESS
+              </span>
+
+              <h2>
+                Here’s where your order
+                stands
+              </h2>
             </div>
 
-            <div className={styles.timelineRow}>
-              <div className={`${styles.step} ${stepState(order.paymentStatus)}`}>
+            <div
+              className={
+                styles.timelineRow
+              }
+            >
+              <div
+                className={`${styles.step} ${stepState(
+                  order.paymentStatus,
+                )}`}
+              >
                 <i>1</i>
+
                 <div>
                   <span>Payment</span>
-                  <strong>{titleCase(order.paymentStatus)}</strong>
+
+                  <strong>
+                    {titleCase(
+                      order.paymentStatus,
+                    )}
+                  </strong>
                 </div>
               </div>
 
@@ -412,9 +748,17 @@ export default function OrderStatusLookup() {
                   )}`}
                 >
                   <i>2</i>
+
                   <div>
-                    <span>Requirements</span>
-                    <strong>{shownRequirements}</strong>
+                    <span>
+                      Requirements
+                    </span>
+
+                    <strong>
+                      {
+                        shownRequirements
+                      }
+                    </strong>
                   </div>
                 </div>
               ) : null}
@@ -427,323 +771,1051 @@ export default function OrderStatusLookup() {
                   )}`}
                 >
                   <i>3</i>
+
                   <div>
                     <span>Project</span>
-                    <strong>{shownProject}</strong>
+
+                    <strong>
+                      {shownProject}
+                    </strong>
                   </div>
                 </div>
               ) : null}
 
               <div
                 className={`${styles.step} ${
-                  isDigitalAccessProgress
-                    ? digitalAccess?.accessActive
-                      ? styles.stepDone
-                      : styles.stepIssue
-                    : progressStepClass(shownDelivery, order.deliveryStatus)
+                  isPersonalizedWebsite
+                    ? stepState(
+                        websitePackageStatus,
+                      )
+                    : isDigitalAccessProgress
+                      ? digitalAccess?.accessActive
+                        ? styles.stepDone
+                        : styles.stepIssue
+                      : progressStepClass(
+                          shownDelivery,
+                          order.deliveryStatus,
+                        )
                 }`}
               >
-                <i>{project ? "4" : "2"}</i>
+                <i>
+                  {project ? "4" : "2"}
+                </i>
+
                 <div>
                   <span>
-                    {isDigitalAccessProgress ? "Digital Access" : "Delivery"}
+                    {isPersonalizedWebsite
+                      ? "Website Package"
+                      : isDigitalAccessProgress
+                        ? "Digital Access"
+                        : "Delivery"}
                   </span>
+
                   <strong>
-                    {isDigitalAccessProgress
-                      ? digitalAccessProgressLabel
-                      : shownDelivery}
+                    {isPersonalizedWebsite
+                      ? websitePackageLabel
+                      : isDigitalAccessProgress
+                        ? digitalAccessProgressLabel
+                        : shownDelivery}
                   </strong>
                 </div>
               </div>
             </div>
           </section>
 
-          <div className={styles.resultLayout}>
-            <div className={styles.resultMain}>
-              {project ? (
-                <section className={styles.panel}>
-                  <div className={styles.panelHeader}>
+          <div
+            className={
+              styles.resultLayout
+            }
+          >
+            <div
+              className={
+                styles.resultMain
+              }
+            >
+              {isPersonalizedWebsite ? (
+                <section
+                  className={
+                    styles.panel
+                  }
+                >
+                  <div
+                    className={
+                      styles.panelHeader
+                    }
+                  >
                     <div>
-                      <span>PROJECT DETAILS</span>
-                      <h2>Your custom project</h2>
+                      <span>
+                        WEBSITE PACKAGE
+                      </span>
+
+                      <h2>
+                        {websitePackageStatus ===
+                        "READY_FOR_DOWNLOAD"
+                          ? "Your website package is ready"
+                          : websitePackageStatus ===
+                              "ACCESS_EXPIRED"
+                            ? "Your download access has expired"
+                            : websitePackageStatus ===
+                                "CANCELLED"
+                              ? "This order was cancelled"
+                              : websitePackageStatus ===
+                                  "WAITING_FOR_PAYMENT"
+                                ? "Waiting for payment"
+                                : "Your website package is being prepared"}
+                      </h2>
+
                       <p>
-                        Keep track of your submitted requirements and current
-                        project status.
+                        {websitePackageStatus ===
+                        "READY_FOR_DOWNLOAD"
+                          ? "Your personalized website package is now available below."
+                          : websitePackageStatus ===
+                              "ACCESS_EXPIRED"
+                            ? "The download window for this website package has ended."
+                            : websitePackageStatus ===
+                                "CANCELLED"
+                              ? "This website package is no longer available for delivery."
+                              : websitePackageStatus ===
+                                  "WAITING_FOR_PAYMENT"
+                                ? "Your personalized website package will be prepared after payment is completed."
+                                : "Please allow up to 24 hours for TCL Systems & Digitals PH to prepare your personalized website package."}
                       </p>
                     </div>
+
+                    <strong
+                      className={statusTone(
+                        websitePackageStatus,
+                      )}
+                    >
+                      {
+                        websitePackageLabel
+                      }
+                    </strong>
+                  </div>
+
+                  <div
+                    className={
+                      styles.summaryRows
+                    }
+                  >
+                    <div>
+                      <span>
+                        Selected design
+                      </span>
+
+                      <strong>
+                        {order.selectedDesignName ||
+                          "—"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>
+                        Package status
+                      </span>
+
+                      <strong
+                        className={statusTone(
+                          websitePackageStatus,
+                        )}
+                      >
+                        {
+                          websitePackageLabel
+                        }
+                      </strong>
+                    </div>
+
+                    {order.deliveredAt ? (
+                      <div>
+                        <span>
+                          Prepared /
+                          delivered
+                        </span>
+
+                        <strong>
+                          {formatDate(
+                            order.deliveredAt,
+                          )}
+                        </strong>
+                      </div>
+                    ) : null}
+
+                    {digitalAccess?.accessExpiresAt ? (
+                      <div>
+                        <span>
+                          Download access
+                          expires
+                        </span>
+
+                        <strong>
+                          {formatDate(
+                            digitalAccess.accessExpiresAt,
+                          )}
+                        </strong>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {websitePackageStatus ===
+                    "PROCESSING" ? (
+                    <div
+                      className={
+                        styles.actionNeeded
+                      }
+                    >
+                      <div
+                        className={
+                          styles.actionIcon
+                        }
+                      >
+                        ⏳
+                      </div>
+
+                      <div>
+                        <span>
+                          PREPARING YOUR
+                          PACKAGE
+                        </span>
+
+                        <strong>
+                          Please allow up
+                          to 24 hours.
+                        </strong>
+
+                        <p>
+                          TCL is preparing
+                          the website files
+                          for your selected
+                          design. You can
+                          return to this
+                          Order Status page
+                          anytime to check
+                          if your package is
+                          ready.
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {websitePackageStatus ===
+                    "READY_FOR_DOWNLOAD" &&
+                  digitalAccess?.hasFiles ? (
+                    <>
+                      <div
+                        className={
+                          styles.accessMeta
+                        }
+                      >
+                        <span>
+                          Access expires
+                        </span>
+
+                        <strong>
+                          {formatDate(
+                            digitalAccess.accessExpiresAt,
+                          )}
+                        </strong>
+                      </div>
+
+                      <div
+                        className={
+                          styles.fileList
+                        }
+                      >
+                        {digitalAccess.files.map(
+                          (file) => (
+                            <div
+                              className={
+                                styles.fileItem
+                              }
+                              key={
+                                file.id
+                              }
+                            >
+                              <div
+                                className={
+                                  styles.fileIcon
+                                }
+                              >
+                                ↓
+                              </div>
+
+                              <div
+                                style={{
+                                  flex: 1,
+                                }}
+                              >
+                                <strong>
+                                  {
+                                    file.name
+                                  }
+                                </strong>
+
+                                <span>
+                                  {
+                                    file.remainingDownloads
+                                  }{" "}
+                                  of{" "}
+                                  {
+                                    digitalAccess.maxDownloadsPerFile
+                                  }{" "}
+                                  downloads
+                                  remaining
+                                </span>
+                              </div>
+
+                              {file.downloadUrl &&
+                              file.remainingDownloads >
+                                0 ? (
+                                <a
+                                  href={
+                                    file.downloadUrl
+                                  }
+                                  className={
+                                    styles.primaryButton
+                                  }
+                                  style={{
+                                    marginTop: 0,
+                                    whiteSpace:
+                                      "nowrap",
+                                  }}
+                                >
+                                  Download
+                                  Package ↓
+                                </a>
+                              ) : null}
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </>
+                  ) : null}
+
+                  {websitePackageStatus ===
+                  "ACCESS_EXPIRED" ? (
+                    <div
+                      className={
+                        styles.actionNeeded
+                      }
+                    >
+                      <div
+                        className={
+                          styles.actionIcon
+                        }
+                      >
+                        !
+                      </div>
+
+                      <div>
+                        <span>
+                          ACCESS EXPIRED
+                        </span>
+
+                        <strong>
+                          Your download
+                          window has ended.
+                        </strong>
+
+                        <p>
+                          Contact TCL if
+                          you need help
+                          with your
+                          delivered website
+                          package.
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
+
+              {project ? (
+                <section
+                  className={
+                    styles.panel
+                  }
+                >
+                  <div
+                    className={
+                      styles.panelHeader
+                    }
+                  >
+                    <div>
+                      <span>
+                        PROJECT DETAILS
+                      </span>
+
+                      <h2>
+                        Your custom
+                        project
+                      </h2>
+
+                      <p>
+                        Keep track of your
+                        submitted
+                        requirements and
+                        current project
+                        status.
+                      </p>
+                    </div>
+
                     {shownProject ? (
-                      <strong className={statusTone(project.projectStatus)}>
-                        {shownProject}
+                      <strong
+                        className={statusTone(
+                          project.projectStatus,
+                        )}
+                      >
+                        {
+                          shownProject
+                        }
                       </strong>
                     ) : null}
                   </div>
 
                   {project.customerUpdateNote ? (
-                    <div className={styles.actionNeeded}>
-                      <div className={styles.actionIcon}>!</div>
+                    <div
+                      className={
+                        styles.actionNeeded
+                      }
+                    >
+                      <div
+                        className={
+                          styles.actionIcon
+                        }
+                      >
+                        !
+                      </div>
+
                       <div>
-                        <span>ACTION NEEDED</span>
-                        <strong>We need a little more information.</strong>
-                        <p>{project.customerUpdateNote}</p>
+                        <span>
+                          ACTION NEEDED
+                        </span>
+
+                        <strong>
+                          We need a little
+                          more information.
+                        </strong>
+
+                        <p>
+                          {
+                            project.customerUpdateNote
+                          }
+                        </p>
                       </div>
                     </div>
                   ) : null}
 
-                  <div className={styles.projectDetails}>
+                  <div
+                    className={
+                      styles.projectDetails
+                    }
+                  >
                     <div>
-                      <span>Requirements</span>
-                      <strong>{shownRequirements}</strong>
+                      <span>
+                        Requirements
+                      </span>
+
+                      <strong>
+                        {
+                          shownRequirements
+                        }
+                      </strong>
                     </div>
+
                     <div>
-                      <span>Submitted</span>
-                      <strong>{formatDate(project.submittedAt)}</strong>
+                      <span>
+                        Submitted
+                      </span>
+
+                      <strong>
+                        {formatDate(
+                          project.submittedAt,
+                        )}
+                      </strong>
                     </div>
+
                     <div>
-                      <span>Approved</span>
-                      <strong>{formatDate(project.approvedAt)}</strong>
+                      <span>
+                        Approved
+                      </span>
+
+                      <strong>
+                        {formatDate(
+                          project.approvedAt,
+                        )}
+                      </strong>
                     </div>
+
                     <div>
-                      <span>Completed</span>
-                      <strong>{formatDate(project.completedAt)}</strong>
+                      <span>
+                        Completed
+                      </span>
+
+                      <strong>
+                        {formatDate(
+                          project.completedAt,
+                        )}
+                      </strong>
                     </div>
                   </div>
 
                   <a
-                    href={project.requirementsUrl}
-                    className={styles.primaryButton}
+                    href={
+                      project.requirementsUrl
+                    }
+                    className={
+                      styles.primaryButton
+                    }
                   >
-                    {project.requirementsButtonLabel}
+                    {
+                      project.requirementsButtonLabel
+                    }
                   </a>
                 </section>
               ) : null}
 
-              <section className={styles.panel}>
-                <div className={styles.panelHeader}>
+              <section
+                className={styles.panel}
+              >
+                <div
+                  className={
+                    styles.panelHeader
+                  }
+                >
                   <div>
-                    <span>PURCHASE DETAILS</span>
-                    <h2>Order summary</h2>
-                    <p>Everything related to this purchase in one place.</p>
+                    <span>
+                      PURCHASE DETAILS
+                    </span>
+
+                    <h2>
+                      Order summary
+                    </h2>
+
+                    <p>
+                      Everything related
+                      to this purchase in
+                      one place.
+                    </p>
                   </div>
                 </div>
 
-                <div className={styles.summaryRows}>
+                <div
+                  className={
+                    styles.summaryRows
+                  }
+                >
                   <div>
-                    <span>Order number</span>
+                    <span>
+                      Order number
+                    </span>
+
                     <div
                       style={{
                         display: "flex",
-                        alignItems: "center",
+                        alignItems:
+                          "center",
                         gap: 8,
-                        flexWrap: "wrap",
+                        flexWrap:
+                          "wrap",
                       }}
                     >
-                      <strong>{order.orderNumber}</strong>
-                      <CopyOrderNumberButton orderNumber={order.orderNumber} />
+                      <strong>
+                        {
+                          order.orderNumber
+                        }
+                      </strong>
+
+                      <CopyOrderNumberButton
+                        orderNumber={
+                          order.orderNumber
+                        }
+                      />
                     </div>
                   </div>
+
                   <div>
                     <span>Product</span>
-                    <strong>{order.productName}</strong>
+
+                    <strong>
+                      {
+                        order.productName
+                      }
+                    </strong>
                   </div>
+
+                  {isPersonalizedWebsite ? (
+                    <div>
+                      <span>
+                        Selected design
+                      </span>
+
+                      <strong>
+                        {order.selectedDesignName ||
+                          "—"}
+                      </strong>
+                    </div>
+                  ) : null}
+
                   <div>
-                    <span>Purchase date</span>
-                    <strong>{formatDate(order.createdAt)}</strong>
+                    <span>
+                      Purchase date
+                    </span>
+
+                    <strong>
+                      {formatDate(
+                        order.createdAt,
+                      )}
+                    </strong>
                   </div>
+
                   <div>
-                    <span>Paid at</span>
-                    <strong>{formatDate(order.paidAt)}</strong>
+                    <span>
+                      Paid at
+                    </span>
+
+                    <strong>
+                      {formatDate(
+                        order.paidAt,
+                      )}
+                    </strong>
                   </div>
+
                   <div>
-                    <span>Payment method</span>
-                    <strong>{titleCase(order.paymentProvider)}</strong>
+                    <span>
+                      Payment method
+                    </span>
+
+                    <strong>
+                      {titleCase(
+                        order.paymentProvider,
+                      )}
+                    </strong>
                   </div>
+
                   <div>
-                    <span>Payment status</span>
-                    <strong className={statusTone(order.paymentStatus)}>
-                      {titleCase(order.paymentStatus)}
+                    <span>
+                      Payment status
+                    </span>
+
+                    <strong
+                      className={statusTone(
+                        order.paymentStatus,
+                      )}
+                    >
+                      {titleCase(
+                        order.paymentStatus,
+                      )}
                     </strong>
                   </div>
                 </div>
 
-                <div className={styles.priceBox}>
+                <div
+                  className={
+                    styles.priceBox
+                  }
+                >
                   <div>
-                    <span>Base price</span>
-                    <strong>{formatMoney(order.basePrice, order.currency)}</strong>
-                  </div>
-                  <div>
-                    <span>Processing fee</span>
+                    <span>
+                      Base price
+                    </span>
+
                     <strong>
-                      {formatMoney(order.processingFee, order.currency)}
-                      {order.processingFeePercent > 0
+                      {formatMoney(
+                        order.basePrice,
+                        order.currency,
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Processing fee
+                    </span>
+
+                    <strong>
+                      {formatMoney(
+                        order.processingFee,
+                        order.currency,
+                      )}
+
+                      {order.processingFeePercent >
+                      0
                         ? ` (${order.processingFeePercent}%)`
                         : ""}
                     </strong>
                   </div>
-                  <div className={styles.totalRow}>
-                    <span>Total paid</span>
+
+                  <div
+                    className={
+                      styles.totalRow
+                    }
+                  >
+                    <span>
+                      Total paid
+                    </span>
+
                     <strong>
-                      {formatMoney(order.totalAmount, order.currency)}
+                      {formatMoney(
+                        order.totalAmount,
+                        order.currency,
+                      )}
                     </strong>
                   </div>
 
-                  {order.refundedAmount > 0 ? (
+                  {order.refundedAmount >
+                  0 ? (
                     <div>
-                      <span>Total refunded</span>
+                      <span>
+                        Total refunded
+                      </span>
+
                       <strong>
-                        {formatMoney(order.refundedAmount, order.currency)}
+                        {formatMoney(
+                          order.refundedAmount,
+                          order.currency,
+                        )}
                       </strong>
                     </div>
                   ) : null}
                 </div>
               </section>
 
-              {digitalAccess?.hasFiles ? (
-                <section className={styles.panel}>
-                  <div className={styles.panelHeader}>
+              {!isPersonalizedWebsite &&
+              digitalAccess?.hasFiles ? (
+                <section
+                  className={
+                    styles.panel
+                  }
+                >
+                  <div
+                    className={
+                      styles.panelHeader
+                    }
+                  >
                     <div>
-                      <span>DIGITAL ACCESS</span>
-                      <h2>Your files</h2>
+                      <span>
+                        DIGITAL ACCESS
+                      </span>
+
+                      <h2>
+                        Your files
+                      </h2>
+
                       <p>
-                        Access status and remaining downloads for this purchase.
+                        Access status and
+                        remaining downloads
+                        for this purchase.
                       </p>
                     </div>
+
                     <strong
                       className={
-                        digitalAccess.accessActive ? styles.good : styles.bad
+                        digitalAccess.accessActive
+                          ? styles.good
+                          : styles.bad
                       }
                     >
-                      {digitalAccess.accessActive ? "Active" : "Expired"}
+                      {digitalAccess.accessActive
+                        ? "Active"
+                        : "Expired"}
                     </strong>
                   </div>
 
-                  <div className={styles.accessMeta}>
-                    <span>Access expires</span>
-                    <strong>{formatDate(digitalAccess.accessExpiresAt)}</strong>
+                  <div
+                    className={
+                      styles.accessMeta
+                    }
+                  >
+                    <span>
+                      Access expires
+                    </span>
+
+                    <strong>
+                      {formatDate(
+                        digitalAccess.accessExpiresAt,
+                      )}
+                    </strong>
                   </div>
 
-                  <div className={styles.fileList}>
-                    {digitalAccess.files.map((file) => (
-                      <div className={styles.fileItem} key={file.id}>
-                        <div className={styles.fileIcon}>↓</div>
-                        <div>
-                          <strong>{file.name}</strong>
-                          <span>
-                            {file.remainingDownloads} of{" "}
-                            {digitalAccess.maxDownloadsPerFile} downloads
-                            remaining
-                          </span>
+                  <div
+                    className={
+                      styles.fileList
+                    }
+                  >
+                    {digitalAccess.files.map(
+                      (file) => (
+                        <div
+                          className={
+                            styles.fileItem
+                          }
+                          key={file.id}
+                        >
+                          <div
+                            className={
+                              styles.fileIcon
+                            }
+                          >
+                            ↓
+                          </div>
+
+                          <div>
+                            <strong>
+                              {
+                                file.name
+                              }
+                            </strong>
+
+                            <span>
+                              {
+                                file.remainingDownloads
+                              }{" "}
+                              of{" "}
+                              {
+                                digitalAccess.maxDownloadsPerFile
+                              }{" "}
+                              downloads
+                              remaining
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
 
                   {result.actions.receiptUrl ? (
                     <a
-                      href={result.actions.receiptUrl}
-                      className={styles.primaryButton}
+                      href={
+                        result.actions.receiptUrl
+                      }
+                      className={
+                        styles.primaryButton
+                      }
                     >
-                      Access Receipt & Downloads →
+                      Access Receipt &
+                      Downloads →
                     </a>
                   ) : null}
                 </section>
               ) : null}
 
-              {result.product?.postPurchaseInstructions?.trim() ? (
-                <section className={styles.panel}>
-                  <div className={styles.panelHeader}>
+              {!isPersonalizedWebsite &&
+              result.product
+                ?.postPurchaseInstructions
+                ?.trim() ? (
+                <section
+                  className={
+                    styles.panel
+                  }
+                >
+                  <div
+                    className={
+                      styles.panelHeader
+                    }
+                  >
                     <div>
-                      <span>POST-PURCHASE INFO</span>
-                      <h2>What happens next</h2>
+                      <span>
+                        POST-PURCHASE
+                        INFO
+                      </span>
+
+                      <h2>
+                        What happens
+                        next
+                      </h2>
                     </div>
                   </div>
 
-                  <div className={styles.instructions}>
+                  <div
+                    className={
+                      styles.instructions
+                    }
+                  >
                     <PostPurchaseInstructions
-                      text={result.product.postPurchaseInstructions}
+                      text={
+                        result.product
+                          .postPurchaseInstructions
+                      }
                     />
                   </div>
                 </section>
               ) : null}
             </div>
 
-            <aside className={styles.resultSidebar}>
-              <section className={styles.actionCard}>
-                <span>QUICK ACTIONS</span>
-                <h2>Need something?</h2>
+            <aside
+              className={
+                styles.resultSidebar
+              }
+            >
+              <section
+                className={
+                  styles.actionCard
+                }
+              >
+                <span>
+                  QUICK ACTIONS
+                </span>
+
+                <h2>
+                  Need something?
+                </h2>
+
                 <p>
-                  Use the options below to manage this purchase or contact us.
+                  Use the options below
+                  to manage this purchase
+                  or contact us.
                 </p>
 
-                <div className={styles.actionButtons}>
+                <div
+                  className={
+                    styles.actionButtons
+                  }
+                >
                   {project ? (
                     <a
-                      href={project.requirementsUrl}
-                      className={styles.primaryButton}
+                      href={
+                        project.requirementsUrl
+                      }
+                      className={
+                        styles.primaryButton
+                      }
                     >
-                      {project.requirementsButtonLabel}
+                      {
+                        project.requirementsButtonLabel
+                      }
                     </a>
                   ) : null}
 
-                  {result.actions.receiptUrl ? (
+                  {result.actions
+                    .receiptUrl ? (
                     <a
-                      href={result.actions.receiptUrl}
-                      className={styles.secondaryButton}
+                      href={
+                        result.actions
+                          .receiptUrl
+                      }
+                      className={
+                        styles.secondaryButton
+                      }
                     >
                       View Receipt
                     </a>
                   ) : null}
 
                   <a
-                    href={result.actions.supportUrl}
+                    href={
+                      result.actions
+                        .supportUrl
+                    }
                     target="_blank"
                     rel="noreferrer"
-                    className={styles.secondaryButton}
+                    className={
+                      styles.secondaryButton
+                    }
                   >
                     Contact TCL
                   </a>
                 </div>
               </section>
 
-              <section className={styles.miniCard}>
+              <section
+                className={
+                  styles.miniCard
+                }
+              >
                 <span>
-                  {isDigitalAccessProgress ? "DIGITAL ACCESS" : "DELIVERY"}
+                  {isPersonalizedWebsite
+                    ? "WEBSITE PACKAGE"
+                    : isDigitalAccessProgress
+                      ? "DIGITAL ACCESS"
+                      : "DELIVERY"}
                 </span>
+
                 <strong
                   className={
-                    isDigitalAccessProgress
-                      ? digitalAccess?.accessActive
-                        ? styles.good
-                        : styles.bad
-                      : statusTone(order.deliveryStatus)
+                    isPersonalizedWebsite
+                      ? statusTone(
+                          websitePackageStatus,
+                        )
+                      : isDigitalAccessProgress
+                        ? digitalAccess?.accessActive
+                          ? styles.good
+                          : styles.bad
+                        : statusTone(
+                            order.deliveryStatus,
+                          )
                   }
                 >
-                  {isDigitalAccessProgress
-                    ? digitalAccessProgressLabel
-                    : shownDelivery || "Not updated yet"}
+                  {isPersonalizedWebsite
+                    ? websitePackageLabel
+                    : isDigitalAccessProgress
+                      ? digitalAccessProgressLabel
+                      : shownDelivery ||
+                        "Not updated yet"}
                 </strong>
+
                 <p>
-                  {isDigitalAccessProgress
-                    ? digitalAccess?.accessExpiresAt
-                      ? `Access expires ${formatDate(
-                          digitalAccess.accessExpiresAt,
-                        )}`
-                      : "Your digital files are available from your receipt."
-                    : order.deliveredAt
-                      ? `Delivered ${formatDate(order.deliveredAt)}`
-                      : "We’ll update this section once your order is delivered."}
+                  {isPersonalizedWebsite
+                    ? websitePackageStatus ===
+                      "READY_FOR_DOWNLOAD"
+                      ? digitalAccess?.accessExpiresAt
+                        ? `Download access expires ${formatDate(
+                            digitalAccess.accessExpiresAt,
+                          )}`
+                        : "Your personalized website package is ready."
+                      : websitePackageStatus ===
+                          "PROCESSING"
+                        ? "Your personalized package is being prepared. Please allow up to 24 hours."
+                        : websitePackageStatus ===
+                            "ACCESS_EXPIRED"
+                          ? "The download window for this package has ended."
+                          : websitePackageStatus ===
+                              "WAITING_FOR_PAYMENT"
+                            ? "Package preparation starts after payment is completed."
+                            : websitePackageStatus ===
+                                "CANCELLED"
+                              ? "This order was cancelled."
+                              : "Check back here for your website package status."
+                    : isDigitalAccessProgress
+                      ? digitalAccess?.accessExpiresAt
+                        ? `Access expires ${formatDate(
+                            digitalAccess.accessExpiresAt,
+                          )}`
+                        : "Your digital files are available from your receipt."
+                      : order.deliveredAt
+                        ? `Delivered ${formatDate(
+                            order.deliveredAt,
+                          )}`
+                        : "We’ll update this section once your order is delivered."}
                 </p>
               </section>
 
               {hasRefund ? (
-                <section className={styles.miniCard}>
-                  <span>REFUND STATUS</span>
-                  <strong className={statusTone(order.refundStatus)}>
-                    {titleCase(order.refundStatus)}
+                <section
+                  className={
+                    styles.miniCard
+                  }
+                >
+                  <span>
+                    REFUND STATUS
+                  </span>
+
+                  <strong
+                    className={statusTone(
+                      order.refundStatus,
+                    )}
+                  >
+                    {titleCase(
+                      order.refundStatus,
+                    )}
                   </strong>
-                  {order.refundedAmount > 0 ? (
+
+                  {order.refundedAmount >
+                  0 ? (
                     <p>
                       Refunded amount:{" "}
-                      {formatMoney(order.refundedAmount, order.currency)}
+                      {formatMoney(
+                        order.refundedAmount,
+                        order.currency,
+                      )}
                     </p>
                   ) : null}
                 </section>
@@ -753,13 +1825,19 @@ export default function OrderStatusLookup() {
 
           <button
             type="button"
-            className={styles.lookupAnother}
+            className={
+              styles.lookupAnother
+            }
             onClick={() => {
               setResult(null);
               setMessage("");
               setOrderNumber("");
               setEmail("");
-              window.scrollTo({ top: 0, behavior: "smooth" });
+
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
             }}
           >
             ← Check another order

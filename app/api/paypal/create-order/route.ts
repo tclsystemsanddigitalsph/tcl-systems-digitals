@@ -16,6 +16,20 @@ type CreateOrderBody = {
   customerName?: string;
   email?: string;
   customerEmail?: string;
+  selectedDesignSlug?: string;
+  selectedDesignName?: string;
+};
+
+const SIMPLE_WEBSITE_TEMPLATE_SLUG =
+  "simple-business-website-template";
+
+const SIMPLE_WEBSITE_DESIGNS: Record<string, string> = {
+  "aesthetic-soft": "Aesthetic & Soft",
+  "clean-minimal": "Clean & Minimal",
+  "professional-business": "Professional Business",
+  "bold-creative": "Bold & Creative",
+  "modern-monochrome": "Modern Monochrome",
+  "modern-refined": "Modern & Refined",
 };
 
 function toCentavos(value: number) {
@@ -60,6 +74,9 @@ export async function POST(request: Request) {
       body.email?.trim().toLowerCase() ||
       "";
 
+    const requestedDesignSlug =
+      body.selectedDesignSlug?.trim() || "";
+
     if (!productSlug) {
       return NextResponse.json(
         { error: "Missing product." },
@@ -81,6 +98,27 @@ export async function POST(request: Request) {
       );
     }
 
+    let selectedDesignSlug: string | null = null;
+    let selectedDesignName: string | null = null;
+
+    if (productSlug === SIMPLE_WEBSITE_TEMPLATE_SLUG) {
+      const validatedDesignName =
+        SIMPLE_WEBSITE_DESIGNS[requestedDesignSlug];
+
+      if (!requestedDesignSlug || !validatedDesignName) {
+        return NextResponse.json(
+          {
+            error:
+              "Please choose a valid website design before checkout.",
+          },
+          { status: 400 },
+        );
+      }
+
+      selectedDesignSlug = requestedDesignSlug;
+      selectedDesignName = validatedDesignName;
+    }
+
     const supabase = createAdminSupabaseClient();
 
     const { data: product, error: productError } = await supabase
@@ -93,7 +131,10 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (productError) {
-      console.error("Unable to load product for PayPal order:", productError);
+      console.error(
+        "Unable to load product for PayPal order:",
+        productError,
+      );
 
       return NextResponse.json(
         { error: "Unable to load this product." },
@@ -131,18 +172,30 @@ export async function POST(request: Request) {
     }
 
     const basePrice = fromCentavos(baseCentavos);
-    const processingFee = fromCentavos(processingFeeCentavos);
+    const processingFee = fromCentavos(
+      processingFeeCentavos,
+    );
     const totalAmount = fromCentavos(totalCentavos);
 
     const accessToken = await getPayPalAccessToken();
     const origin = new URL(request.url).origin;
 
-    const returnUrl = new URL("/api/paypal/capture", origin);
+    const returnUrl = new URL(
+      "/api/paypal/capture",
+      origin,
+    );
     returnUrl.searchParams.set("product", product.slug);
 
     const cancelUrl = new URL("/checkout", origin);
     cancelUrl.searchParams.set("product", product.slug);
     cancelUrl.searchParams.set("payment_cancelled", "1");
+
+    if (selectedDesignSlug) {
+      cancelUrl.searchParams.set(
+        "design",
+        selectedDesignSlug,
+      );
+    }
 
     const paypalResponse = await fetch(
       `${getPayPalBaseUrl()}/v2/checkout/orders`,
@@ -158,7 +211,9 @@ export async function POST(request: Request) {
           purchase_units: [
             {
               custom_id: product.slug,
-              description: product.name,
+              description: selectedDesignName
+                ? `${product.name} — ${selectedDesignName}`
+                : product.name,
               amount: {
                 currency_code: "PHP",
                 value: totalAmount.toFixed(2),
@@ -200,7 +255,10 @@ export async function POST(request: Request) {
         : "";
 
     if (!paypalOrderId) {
-      console.error("PayPal did not return an order ID:", paypalOrder);
+      console.error(
+        "PayPal did not return an order ID:",
+        paypalOrder,
+      );
 
       return NextResponse.json(
         { error: "PayPal did not return an order ID." },
@@ -219,7 +277,8 @@ export async function POST(request: Request) {
         product_id: product.id,
         product_name: product.name,
         base_price: basePrice,
-        processing_fee_percent: processingFeePercent,
+        processing_fee_percent:
+          processingFeePercent,
         processing_fee: processingFee,
         total_amount: totalAmount,
         currency: "PHP",
@@ -227,6 +286,8 @@ export async function POST(request: Request) {
         payment_status: "PENDING",
         paypal_order_id: paypalOrderId,
         delivery_status: "NOT_STARTED",
+        selected_design_slug: selectedDesignSlug,
+        selected_design_name: selectedDesignName,
       });
 
     if (orderError) {
@@ -268,7 +329,10 @@ export async function POST(request: Request) {
       url: approvalUrl,
     });
   } catch (error) {
-    console.error("PayPal order creation failed:", error);
+    console.error(
+      "PayPal order creation failed:",
+      error,
+    );
 
     return NextResponse.json(
       { error: "Unable to start PayPal checkout." },
