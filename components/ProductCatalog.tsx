@@ -251,7 +251,7 @@ export default function ProductCatalog({
           position: relative;
           display: flex !important;
           height: 100% !important;
-          min-height: 365px;
+          min-height: 300px;
           overflow: hidden;
           flex-direction: column !important;
           border: 1px solid #eadde2;
@@ -440,14 +440,14 @@ export default function ProductCatalog({
           .shop-product-card {
             display: flex !important;
             height: 100% !important;
-            min-height: 330px !important;
+            min-height: 270px !important;
             border-radius: 16px !important;
           }
 
           .shop-product-body {
             width: 100% !important;
             height: 100% !important;
-            min-height: 330px !important;
+            min-height: 270px !important;
             padding: 13px !important;
           }
 
@@ -536,7 +536,7 @@ export default function ProductCatalog({
 
           .shop-product-card,
           .shop-product-body {
-            min-height: 318px !important;
+            min-height: 260px !important;
           }
 
           .shop-product-body {
