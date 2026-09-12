@@ -5,10 +5,6 @@ import { redirect } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 
-const FULL_PAYMENT_FEE_PERCENT = 4;
-const DEPOSIT_PAYMENT_FEE_PERCENT = 6;
-const BPI_DIRECT_FEE_PERCENT = 0;
-
 const allowedStatuses = [
   "NEW",
   "REVIEWING",
@@ -54,26 +50,6 @@ function toMoneyNumber(value: number | string | null | undefined) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function moneyToCentavos(value: number) {
-  return Math.round((value + Number.EPSILON) * 100);
-}
-
-function calculateCustomPricing(subtotal: number, feePercent: number) {
-  const subtotalCentavos = moneyToCentavos(subtotal);
-  const safeFeePercent = Number.isFinite(feePercent) ? feePercent : 0;
-  const feeCentavos = Math.round(
-    (subtotalCentavos * safeFeePercent) / 100,
-  );
-  const totalCentavos = subtotalCentavos + feeCentavos;
-
-  return {
-    subtotal: subtotalCentavos / 100,
-    processingFeePercent: safeFeePercent,
-    processingFee: feeCentavos / 100,
-    total: totalCentavos / 100,
-  };
-}
-
 function money(value: number) {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -81,12 +57,6 @@ function money(value: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
-}
-
-function paymentTermsLabel(value: PaymentTerms) {
-  if (value === "DEPOSIT_50") return "50% Deposit + Remaining Balance";
-  if (value === "FULL") return "Full Payment";
-  return "Not set";
 }
 
 function statusLabel(value: string) {
@@ -163,7 +133,6 @@ export async function updateQuotationRequest(formData: FormData) {
   const status = cleanText(formData.get("status"));
   const adminNotes = cleanText(formData.get("admin_notes"));
   const quotedAmountRaw = cleanText(formData.get("quoted_amount"));
-  const paymentTermsRaw = cleanText(formData.get("payment_terms"));
   const submittedItems = readQuotationItems(formData);
 
   if (!id) throw new Error("Quotation request ID is missing.");
@@ -180,15 +149,6 @@ export async function updateQuotationRequest(formData: FormData) {
       throw new Error("Quoted amount must be a valid positive number.");
     }
     manualQuotedAmount = parsed;
-  }
-
-  let paymentTerms: PaymentTerms = null;
-
-  if (paymentTermsRaw) {
-    if (paymentTermsRaw !== "FULL" && paymentTermsRaw !== "DEPOSIT_50") {
-      throw new Error("Invalid payment terms.");
-    }
-    paymentTerms = paymentTermsRaw;
   }
 
   // Once itemized scope exists, its sum becomes the agreed quotation total.
@@ -261,6 +221,9 @@ export async function updateQuotationRequest(formData: FormData) {
       ? null
       : toMoneyNumber(previousRequest.quoted_amount);
   const oldPaymentTerms = (previousRequest.payment_terms ?? null) as PaymentTerms;
+  const paymentTerms: PaymentTerms = previousRequest.order_id
+    ? oldPaymentTerms
+    : null;
 
   const now = new Date().toISOString();
 
@@ -366,30 +329,18 @@ export async function updateQuotationRequest(formData: FormData) {
 
   let oldOrderTotal: number | null = null;
   let newOrderTotal: number | null = null;
-  let oldProcessingFee: number | null = null;
-  let newProcessingFee: number | null = null;
   let oldBalance: number | null = null;
   let newBalance: number | null = null;
   let amountPaid: number | null = null;
-  let linkedReceiptToken: string | null = null;
-  let acceptedLockedFeePercent: number | null = null;
 
   /*
-   * Accepted quotation pricing rule:
-   * - quotation_requests.quoted_amount stays the scope SUBTOTAL.
-   * - the client's accepted fee rate is locked on the linked order:
-   *     online full = 4%, online 50% DP = 6%, direct BPI full = 0%.
-   * - orders.total_amount is subtotal + the locked payment-provider fee.
-   * - successful COMPLETED order_payments are the source of truth.
-   * - past successful payments are NEVER changed when scope changes.
-   * - remaining balance = current fee-inclusive order total - successful payments.
+   * Accepted quotation: change current agreed total, NEVER past payments.
+   * Remaining = current agreed total - successful amount already paid.
    */
   if (previousRequest.order_id && quotedAmount !== null) {
     const { data: order, error: orderLoadError } = await supabase
       .from("orders")
-      .select(
-        "id,receipt_token,payment_terms,base_price,processing_fee_percent,processing_fee,total_amount,amount_paid,balance_due,payment_status,paid_at",
-      )
+      .select("id,total_amount,amount_paid,balance_due")
       .eq("id", previousRequest.order_id)
       .maybeSingle();
 
@@ -400,101 +351,25 @@ export async function updateQuotationRequest(formData: FormData) {
     }
 
     if (order) {
-      linkedReceiptToken = order.receipt_token
-        ? String(order.receipt_token)
-        : null;
       oldOrderTotal = toMoneyNumber(order.total_amount);
-      oldProcessingFee = toMoneyNumber(order.processing_fee);
       oldBalance = toMoneyNumber(order.balance_due);
+      amountPaid = toMoneyNumber(order.amount_paid);
 
-      const { data: completedPaymentsData, error: completedPaymentsError } =
-        await supabase
-          .from("order_payments")
-          .select("amount")
-          .eq("order_id", order.id)
-          .eq("status", "COMPLETED");
-
-      if (completedPaymentsError) {
-        throw new Error(
-          `Quotation was updated, but successful payments could not be recalculated: ${completedPaymentsError.message}`,
-        );
-      }
-
-      const successfulPayments = Number(
-        (completedPaymentsData ?? [])
-          .reduce(
-            (sum, payment) => sum + toMoneyNumber(payment.amount),
-            0,
-          )
-          .toFixed(2),
-      );
-
-      const rawLockedFeePercent = order.processing_fee_percent;
-      const hasLockedFeePercent =
-        rawLockedFeePercent !== null &&
-        rawLockedFeePercent !== undefined &&
-        Number.isFinite(Number(rawLockedFeePercent));
-      const fallbackFeePercent =
-        order.payment_terms === "FULL"
-          ? FULL_PAYMENT_FEE_PERCENT
-          : DEPOSIT_PAYMENT_FEE_PERCENT;
-      const lockedFeePercent = hasLockedFeePercent
-        ? toMoneyNumber(rawLockedFeePercent)
-        : fallbackFeePercent;
-      acceptedLockedFeePercent = lockedFeePercent;
-      const pricing = calculateCustomPricing(
-        quotedAmount,
-        lockedFeePercent,
-      );
-
-      newProcessingFee = pricing.processingFee;
-      newOrderTotal = pricing.total;
-
-      /*
-       * Keep the actual successful payment rows untouched. The order summary
-       * amount is capped at the current total so balance/status remain valid if
-       * an item is later removed and the new total drops below what was paid.
-       */
-      amountPaid = Math.min(newOrderTotal, successfulPayments);
-      newBalance = Math.max(
-        0,
-        Number((newOrderTotal - amountPaid).toFixed(2)),
-      );
-
-      const nextPaymentStatus =
-        newBalance <= 0.005 ? "COMPLETED" : "PENDING";
-
-      const orderUpdate: Record<string, unknown> = {
-        base_price: pricing.subtotal,
-        processing_fee_percent: pricing.processingFeePercent,
-        processing_fee: pricing.processingFee,
-        total_amount: pricing.total,
-        amount_paid: amountPaid,
-        balance_due: newBalance,
-        payment_status: nextPaymentStatus,
-        updated_at: now,
-      };
-
-      /*
-       * If an added item creates a new balance on a previously fully-paid
-       * order, it must no longer stay marked as paid. If an edited quotation
-       * reduces the current balance to zero, preserve an existing paid_at
-       * timestamp or mark the recalculated completion time.
-       */
-      if (nextPaymentStatus === "COMPLETED") {
-        orderUpdate.paid_at = order.paid_at ?? now;
-      } else {
-        orderUpdate.paid_at = null;
-      }
+      newOrderTotal = quotedAmount;
+      newBalance = Math.max(newOrderTotal - amountPaid, 0);
 
       const { error: orderUpdateError } = await supabase
         .from("orders")
-        .update(orderUpdate)
+        .update({
+          total_amount: newOrderTotal,
+          balance_due: newBalance,
+          updated_at: now,
+        })
         .eq("id", order.id);
 
       if (orderUpdateError) {
         throw new Error(
-          `Quotation was updated, but linked order pricing/balance could not be updated: ${orderUpdateError.message}`,
+          `Quotation was updated, but linked order balance could not be updated: ${orderUpdateError.message}`,
         );
       }
     }
@@ -515,30 +390,10 @@ export async function updateQuotationRequest(formData: FormData) {
     details: Record<string, unknown>;
   }> = [];
 
-  const selectedFeePercent = previousRequest.order_id
-    ? acceptedLockedFeePercent
-    : null;
-
-  const oldPricing =
-    oldQuotedAmount === null || selectedFeePercent === null
-      ? null
-      : calculateCustomPricing(oldQuotedAmount, selectedFeePercent);
-  const newPricing =
-    quotedAmount === null || selectedFeePercent === null
-      ? null
-      : calculateCustomPricing(quotedAmount, selectedFeePercent);
-
   const commonTotals = {
-    quotation_subtotal_before: oldQuotedAmount,
-    quotation_subtotal_after: quotedAmount,
-    processing_fee_percent: selectedFeePercent,
-    processing_fee_before:
-      oldProcessingFee ?? oldPricing?.processingFee ?? null,
-    processing_fee_after:
-      newProcessingFee ?? newPricing?.processingFee ?? null,
-    order_total_before: oldOrderTotal ?? oldPricing?.total ?? null,
-    order_total_after: newOrderTotal ?? newPricing?.total ?? null,
-    successful_payments: amountPaid,
+    quotation_amount_before: oldQuotedAmount,
+    quotation_amount_after: quotedAmount,
+    amount_paid: amountPaid,
     balance_before: oldBalance,
     balance_after: newBalance,
     admin_email: adminUser.email ?? null,
@@ -659,41 +514,7 @@ export async function updateQuotationRequest(formData: FormData) {
       action_type: "QUOTATION_MARKED_QUOTED",
       summary: "Quotation was finalized and marked as Quoted.",
       details: {
-        quotation_subtotal: quotedAmount,
-        payment_options: {
-          full_payment: {
-            processing_fee_percent: FULL_PAYMENT_FEE_PERCENT,
-            project_total:
-              quotedAmount === null
-                ? null
-                : calculateCustomPricing(
-                    quotedAmount,
-                    FULL_PAYMENT_FEE_PERCENT,
-                  ).total,
-          },
-          deposit_50: {
-            processing_fee_percent: DEPOSIT_PAYMENT_FEE_PERCENT,
-            project_total:
-              quotedAmount === null
-                ? null
-                : calculateCustomPricing(
-                    quotedAmount,
-                    DEPOSIT_PAYMENT_FEE_PERCENT,
-                  ).total,
-          },
-          bpi_full: {
-            processing_fee_percent: BPI_DIRECT_FEE_PERCENT,
-            project_total:
-              quotedAmount === null
-                ? null
-                : calculateCustomPricing(
-                    quotedAmount,
-                    BPI_DIRECT_FEE_PERCENT,
-                  ).total,
-            manual_verification: true,
-          },
-        },
-        payment_terms: "CLIENT_SELECTS_ON_QUOTATION_LINK",
+        quotation_amount: quotedAmount,
         quoted_at: payload.quoted_at ?? now,
         admin_email: adminUser.email ?? null,
       },
@@ -709,11 +530,11 @@ export async function updateQuotationRequest(formData: FormData) {
     activityRows.push({
       quotation_request_id: id,
       action_type: "QUOTATION_AMOUNT_CHANGED",
-      summary: `Quotation subtotal changed from ${oldAmountText} to ${newAmountText}.`,
+      summary: `Quotation amount changed from ${oldAmountText} to ${newAmountText}.`,
       details: commonTotals,
     });
 
-    let note = `Quotation subtotal changed from ${oldAmountText} to ${newAmountText}.`;
+    let note = `Quotation total changed from ${oldAmountText} to ${newAmountText}.`;
 
     if (oldBalance !== null && newBalance !== null && oldBalance !== newBalance) {
       note += ` Remaining balance changed from ${money(oldBalance)} to ${money(newBalance)}.`;
@@ -722,10 +543,12 @@ export async function updateQuotationRequest(formData: FormData) {
     automaticNoteRows.push({
       quotation_request_id: id,
       note_type: "AUTOMATIC",
-      title: "Quotation pricing updated",
+      title: "Quotation total updated",
       note,
       details: {
         change_type: "TOTAL_CHANGED",
+        order_total_before: oldOrderTotal,
+        order_total_after: newOrderTotal,
         ...commonTotals,
       },
     });
@@ -751,35 +574,6 @@ export async function updateQuotationRequest(formData: FormData) {
     }
   }
 
-  if (oldPaymentTerms !== paymentTerms) {
-    const note = `Payment terms changed from ${paymentTermsLabel(
-      oldPaymentTerms,
-    )} to ${paymentTermsLabel(paymentTerms)}.`;
-
-    activityRows.push({
-      quotation_request_id: id,
-      action_type: "PAYMENT_TERMS_CHANGED",
-      summary: note,
-      details: {
-        from: oldPaymentTerms,
-        to: paymentTerms,
-        admin_email: adminUser.email ?? null,
-      },
-    });
-
-    automaticNoteRows.push({
-      quotation_request_id: id,
-      note_type: "AUTOMATIC",
-      title: "Payment terms updated",
-      note,
-      details: {
-        change_type: "PAYMENT_TERMS_CHANGED",
-        from: oldPaymentTerms,
-        to: paymentTerms,
-        admin_email: adminUser.email ?? null,
-      },
-    });
-  }
 
   if (oldNotes !== adminNotes) {
     activityRows.push({
@@ -836,25 +630,15 @@ export async function updateQuotationRequest(formData: FormData) {
   revalidatePath("/admin/quotation-requests");
   revalidatePath(`/admin/quotation-requests/${id}`);
 
-  if (previousRequest.secure_token) {
-    revalidatePath(`/quotation/${previousRequest.secure_token}`);
-  }
-
   if (previousRequest.order_id) {
     revalidatePath(`/admin/orders/${previousRequest.order_id}`);
-  }
-
-  if (linkedReceiptToken) {
-    revalidatePath(`/checkout/custom/${linkedReceiptToken}`);
   }
 }
 
 export async function addManualQuotationNote(formData: FormData) {
   const adminUser = await requireAdmin();
 
-  const id =
-    cleanText(formData.get("id")) ||
-    cleanText(formData.get("quotation_request_id"));
+  const id = cleanText(formData.get("id"));
   const title = cleanText(formData.get("title"));
   const note = cleanText(formData.get("note"));
 

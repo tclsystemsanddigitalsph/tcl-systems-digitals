@@ -15,7 +15,6 @@ const allowedStatuses = [
 ] as const;
 
 type AllowedStatus = (typeof allowedStatuses)[number];
-type PaymentTerms = "FULL" | "DEPOSIT_50" | null;
 
 async function requireAdmin() {
   const authSupabase = await createServerSupabaseClient();
@@ -49,7 +48,6 @@ export async function createManualQuotation(formData: FormData) {
   const mainGoal = text(formData, "main_goal");
   const adminNotes = text(formData, "admin_notes");
   const status = text(formData, "status") || "NEW";
-  const paymentTermsRaw = text(formData, "payment_terms");
 
   if (!fullName) {
     throw new Error("Client name is required.");
@@ -61,15 +59,6 @@ export async function createManualQuotation(formData: FormData) {
 
   if (!allowedStatuses.includes(status as AllowedStatus)) {
     throw new Error("Invalid quotation status.");
-  }
-
-  let paymentTerms: PaymentTerms = null;
-
-  if (
-    paymentTermsRaw === "FULL" ||
-    paymentTermsRaw === "DEPOSIT_50"
-  ) {
-    paymentTerms = paymentTermsRaw;
   }
 
   const itemNames = formData.getAll("item_name");
@@ -129,11 +118,6 @@ export async function createManualQuotation(formData: FormData) {
       );
     }
 
-    if (!paymentTerms) {
-      throw new Error(
-        "Choose payment terms before marking this as Quoted.",
-      );
-    }
   }
 
   /*
@@ -171,7 +155,7 @@ export async function createManualQuotation(formData: FormData) {
     admin_notes: nullable(adminNotes),
     status,
     quoted_amount: quotedAmount,
-    payment_terms: paymentTerms,
+    payment_terms: null,
     quoted_at: status === "QUOTED" ? now : null,
     secure_token: secureToken,
   };
@@ -231,7 +215,7 @@ export async function createManualQuotation(formData: FormData) {
         quoted_amount: quotedAmount,
         item_count: items.length,
         status,
-        payment_terms: paymentTerms,
+        payment_terms: null,
       },
     },
   ];
@@ -244,7 +228,7 @@ export async function createManualQuotation(formData: FormData) {
       details: {
         admin_email: adminUser.email ?? null,
         quoted_amount: quotedAmount,
-        payment_terms: paymentTerms,
+        payment_terms: null,
         quoted_at: now,
       },
     });
@@ -276,7 +260,7 @@ export async function createManualQuotation(formData: FormData) {
       details: {
         admin_email: adminUser.email ?? null,
         quoted_amount: quotedAmount,
-        payment_terms: paymentTerms,
+        payment_terms: null,
       },
     });
 

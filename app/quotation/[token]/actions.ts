@@ -153,17 +153,32 @@ export async function acceptQuotation(formData: FormData) {
   const productSlug =
     String(quotation.product_slug ?? "").trim() || CUSTOM_PRODUCT_SLUG;
 
-  const { data: productData, error: productError } = await supabase
+  let productQuery = supabase
     .from("products")
     .select("id,slug,name,product_type,is_active")
-    .eq("slug", productSlug)
-    .eq("is_active", true)
-    .maybeSingle();
+    .eq("slug", productSlug);
+
+  // The permanent custom-quotation service may be hidden/inactive in the
+  // storefront catalog while still being used as the internal order anchor.
+  // Do not block quotation acceptance just because that catalog row is hidden.
+  if (productSlug !== CUSTOM_PRODUCT_SLUG) {
+    productQuery = productQuery.eq("is_active", true);
+  }
+
+  const { data: productData, error: productError } =
+    await productQuery.maybeSingle();
 
   const product = productData as unknown as ProductRow | null;
 
-  if (productError || !product || product.product_type !== "SERVICE") {
+  if (productError || !product) {
+    console.error("Client quotation product lookup error:", productError, {
+      productSlug,
+    });
     redirect(reviewPath(token, "error=product"));
+  }
+
+  if (productSlug !== CUSTOM_PRODUCT_SLUG && product.product_type !== "SERVICE") {
+    redirect(reviewPath(token, "error=product-type"));
   }
 
   const customerName =
