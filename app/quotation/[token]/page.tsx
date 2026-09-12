@@ -9,8 +9,47 @@ import styles from "./quotation.module.css";
 
 export const dynamic = "force-dynamic";
 
-const FULL_PAYMENT_FEE_PERCENT = 4;
-const DEPOSIT_PAYMENT_FEE_PERCENT = 6;
+
+type ClientQuotationRow = {
+  id: string;
+  secure_token: string;
+  status: string;
+  quoted_amount: number | string | null;
+  quoted_at: string | null;
+  payment_terms: string | null;
+  accepted_at: string | null;
+  order_id: string | null;
+  product_slug: string | null;
+  product_name: string | null;
+  full_name: string | null;
+  business_name: string | null;
+  email: string | null;
+  project_context: string | null;
+  business_type: string | null;
+  main_goal: string | null;
+  selected_features: unknown;
+  admin_notes: string | null;
+};
+
+type QuotationItemRow = {
+  id: string;
+  item_name: string | null;
+  item_description: string | null;
+  amount: number | string | null;
+  display_order: number | null;
+  created_at: string | null;
+};
+
+type LinkedOrderRow = {
+  id: string;
+  receipt_token: string | null;
+  payment_status: string | null;
+  payment_terms: string | null;
+  amount_paid: number | string | null;
+  balance_due: number | string | null;
+  total_amount: number | string | null;
+  order_status: string | null;
+};
 
 function money(value: number | string | null | undefined) {
   return new Intl.NumberFormat("en-PH", {
@@ -19,18 +58,6 @@ function money(value: number | string | null | undefined) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Number(value ?? 0));
-}
-
-function termsLabel(value: string | null) {
-  if (value === "DEPOSIT_50") {
-    return "50% Deposit + Remaining Balance";
-  }
-
-  if (value === "FULL") {
-    return "Full Payment";
-  }
-
-  return "Not set";
 }
 
 function statusLabel(value: string) {
@@ -63,10 +90,29 @@ export default async function ClientQuotationPage({
   const query = await searchParams;
   const supabase = createAdminSupabaseClient();
 
-  const { data: quotation, error } = await supabase
+  const { data: quotationData, error } = await supabase
     .from("quotation_requests")
     .select(
-      "id,secure_token,status,quoted_amount,quoted_at,payment_terms,accepted_at,order_id,product_slug,product_name,full_name,business_name,email,project_context,business_type,main_goal,selected_features,admin_notes",
+      [
+        "id",
+        "secure_token",
+        "status",
+        "quoted_amount",
+        "quoted_at",
+        "payment_terms",
+        "accepted_at",
+        "order_id",
+        "product_slug",
+        "product_name",
+        "full_name",
+        "business_name",
+        "email",
+        "project_context",
+        "business_type",
+        "main_goal",
+        "selected_features",
+        "admin_notes",
+      ].join(","),
     )
     .eq("secure_token", token)
     .maybeSingle();
@@ -74,6 +120,8 @@ export default async function ClientQuotationPage({
   if (error) {
     console.error("Client quotation load error:", error);
   }
+
+  const quotation = quotationData as unknown as ClientQuotationRow | null;
 
   if (!quotation) {
     notFound();
@@ -94,7 +142,7 @@ export default async function ClientQuotationPage({
     );
   }
 
-  const quotationItems = (quotationItemsData ?? []).map((item) => ({
+  const quotationItems = ((quotationItemsData ?? []) as unknown as QuotationItemRow[]).map((item) => ({
     id: String(item.id),
     name: String(item.item_name ?? ""),
     description: item.item_description
@@ -103,25 +151,13 @@ export default async function ClientQuotationPage({
     amount: Number(item.amount ?? 0),
   }));
 
-  let linkedOrder: {
-    id: string;
-    receipt_token: string | null;
-    payment_status: string | null;
-    payment_terms: string | null;
-    base_price: number | string | null;
-    processing_fee_percent: number | string | null;
-    processing_fee: number | string | null;
-    amount_paid: number | string | null;
-    balance_due: number | string | null;
-    total_amount: number | string | null;
-    order_status: string | null;
-  } | null = null;
+  let linkedOrder: LinkedOrderRow | null = null;
 
   if (quotation.order_id) {
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .select(
-        "id,receipt_token,payment_status,payment_terms,base_price,processing_fee_percent,processing_fee,amount_paid,balance_due,total_amount,order_status",
+        "id,receipt_token,payment_status,payment_terms,amount_paid,balance_due,total_amount,order_status",
       )
       .eq("id", quotation.order_id)
       .maybeSingle();
@@ -129,7 +165,7 @@ export default async function ClientQuotationPage({
     if (orderError) {
       console.error("Client quotation linked order load error:", orderError);
     } else {
-      linkedOrder = orderData;
+      linkedOrder = orderData as unknown as LinkedOrderRow | null;
     }
   }
 
@@ -157,28 +193,15 @@ export default async function ClientQuotationPage({
 
   const base = Number(quotation.quoted_amount ?? 0);
 
-  const fullFee = Number(((base * FULL_PAYMENT_FEE_PERCENT) / 100).toFixed(2));
-  const fullTotal = Number((base + fullFee).toFixed(2));
+  // Payment terms are chosen by the client at acceptance, not by Admin.
+  const providerFullFee = Number((base * 0.04).toFixed(2));
+  const providerFullTotal = Number((base + providerFullFee).toFixed(2));
 
-  const depositFee = Number(((base * DEPOSIT_PAYMENT_FEE_PERCENT) / 100).toFixed(2));
-  const depositTotal = Number((base + depositFee).toFixed(2));
-  const depositDueNow = Number((depositTotal / 2).toFixed(2));
-  const depositRemaining = Number((depositTotal - depositDueNow).toFixed(2));
+  const providerDepositFee = Number((base * 0.06).toFixed(2));
+  const providerDepositTotal = Number((base + providerDepositFee).toFixed(2));
+  const providerDepositDueNow = Number((providerDepositTotal / 2).toFixed(2));
+
   const bpiTotal = base;
-
-  const acceptedFeePercent = Number(
-    linkedOrder?.processing_fee_percent ??
-      (quotation.payment_terms === "FULL"
-        ? FULL_PAYMENT_FEE_PERCENT
-        : DEPOSIT_PAYMENT_FEE_PERCENT),
-  );
-  const acceptedFee = Number(linkedOrder?.processing_fee ?? 0);
-  const acceptedTotal = Number(linkedOrder?.total_amount ?? 0);
-  const isAcceptedBpiDirect =
-    quotation.status === "ACCEPTED" &&
-    quotation.payment_terms === "FULL" &&
-    linkedOrder !== null &&
-    acceptedFeePercent <= 0.005;
 
   const requestedFeatures = Array.isArray(quotation.selected_features)
     ? quotation.selected_features.filter(
@@ -232,6 +255,9 @@ export default async function ClientQuotationPage({
                   We couldn&apos;t continue with the quotation right now. Please
                   contact TCL Systems &amp; Digitals PH so we can check it for
                   you.
+                  {typeof query.error === "string" ? (
+                    <><br /><small>Error reference: {query.error}</small></>
+                  ) : null}
                 </div>
               ) : null}
 
@@ -352,7 +378,7 @@ export default async function ClientQuotationPage({
                         borderTop: "1px solid rgba(27, 22, 24, 0.10)",
                       }}
                     >
-                      <strong>Quotation subtotal</strong>
+                      <strong>Quotation total</strong>
                       <strong style={{ fontSize: "1.15rem" }}>
                         {money(base)}
                       </strong>
@@ -393,87 +419,15 @@ export default async function ClientQuotationPage({
 
               <section className={styles.card}>
                 <span className={styles.sectionLabel}>PAYMENT OPTIONS</span>
-                <h2>Choose how you want to pay</h2>
-
-                {quotation.status === "QUOTED" ? (
-                  <>
-                    <p className={styles.muted}>
-                      Your quotation subtotal stays the same. The processing fee
-                      depends on the payment option you choose when accepting.
-                    </p>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: 12,
-                        marginTop: 16,
-                      }}
-                    >
-                      <div
-                        style={{
-                          padding: 16,
-                          border: "1px solid rgba(27, 22, 24, 0.10)",
-                          borderRadius: 14,
-                          background: "#fff",
-                        }}
-                      >
-                        <strong>Pay in Full — Online / Card Payment · 4% provider fee</strong>
-                        <p style={{ margin: "7px 0 0", lineHeight: 1.6 }}>
-                          Pay through PayPal / Card or QR Ph. Project total: {money(fullTotal)}.
-                          The full amount is due after acceptance.
-                        </p>
-                      </div>
-
-                      <div
-                        style={{
-                          padding: 16,
-                          border: "1px solid rgba(27, 22, 24, 0.10)",
-                          borderRadius: 14,
-                          background: "#fff",
-                        }}
-                      >
-                        <strong>50% Down Payment — Online / Card Payment · 6% provider fee</strong>
-                        <p style={{ margin: "7px 0 0", lineHeight: 1.6 }}>
-                          Pay through PayPal / Card or QR Ph. Project total: {money(depositTotal)}.
-                          Pay {money(depositDueNow)} now, then {money(depositRemaining)} when TCL
-                          activates the remaining balance.
-                        </p>
-                      </div>
-
-                      <div
-                        style={{
-                          padding: 16,
-                          border: "1px solid rgba(27, 22, 24, 0.10)",
-                          borderRadius: 14,
-                          background: "#fff",
-                        }}
-                      >
-                        <strong>Pay in Full — Direct BPI Transfer · No processing fee</strong>
-                        <p style={{ margin: "7px 0 0", lineHeight: 1.6 }}>
-                          Full payment only. Project total: {money(bpiTotal)}. Direct BPI
-                          transfers are manually verified by TCL after payment.
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h3 style={{ marginTop: 12 }}>
-                      {termsLabel(quotation.payment_terms)}
-                    </h3>
-                    <p className={styles.muted}>
-                      {quotation.payment_terms === "DEPOSIT_50"
-                        ? "You selected the 50% down payment option through an online payment provider with a 6% processing fee. Successful payments remain credited toward the current project total if the scope changes later."
-                        : isAcceptedBpiDirect
-                          ? "You selected full payment through direct BPI bank transfer with no processing fee. Payment is manually verified by TCL."
-                          : "You selected full payment through an online payment provider with a 4% processing fee."}
-                    </p>
-                  </>
-                )}
+                <h2>Choose your payment option when you accept.</h2>
+                <p className={styles.muted}>
+                  The quotation amount below is the agreed project subtotal.
+                  Payment-provider fees depend on the option you choose.
+                </p>
 
                 <div
                   style={{
-                    marginTop: 14,
+                    marginTop: 16,
                     padding: 14,
                     borderRadius: 13,
                     background: "rgba(0,0,0,.035)",
@@ -481,95 +435,78 @@ export default async function ClientQuotationPage({
                     lineHeight: 1.6,
                   }}
                 >
-                  Online payment processing fees apply only when using the supported
-                  payment providers. Direct BPI bank transfer is full-payment only
-                  and has no processing fee. Your selected payment option and fee
-                  rate are locked when the quotation is accepted. If the scope changes
-                  later, the same selected rate applies to the updated subtotal.
+                  If the project scope changes later, TCL may update the
+                  quotation. Any successful payment already made remains
+                  recorded and is not replaced by a new quotation amount.
                 </div>
               </section>
             </div>
 
             <aside className={styles.side}>
               <section className={styles.priceCard}>
-                <span className={styles.sectionLabel}>QUOTATION SUMMARY</span>
+                <span className={styles.sectionLabel}>
+                  QUOTATION SUMMARY
+                </span>
 
                 <div className={styles.priceRow}>
-                  <span>Quotation subtotal</span>
+                  <span>Agreed project price</span>
                   <strong>{money(base)}</strong>
                 </div>
 
                 {quotation.status === "ACCEPTED" && linkedOrder ? (
-                  <>
-                    <div className={styles.priceRow}>
-                      <span>
-                        {isAcceptedBpiDirect
-                          ? "Processing fee (Direct BPI)"
-                          : `Payment provider fee (${acceptedFeePercent}%)`}
-                      </span>
-                      <strong>{money(acceptedFee)}</strong>
-                    </div>
-
-                    <div className={`${styles.priceRow} ${styles.total}`}>
-                      <span>Current project total</span>
-                      <strong>{money(acceptedTotal || currentOrderTotal)}</strong>
-                    </div>
-
-                    <div className={styles.due}>
-                      <small>Current payment status</small>
-
-                      {customCheckoutState?.state === "PAYMENT_DUE" &&
-                      currentPayment ? (
-                        <>
-                          <strong>{money(currentPayment.amount)}</strong>
-                          <span>
-                            {currentPayment.payment_stage === "DEPOSIT"
-                              ? "50% down payment currently due"
-                              : currentPayment.payment_stage === "FINAL"
-                                ? "Remaining balance currently due"
-                                : isAcceptedBpiDirect
-                                  ? "Direct BPI full payment currently due"
-                                  : "Full payment currently due"}
-                          </span>
-                        </>
-                      ) : customCheckoutState?.state === "WAITING_FOR_FINAL" ? (
-                        <>
-                          <strong>{money(currentBalance)}</strong>
-                          <span>
-                            Down payment received. The remaining balance has not
-                            been activated for payment yet.
-                          </span>
-                        </>
-                      ) : customCheckoutState?.state === "FULLY_PAID" ? (
-                        <>
-                          <strong>{money(0)}</strong>
-                          <span>Project is fully paid.</span>
-                        </>
-                      ) : (
-                        <>
-                          <strong>{money(currentBalance)}</strong>
-                          <span>Current remaining project balance.</span>
-                        </>
-                      )}
-                    </div>
-                  </>
+                  <div className={`${styles.priceRow} ${styles.total}`}>
+                    <span>Current order total</span>
+                    <strong>{money(currentOrderTotal)}</strong>
+                  </div>
                 ) : (
-                  <>
-                    <div
-                      style={{
-                        marginTop: 16,
-                        padding: 14,
-                        borderRadius: 13,
-                        background: "rgba(0,0,0,.035)",
-                        fontSize: ".88rem",
-                        lineHeight: 1.55,
-                      }}
-                    >
-                      Choose your payment option below. Online provider payments include
-                      the applicable processing fee. Direct BPI transfer requires full
-                      payment and has no processing fee.
-                    </div>
-                  </>
+                  <div className={`${styles.priceRow} ${styles.total}`}>
+                    <span>Agreed quotation subtotal</span>
+                    <strong>{money(base)}</strong>
+                  </div>
+                )}
+
+                {quotation.status === "ACCEPTED" && linkedOrder ? (
+                  <div className={styles.due}>
+                    <small>Current payment status</small>
+
+                    {customCheckoutState?.state === "PAYMENT_DUE" &&
+                    currentPayment ? (
+                      <>
+                        <strong>{money(currentPayment.amount)}</strong>
+                        <span>
+                          {currentPayment.payment_stage === "DEPOSIT"
+                            ? "50% deposit currently due"
+                            : currentPayment.payment_stage === "FINAL"
+                              ? "Remaining balance currently due"
+                              : "Full payment currently due"}
+                        </span>
+                      </>
+                    ) : customCheckoutState?.state === "WAITING_FOR_FINAL" ? (
+                      <>
+                        <strong>{money(currentBalance)}</strong>
+                        <span>
+                          Deposit received. The remaining balance has not been
+                          activated for payment yet.
+                        </span>
+                      </>
+                    ) : customCheckoutState?.state === "FULLY_PAID" ? (
+                      <>
+                        <strong>{money(0)}</strong>
+                        <span>Project is fully paid.</span>
+                      </>
+                    ) : (
+                      <>
+                        <strong>{money(currentBalance)}</strong>
+                        <span>Current remaining project balance.</span>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className={styles.due}>
+                    <small>Payment option is selected below</small>
+                    <strong>{money(base)}</strong>
+                    <span>Agreed project subtotal before any provider fee.</span>
+                  </div>
                 )}
 
                 {isReviewable ? (
@@ -577,92 +514,23 @@ export default async function ClientQuotationPage({
                     <form action={acceptQuotation}>
                       <input type="hidden" name="token" value={token} />
 
-                      <div
-                        style={{
-                          display: "grid",
-                          gap: 10,
-                          marginBottom: 14,
-                        }}
-                      >
-                        <label
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "auto 1fr",
-                            gap: 10,
-                            alignItems: "start",
-                            padding: 13,
-                            border: "1px solid rgba(27, 22, 24, 0.12)",
-                            borderRadius: 13,
-                            cursor: "pointer",
-                          }}
-                        >
-                          <input
-                            type="radio"
-                            name="payment_choice"
-                            value="PROVIDER_FULL"
-                            required
-                            style={{ marginTop: 3 }}
-                          />
-                          <span>
-                            <strong style={{ display: "block" }}>
-                              Pay in Full · Online / Card Payment· 4% fee
-                            </strong>
-                            <small>Due now: {money(fullTotal)}</small>
-                          </span>
+                      <div style={{ display: "grid", gap: 12, marginBottom: 16 }}>
+                        <label style={{ display: "block", padding: 14, border: "1px solid rgba(27,22,24,.12)", borderRadius: 14, cursor: "pointer" }}>
+                          <input type="radio" name="payment_choice" value="PROVIDER_FULL" required />
+                          <strong style={{ display: "block", marginTop: 6 }}>Pay in Full — Online Provider</strong>
+                          <span style={{ display: "block", marginTop: 4, opacity: .75 }}>4% processing fee · Total due now: {money(providerFullTotal)}</span>
                         </label>
 
-                        <label
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "auto 1fr",
-                            gap: 10,
-                            alignItems: "start",
-                            padding: 13,
-                            border: "1px solid rgba(27, 22, 24, 0.12)",
-                            borderRadius: 13,
-                            cursor: "pointer",
-                          }}
-                        >
-                          <input
-                            type="radio"
-                            name="payment_choice"
-                            value="PROVIDER_DEPOSIT"
-                            required
-                            style={{ marginTop: 3 }}
-                          />
-                          <span>
-                            <strong style={{ display: "block" }}>
-                              50% Down Payment · Online / Card Payment · 6% fee
-                            </strong>
-                            <small>Due now: {money(depositDueNow)}</small>
-                          </span>
+                        <label style={{ display: "block", padding: 14, border: "1px solid rgba(27,22,24,.12)", borderRadius: 14, cursor: "pointer" }}>
+                          <input type="radio" name="payment_choice" value="PROVIDER_DEPOSIT" required />
+                          <strong style={{ display: "block", marginTop: 6 }}>50% Down Payment — Online Provider</strong>
+                          <span style={{ display: "block", marginTop: 4, opacity: .75 }}>6% processing fee · Due now: {money(providerDepositDueNow)} · Remaining later: {money(providerDepositTotal - providerDepositDueNow)}</span>
                         </label>
 
-                        <label
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "auto 1fr",
-                            gap: 10,
-                            alignItems: "start",
-                            padding: 13,
-                            border: "1px solid rgba(27, 22, 24, 0.12)",
-                            borderRadius: 13,
-                            cursor: "pointer",
-                          }}
-                        >
-                          <input
-                            type="radio"
-                            name="payment_choice"
-                            value="BPI_FULL"
-                            required
-                            style={{ marginTop: 3 }}
-                          />
-                          <span>
-                            <strong style={{ display: "block" }}>
-                              Pay in Full · Direct BPI · No fee
-                            </strong>
-                            <small>Due now: {money(bpiTotal)}</small>
-                          </span>
+                        <label style={{ display: "block", padding: 14, border: "1px solid rgba(27,22,24,.12)", borderRadius: 14, cursor: "pointer" }}>
+                          <input type="radio" name="payment_choice" value="BPI_FULL" required />
+                          <strong style={{ display: "block", marginTop: 6 }}>Pay in Full — Direct BPI Bank Transfer</strong>
+                          <span style={{ display: "block", marginTop: 4, opacity: .75 }}>0% processing fee · Total due now: {money(bpiTotal)}</span>
                         </label>
                       </div>
 
@@ -681,12 +549,12 @@ export default async function ClientQuotationPage({
 
                     <p className={styles.finePrint}>
                       By accepting, you confirm the latest scope and quotation
-                      subtotal and choose the payment method/plan shown above. Online
-                      provider fees apply only to provider payments; direct BPI full
-                      payment has no processing fee. Your selection is locked to this project.
+                      subtotal. Your selected payment option and its processing
+                      fee are locked when the quotation is accepted.
                     </p>
                   </div>
-                ) : quotation.status === "ACCEPTED" && quotation.order_id ? (
+                ) : quotation.status === "ACCEPTED" &&
+                  quotation.order_id ? (
                   <div className={styles.acceptedBox}>
                     {customCheckoutState?.state === "PAYMENT_DUE" &&
                     currentPayment &&
@@ -696,10 +564,8 @@ export default async function ClientQuotationPage({
                           {currentPayment.payment_stage === "FINAL"
                             ? "Remaining balance is ready for payment"
                             : currentPayment.payment_stage === "DEPOSIT"
-                              ? "Quotation accepted — down payment is ready"
-                              : isAcceptedBpiDirect
-                                ? "Quotation accepted — BPI transfer is ready"
-                                : "Quotation accepted — payment is ready"}
+                              ? "Quotation accepted — deposit is ready"
+                              : "Quotation accepted — payment is ready"}
                         </strong>
                         <p>
                           Successful payments: {money(successfulPayments)}
@@ -714,15 +580,13 @@ export default async function ClientQuotationPage({
                           {currentPayment.payment_stage === "FINAL"
                             ? "Pay Remaining Balance →"
                             : currentPayment.payment_stage === "DEPOSIT"
-                              ? "Continue to Down Payment →"
-                              : isAcceptedBpiDirect
-                                ? "View BPI Transfer Instructions →"
-                                : "Continue to Payment →"}
+                              ? "Continue to Deposit Payment →"
+                              : "Continue to Payment →"}
                         </Link>
                       </>
                     ) : customCheckoutState?.state === "WAITING_FOR_FINAL" ? (
                       <>
-                        <strong>Down payment received ✓</strong>
+                        <strong>Deposit received ✓</strong>
                         <p>
                           Successful payments: {money(successfulPayments)}
                           <br />

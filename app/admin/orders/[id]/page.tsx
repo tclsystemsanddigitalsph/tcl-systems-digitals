@@ -686,7 +686,8 @@ export default async function OrderDetailsPage({
                           lineHeight: 1.55,
                         }}
                       >
-                        Successful payments stay unchanged. The 6% processing fee,
+                        Successful payments stay unchanged. The locked{" "}
+                        {Number(order.processing_fee_percent ?? 0)}% processing fee,
                         customer total, and remaining balance will recalculate from
                         the new project price.
                       </div>

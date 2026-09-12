@@ -4,8 +4,13 @@ import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import AdminNav from "@/app/admin/AdminNav";
 import CopyPaymentLinkButton from "./CopyPaymentLinkButton";
+import QuotationItemsEditor from "./QuotationItemsEditor";
 import detailStyles from "./quotation-detail.module.css";
-import { deleteQuotationRequest, updateQuotationRequest } from "../actions";
+import {
+  addManualQuotationNote,
+  deleteQuotationRequest,
+  updateQuotationRequest,
+} from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +27,8 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function formatMoney(value: number | string | null) {
-  if (value === null || value === "") return "Not quoted yet";
+function formatMoney(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === "") return "—";
 
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -35,26 +40,46 @@ function formatMoney(value: number | string | null) {
 
 function statusLabel(status: string) {
   switch (status) {
-    case "NEW": return "New";
-    case "REVIEWING": return "Reviewing";
-    case "QUOTED": return "Quoted";
-    case "ACCEPTED": return "Accepted";
-    case "DECLINED": return "Declined";
-    case "CLOSED": return "Closed";
-    default: return status;
+    case "NEW":
+      return "New";
+    case "REVIEWING":
+      return "Reviewing";
+    case "QUOTED":
+      return "Quoted";
+    case "ACCEPTED":
+      return "Accepted";
+    case "DECLINED":
+      return "Declined";
+    case "CLOSED":
+      return "Closed";
+    default:
+      return status;
   }
 }
 
 function statusClass(status: string) {
   switch (status) {
-    case "NEW": return detailStyles.statusNew;
-    case "REVIEWING": return detailStyles.statusReviewing;
-    case "QUOTED": return detailStyles.statusQuoted;
-    case "ACCEPTED": return detailStyles.statusAccepted;
-    case "DECLINED": return detailStyles.statusDeclined;
-    case "CLOSED": return detailStyles.statusClosed;
-    default: return detailStyles.statusClosed;
+    case "NEW":
+      return detailStyles.statusNew;
+    case "REVIEWING":
+      return detailStyles.statusReviewing;
+    case "QUOTED":
+      return detailStyles.statusQuoted;
+    case "ACCEPTED":
+      return detailStyles.statusAccepted;
+    case "DECLINED":
+      return detailStyles.statusDeclined;
+    case "CLOSED":
+      return detailStyles.statusClosed;
+    default:
+      return detailStyles.statusClosed;
   }
+}
+
+function paymentTermsLabel(value: string | null) {
+  if (value === "DEPOSIT_50") return "50% Deposit + Remaining Balance";
+  if (value === "FULL") return "Full Payment";
+  return "Not set";
 }
 
 function Field({
@@ -77,6 +102,31 @@ function Field({
   );
 }
 
+function DetailSection({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <details className={detailStyles.detailsCard}>
+      <summary>
+        <div>
+          <span>{eyebrow}</span>
+          <strong>{title}</strong>
+          {description ? <small>{description}</small> : null}
+        </div>
+        <span className={detailStyles.detailsChevron}>⌄</span>
+      </summary>
+      <div className={detailStyles.detailsBody}>{children}</div>
+    </details>
+  );
+}
 
 export default async function AdminQuotationRequestDetailPage({
   params,
@@ -107,6 +157,42 @@ export default async function AdminQuotationRequestDetailPage({
     ? request.selected_features
     : [];
 
+  const { data: quotationItemsData, error: quotationItemsError } =
+    await adminSupabase
+      .from("quotation_items")
+      .select("id,item_name,item_description,amount,display_order")
+      .eq("quotation_request_id", request.id)
+      .order("display_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+  if (quotationItemsError) {
+    console.error("Quotation items load error:", quotationItemsError);
+  }
+
+  const quotationItems = (quotationItemsData ?? []).map((item) => ({
+    id: String(item.id),
+    item_name: String(item.item_name ?? ""),
+    item_description: item.item_description
+      ? String(item.item_description)
+      : null,
+    amount: Number(item.amount ?? 0),
+  }));
+
+  const [{ data: activityLogs }, { data: noteLogs }] = await Promise.all([
+    adminSupabase
+      .from("quotation_activity_logs")
+      .select("id,action_type,summary,details,created_at")
+      .eq("quotation_request_id", request.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    adminSupabase
+      .from("quotation_note_logs")
+      .select("id,note_type,title,note,details,created_at")
+      .eq("quotation_request_id", request.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+  ]);
+
   let order: {
     id: string;
     order_number: string;
@@ -134,8 +220,11 @@ export default async function AdminQuotationRequestDetailPage({
       .eq("id", request.order_id)
       .maybeSingle();
 
-    if (orderError) console.error("Quotation linked order load error:", orderError);
-    else order = orderData;
+    if (orderError) {
+      console.error("Quotation linked order load error:", orderError);
+    } else {
+      order = orderData;
+    }
 
     const { data: projectData, error: projectError } = await adminSupabase
       .from("project_requirements")
@@ -143,8 +232,11 @@ export default async function AdminQuotationRequestDetailPage({
       .eq("order_id", request.order_id)
       .maybeSingle();
 
-    if (projectError) console.error("Quotation linked project load error:", projectError);
-    else project = projectData;
+    if (projectError) {
+      console.error("Quotation linked project load error:", projectError);
+    } else {
+      project = projectData;
+    }
   }
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/+$/, "");
@@ -156,6 +248,20 @@ export default async function AdminQuotationRequestDetailPage({
   const checkoutUrl =
     checkoutPath && siteUrl ? `${siteUrl}${checkoutPath}` : checkoutPath;
 
+  const quotedAmount = Number(request.quoted_amount ?? 0);
+  const paidAmount = Number(order?.amount_paid ?? 0);
+  const balanceAmount = Number(
+    order?.balance_due ?? (quotedAmount > 0 ? quotedAmount : 0),
+  );
+
+  const displayName =
+    request.business_name ||
+    request.full_name ||
+    "Quotation";
+
+  const clientLinkAvailable =
+    request.status === "QUOTED" || request.status === "ACCEPTED";
+
   return (
     <main className="store-admin-dashboard">
       <div className="store-admin-dashboard-shell">
@@ -165,10 +271,11 @@ export default async function AdminQuotationRequestDetailPage({
           <div className={detailStyles.page}>
             <header className={detailStyles.topbar}>
               <div className={detailStyles.heading}>
-                <span className={detailStyles.eyebrow}>QUOTATION DETAILS</span>
-                <h1>{request.business_name || "Quotation Request"}</h1>
+                <span className={detailStyles.eyebrow}>QUOTATION</span>
+                <h1>{displayName}</h1>
                 <p>
-                  {request.product_name} · Submitted {formatDate(request.created_at)}
+                  {request.product_name || "Custom Project"} · Last updated{" "}
+                  {formatDate(request.updated_at)}
                 </p>
               </div>
 
@@ -176,92 +283,210 @@ export default async function AdminQuotationRequestDetailPage({
                 className={detailStyles.backButton}
                 href="/admin/quotation-requests"
               >
-                ← All Quotations
+                ← Back to Quotations
               </Link>
             </header>
 
-            <section className={detailStyles.summaryGrid}>
-              <article className={detailStyles.summaryCard}>
-                <div className={detailStyles.summaryTop}>
-                  <span>STATUS</span>
-                  <div className={detailStyles.summaryIcon}>✦</div>
+            <section className={detailStyles.overviewCard}>
+              <div className={detailStyles.overviewIntro}>
+                <div>
+                  <span>QUOTATION OVERVIEW</span>
+                  <h2>Current quotation status</h2>
+                  <p>
+                    The key information you need before editing or sending this
+                    quotation to the client.
+                  </p>
                 </div>
+
                 <span
-                  className={`${detailStyles.statusBadge} ${statusClass(request.status)}`}
+                  className={`${detailStyles.statusBadge} ${statusClass(
+                    request.status,
+                  )}`}
                 >
                   {statusLabel(request.status)}
                 </span>
-                <small>Current quotation stage</small>
-              </article>
+              </div>
 
-              <article className={detailStyles.summaryCard}>
-                <div className={detailStyles.summaryTop}>
-                  <span>BUDGET</span>
-                  <div className={detailStyles.summaryIcon}>₱</div>
+              <div className={detailStyles.overviewGrid}>
+                <div>
+                  <span>CLIENT</span>
+                  <strong>{request.full_name || "—"}</strong>
+                  <small>{request.email || "No email added yet"}</small>
                 </div>
-                <strong>{request.budget || "—"}</strong>
-                <small>Customer&apos;s estimated budget</small>
-              </article>
 
-              <article className={detailStyles.summaryCard}>
-                <div className={detailStyles.summaryTop}>
-                  <span>QUOTED AMOUNT</span>
-                  <div className={detailStyles.summaryIcon}>◇</div>
+                <div>
+                  <span>AGREED / QUOTED TOTAL</span>
+                  <strong>{formatMoney(request.quoted_amount)}</strong>
+                  <small>
+                    {order
+                      ? `Client-selected: ${paymentTermsLabel(order.payment_terms)}`
+                      : "Client selects payment option at acceptance"}
+                  </small>
                 </div>
-                <strong>{formatMoney(request.quoted_amount)}</strong>
-                <small>
-                  {request.quoted_at
-                    ? `Quoted ${formatDate(request.quoted_at)}`
-                    : "No quotation amount has been set yet"}
-                </small>
-              </article>
+
+                <div>
+                  <span>PAID</span>
+                  <strong>{order ? formatMoney(paidAmount) : "—"}</strong>
+                  <small>{order ? order.payment_status : "No order yet"}</small>
+                </div>
+
+                <div>
+                  <span>REMAINING BALANCE</span>
+                  <strong>{order ? formatMoney(balanceAmount) : "—"}</strong>
+                  <small>{order ? "Based on linked order" : "Available after acceptance"}</small>
+                </div>
+              </div>
             </section>
 
-            <section className={detailStyles.layout}>
-              <div className={detailStyles.mainColumn}>
-                <section className={detailStyles.card}>
-                  <div className={detailStyles.cardHeader}>
-                    <span>CUSTOMER</span>
-                    <h2>Contact & project details</h2>
-                    <p>Who submitted the request and what they are building.</p>
+            <section className={detailStyles.primaryLayout}>
+              <div className={detailStyles.primaryColumn}>
+                <section className={detailStyles.manageCard}>
+                  <div className={detailStyles.sectionHeader}>
+                    <div>
+                      <span>EDIT QUOTATION</span>
+                      <h2>Scope, pricing & status</h2>
+                      <p>
+                        Build the client&apos;s quotation here. Add the agreed
+                        items and pricing, then mark it Quoted when it is ready
+                        to send. The client chooses the payment option.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className={detailStyles.fieldGrid}>
-                    <Field label="Full name" value={request.full_name} />
-                    <Field label="Business / project name" value={request.business_name} />
-                    <Field label="Email" value={request.email} />
-                    <Field label="Mobile / Telegram" value={request.contact_number} />
-                    <Field label="Preferred contact" value={request.preferred_contact} />
-                    <Field label="Project type" value={request.business_type} />
-                    <Field label="Location / audience area" value={request.business_location} />
-                    <Field label="Project / business stage" value={request.business_age} />
-                    <Field label="Team size" value={request.staff_count} />
-                    <Field label="Physical locations" value={request.location_count} />
-                    <Field label="Website / social page" value={request.current_link} />
-                    <Field label="Already has a website" value={request.existing_website} />
-                  </div>
+                  <form action={updateQuotationRequest}>
+                    <input type="hidden" name="id" value={request.id} />
 
-                  <Field
-                    label="Website purpose / products / services / content"
-                    value={request.offerings}
-                  />
+                    <div className={detailStyles.formRowSingle}>
+                      <label>
+                        <span>Quotation status</span>
+                        <div className={detailStyles.selectWrap}>
+                          <select name="status" defaultValue={request.status}>
+                            <option value="NEW">New</option>
+                            <option value="REVIEWING">Reviewing</option>
+                            <option value="QUOTED">
+                              Quoted — ready for client review
+                            </option>
+                            <option value="ACCEPTED" disabled>
+                              Accepted — client controlled
+                            </option>
+                            <option value="DECLINED">Declined</option>
+                            <option value="CLOSED">Closed</option>
+                          </select>
+                          <span aria-hidden="true">⌄</span>
+                        </div>
+                        <small>
+                          Accepted is set automatically when the client accepts.
+                        </small>
+                      </label>
+
+                    </div>
+
+                    <QuotationItemsEditor
+                      initialItems={quotationItems}
+                      fallbackQuotedAmount={request.quoted_amount}
+                    />
+
+                    <label className={detailStyles.notesField}>
+                      <span>Client quotation / scope notes</span>
+                      <textarea
+                        name="admin_notes"
+                        rows={6}
+                        defaultValue={request.admin_notes ?? ""}
+                        placeholder="Add inclusions, exclusions, limitations, special agreements, timeline notes, or anything the client should review."
+                      />
+                    </label>
+
+                    <button className={detailStyles.saveButton} type="submit">
+                      Save Quotation Changes
+                    </button>
+                  </form>
                 </section>
 
-                <section className={detailStyles.card}>
-                  <div className={detailStyles.cardHeader}>
-                    <span>FUNCTION</span>
-                    <h2>How the website should work</h2>
-                    <p>Direct answers that help determine the actual project scope.</p>
+                <section className={detailStyles.requestSection}>
+              <div className={detailStyles.requestHeading}>
+                <span>ORIGINAL REQUEST</span>
+                <h2>Client & project information</h2>
+                <p>
+                  The original information is kept below for reference. Open
+                  only the section you need.
+                </p>
+              </div>
+
+              <div className={detailStyles.detailsList}>
+                <DetailSection
+                  eyebrow="CLIENT"
+                  title="Contact & project details"
+                  description="Basic client, business, and project information."
+                >
+                  <div className={detailStyles.fieldGrid}>
+                    <Field label="Full name" value={request.full_name} />
+                    <Field
+                      label="Business / project name"
+                      value={request.business_name}
+                    />
+                    <Field label="Email" value={request.email} />
+                    <Field
+                      label="Mobile / Telegram"
+                      value={request.contact_number}
+                    />
+                    <Field
+                      label="Preferred contact"
+                      value={request.preferred_contact}
+                    />
+                    <Field label="Project context" value={request.project_context} />
+                    <Field label="Project type" value={request.business_type} />
+                    <Field
+                      label="Location / audience area"
+                      value={request.business_location}
+                    />
+                    <Field
+                      label="Project / business stage"
+                      value={request.business_age}
+                    />
+                    <Field label="Team size" value={request.staff_count} />
+                    <Field
+                      label="Physical locations"
+                      value={request.location_count}
+                    />
+                    <Field
+                      label="Website / social page"
+                      value={request.current_link}
+                    />
+                    <Field
+                      label="Already has a website"
+                      value={request.existing_website}
+                    />
                   </div>
 
                   <Field
-                    label="What visitors should be able to do"
+                    label="Project description / products / services / content"
+                    value={request.offerings}
+                  />
+                </DetailSection>
+
+                <DetailSection
+                  eyebrow="FUNCTION"
+                  title="How the project should work"
+                  description="Requested functionality and how the client expects to manage it."
+                >
+                  <Field
+                    label="What users should be able to do"
                     value={request.visitor_actions}
+                  />
+                  <Field label="Who will use it" value={request.user_types} />
+                  <Field label="Account / access setup" value={request.access_model} />
+                  <Field
+                    label="Admin / owner requirements"
+                    value={request.admin_requirements}
+                  />
+                  <Field
+                    label="Device requirements"
+                    value={request.device_requirements}
                   />
 
                   <div className={detailStyles.fieldGrid}>
                     <Field
-                      label="Needs to update website themselves"
+                      label="Needs to update it themselves"
                       value={request.self_manage}
                     />
                     <Field
@@ -283,27 +508,29 @@ export default async function AdminQuotationRequestDetailPage({
                     label="Unsure about / wants TCL to recommend"
                     value={request.uncertainty_notes}
                   />
-                </section>
+                </DetailSection>
 
-                <section className={detailStyles.card}>
-                  <div className={detailStyles.cardHeader}>
-                    <span>WORKFLOW</span>
-                    <h2>Current setup & goals</h2>
-                    <p>What the customer currently uses and what they want to improve.</p>
-                  </div>
-
-                  <Field label="Current process / setup" value={request.current_process} />
-                  <Field label="Main problems / needs" value={request.main_problems} />
+                <DetailSection
+                  eyebrow="WORKFLOW"
+                  title="Current setup & goals"
+                  description="What the client uses now, current problems, and the desired result."
+                >
+                  <Field
+                    label="Current process / setup"
+                    value={request.current_process}
+                  />
+                  <Field
+                    label="Main problems / needs"
+                    value={request.main_problems}
+                  />
                   <Field label="Main project goal" value={request.main_goal} />
-                </section>
+                </DetailSection>
 
-                <section className={detailStyles.card}>
-                  <div className={detailStyles.cardHeader}>
-                    <span>REQUIREMENTS</span>
-                    <h2>Requested pages & features</h2>
-                    <p>Potential functionality selected by the customer.</p>
-                  </div>
-
+                <DetailSection
+                  eyebrow="FEATURES"
+                  title="Requested features & requirements"
+                  description="Potential features selected or mentioned by the client."
+                >
                   {features.length > 0 ? (
                     <div className={detailStyles.featureGrid}>
                       {features.map((feature: string) => (
@@ -317,119 +544,220 @@ export default async function AdminQuotationRequestDetailPage({
                   )}
 
                   <div className={detailStyles.fieldGrid}>
-                    <Field label="Expected activity" value={request.expected_volume} />
-                    <Field label="Payment methods" value={request.payment_methods} />
-                    <Field label="Delivery / fulfillment" value={request.delivery_needs} />
-                    <Field label="Admin / editor access" value={request.admin_access} />
+                    <Field
+                      label="Expected activity"
+                      value={request.expected_volume}
+                    />
+                    <Field
+                      label="Payment methods"
+                      value={request.payment_methods}
+                    />
+                    <Field
+                      label="Delivery / fulfillment"
+                      value={request.delivery_needs}
+                    />
+                    <Field
+                      label="Admin / editor access"
+                      value={request.admin_access}
+                    />
                   </div>
 
-                  <Field label="Integrations / tools" value={request.integrations} />
-                </section>
+                  <Field
+                    label="Integrations / tools"
+                    value={request.integrations}
+                  />
+                  <Field
+                    label="Data / content management"
+                    value={request.data_management}
+                  />
+                  <Field
+                    label="Recurring changes"
+                    value={request.recurring_changes}
+                  />
+                  <Field
+                    label="Rules / limits / permissions"
+                    value={request.usage_rules}
+                  />
+                  <Field
+                    label="Results / reports / tracking"
+                    value={request.results_reporting}
+                  />
+                </DetailSection>
 
-                <section className={detailStyles.card}>
-                  <div className={detailStyles.cardHeader}>
-                    <span>BRANDING</span>
-                    <h2>Branding & content readiness</h2>
-                    <p>Assets already available and what may still need preparation.</p>
-                  </div>
-
+                <DetailSection
+                  eyebrow="BRANDING"
+                  title="Branding & content readiness"
+                  description="Assets, content, domain, and timeline information."
+                >
                   <div className={detailStyles.fieldGrid}>
                     <Field label="Logo ready" value={request.logo_ready} />
-                    <Field label="Branding ready" value={request.branding_ready} />
-                    <Field label="Content ready" value={request.content_ready} />
-                    <Field label="Domain status" value={request.domain_status} />
+                    <Field
+                      label="Branding ready"
+                      value={request.branding_ready}
+                    />
+                    <Field
+                      label="Content ready"
+                      value={request.content_ready}
+                    />
+                    <Field
+                      label="Domain status"
+                      value={request.domain_status}
+                    />
                     <Field label="Timeline" value={request.timeline} />
+                    <Field label="Budget" value={request.budget} />
                   </div>
 
                   <Field label="Additional notes" value={request.notes} />
+                </DetailSection>
+              </div>
+            </section>
+
+
+                <section className={detailStyles.historySection}>
+              <div className={detailStyles.requestHeading}>
+                <span>HISTORY</span>
+                <h2>Quotation notes & activity</h2>
+                <p>
+                  Scope notes are for useful project history. Activity is the
+                  automatic audit trail.
+                </p>
+              </div>
+
+              <div className={detailStyles.historyGrid}>
+                <section className={detailStyles.historyCard}>
+                  <div className={detailStyles.historyHeader}>
+                    <div>
+                      <span>NOTE LOG · LATEST FIRST</span>
+                      <h3>Scope & agreement notes</h3>
+                    </div>
+                  </div>
+
+                  <form
+                    action={addManualQuotationNote}
+                    className={detailStyles.noteForm}
+                  >
+                    <input
+                      type="hidden"
+                      name="quotation_request_id"
+                      value={request.id}
+                    />
+                    <textarea
+                      name="note"
+                      rows={3}
+                      placeholder="Add a note from Messenger, call, or another client agreement..."
+                    />
+                    <button type="submit">Add Note</button>
+                  </form>
+
+                  <div
+                    className={detailStyles.logList}
+                    style={{
+                      maxHeight: 520,
+                      overflowY: "auto",
+                      overscrollBehavior: "contain",
+                      paddingRight: 6,
+                      scrollbarGutter: "stable",
+                    }}
+                  >
+                    {(noteLogs ?? []).length > 0 ? (
+                      (noteLogs ?? []).map((log) => (
+                        <article
+                          key={log.id}
+                          className={detailStyles.logItem}
+                          style={{ minHeight: 92 }}
+                        >
+                          <div className={detailStyles.logTop}>
+                            <strong>{log.title}</strong>
+                            <span>{log.note_type}</span>
+                          </div>
+                          <p>{log.note}</p>
+                          <small>{formatDate(log.created_at)}</small>
+                        </article>
+                      ))
+                    ) : (
+                      <div className={detailStyles.emptyText}>
+                        No quotation notes yet.
+                      </div>
+                    )}
+                  </div>
                 </section>
+
+                <section className={detailStyles.historyCard}>
+                  <div className={detailStyles.historyHeader}>
+                    <div>
+                      <span>ACTIVITY LOG · LATEST FIRST</span>
+                      <h3>Automatic audit history</h3>
+                    </div>
+                  </div>
+
+                  <div
+                    className={detailStyles.logList}
+                    style={{
+                      maxHeight: 520,
+                      overflowY: "auto",
+                      overscrollBehavior: "contain",
+                      paddingRight: 6,
+                      scrollbarGutter: "stable",
+                    }}
+                  >
+                    {(activityLogs ?? []).length > 0 ? (
+                      (activityLogs ?? []).map((log) => (
+                        <article
+                          key={log.id}
+                          className={detailStyles.logItem}
+                          style={{ minHeight: 92 }}
+                        >
+                          <div className={detailStyles.logTop}>
+                            <strong>{log.summary}</strong>
+                            <span>{log.action_type}</span>
+                          </div>
+                          <small>{formatDate(log.created_at)}</small>
+                        </article>
+                      ))
+                    ) : (
+                      <div className={detailStyles.emptyText}>
+                        No activity recorded yet.
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </div>
+            </section>
               </div>
 
               <aside className={detailStyles.sideColumn}>
-                <section className={detailStyles.manageCard}>
-                  <div className={detailStyles.cardHeader}>
-                    <span>ADMIN</span>
-                    <h2>Prepare quotation</h2>
-                    <p>
-                      Set the final scope and price, then mark it Quoted. The client
-                      chooses their payment option from the private quotation link.
-                    </p>
-                  </div>
-
-                  <form action={updateQuotationRequest}>
-                    <input type="hidden" name="id" value={request.id} />
-
-                    <label>
-                      Status
-                      <select name="status" defaultValue={request.status}>
-                        <option value="NEW">New</option>
-                        <option value="REVIEWING">Reviewing</option>
-                        <option value="QUOTED">Quoted — ready for client review</option>
-                        <option value="ACCEPTED" disabled>
-                          Accepted — client controlled
-                        </option>
-                        <option value="DECLINED">Declined</option>
-                        <option value="CLOSED">Closed</option>
-                      </select>
-                    </label>
-
-                    <label>
-                      Quoted amount
-                      <div className={detailStyles.moneyInput}>
-                        <span>₱</span>
-                        <input
-                          type="number"
-                          name="quoted_amount"
-                          min="0"
-                          step="0.01"
-                          defaultValue={
-                            request.quoted_amount !== null
-                              ? String(request.quoted_amount)
-                              : ""
-                          }
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </label>
-
-
-                    <label>
-                      Quotation / scope notes
-                      <textarea
-                        name="admin_notes"
-                        rows={8}
-                        defaultValue={request.admin_notes ?? ""}
-                        placeholder="Scope, included features, special notes, exclusions, or anything the client should see before accepting..."
-                      />
-                    </label>
-
-                    <button type="submit">Save Changes</button>
-                  </form>
-                </section>
-
-                <section className={detailStyles.paymentCard}>
-                  <div className={detailStyles.cardHeader}>
-                    <span>CLIENT QUOTATION</span>
-                    <h2>Private review link</h2>
-                    <p>
-                      Send this link after the quotation is ready. The client can
-                      review it, accept it, or decide later.
-                    </p>
-                  </div>
-
-                  <div className={detailStyles.paymentMeta}>
+                <section className={detailStyles.clientCard}>
+                  <div className={detailStyles.sectionHeader}>
                     <div>
-                      <small>Quoted amount</small>
+                      <span>CLIENT QUOTATION</span>
+                      <h2>Review & send</h2>
+                      <p>
+                        This is the private quotation page your client will
+                        review before accepting.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={detailStyles.clientSummary}>
+                    <div>
+                      <small>Status</small>
+                      <strong>{statusLabel(request.status)}</strong>
+                    </div>
+                    <div>
+                      <small>Quotation total</small>
                       <strong>{formatMoney(request.quoted_amount)}</strong>
                     </div>
                     <div>
-                      <small>Client status</small>
-                      <strong>{statusLabel(request.status)}</strong>
+                      <small>Payment option</small>
+                      <strong>
+                        {order
+                          ? paymentTermsLabel(order.payment_terms)
+                          : "Chosen by client at acceptance"}
+                      </strong>
                     </div>
                   </div>
 
-                  {request.status === "QUOTED" ||
-                  request.status === "ACCEPTED" ? (
+                  {clientLinkAvailable ? (
                     <div className={detailStyles.actionStack}>
                       <a
                         className={detailStyles.primaryAction}
@@ -437,7 +765,7 @@ export default async function AdminQuotationRequestDetailPage({
                         target="_blank"
                         rel="noreferrer"
                       >
-                        Open Client Quotation ↗
+                        Preview Client Quotation ↗
                       </a>
 
                       <div className={detailStyles.copyAction}>
@@ -446,43 +774,45 @@ export default async function AdminQuotationRequestDetailPage({
                     </div>
                   ) : (
                     <div className={detailStyles.infoBox}>
-                      Set the final amount and change the status to
-                      <strong> Quoted</strong>. Then send the private review link
-                      to the client so they can choose their payment option.
+                      Finish the scope and pricing, then change the status to
+                      <strong> Quoted</strong>. The private client link will be
+                      ready to send, and the client will choose the payment option.
                     </div>
                   )}
                 </section>
 
                 {order ? (
-                  <section className={detailStyles.paymentCard}>
-                    <div className={detailStyles.cardHeader}>
-                      <span>PAYMENT & PROJECT</span>
-                      <h2>Accepted quotation</h2>
-                      <p>
-                        The client accepted this quotation and the custom project
-                        order was created automatically.
-                      </p>
+                  <section className={detailStyles.clientCard}>
+                    <div className={detailStyles.sectionHeader}>
+                      <div>
+                        <span>PAYMENT & PROJECT</span>
+                        <h2>Accepted quotation</h2>
+                        <p>
+                          Payment information starts here after the client
+                          accepts the quotation.
+                        </p>
+                      </div>
                     </div>
 
-                    <div className={detailStyles.paymentMeta}>
+                    <div className={detailStyles.clientSummary}>
                       <div>
                         <small>Order number</small>
                         <strong>{order.order_number}</strong>
                       </div>
                       <div>
-                        <small>Payment</small>
-                        <strong>{order.payment_status}</strong>
-                      </div>
-                      <div>
-                        <small>Total</small>
+                        <small>Current total</small>
                         <strong>{formatMoney(order.total_amount)}</strong>
                       </div>
                       <div>
-                        <small>Amount paid</small>
+                        <small>Customer-selected plan</small>
+                        <strong>{paymentTermsLabel(order.payment_terms)}</strong>
+                      </div>
+                      <div>
+                        <small>Paid</small>
                         <strong>{formatMoney(order.amount_paid)}</strong>
                       </div>
                       <div>
-                        <small>Balance</small>
+                        <small>Remaining</small>
                         <strong>{formatMoney(order.balance_due)}</strong>
                       </div>
                     </div>
@@ -505,7 +835,6 @@ export default async function AdminQuotationRequestDetailPage({
                           >
                             Open Custom Checkout ↗
                           </a>
-
                           <div className={detailStyles.copyAction}>
                             <CopyPaymentLinkButton url={checkoutUrl} />
                           </div>
@@ -529,34 +858,25 @@ export default async function AdminQuotationRequestDetailPage({
                             Open Customer Requirements ↗
                           </a>
                         </>
-                      ) : (
-                        <div className={detailStyles.infoBox}>
-                          Project Requirements will be prepared by the paid-project
-                          workflow after the required payment stage is completed.
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   </section>
                 ) : null}
 
                 <section className={detailStyles.metaCard}>
-                  <span>REQUEST INFO</span>
-
+                  <span>RECORD INFO</span>
                   <div>
-                    <small>Request ID</small>
+                    <small>Quotation ID</small>
                     <strong>{request.id}</strong>
                   </div>
-
                   <div>
-                    <small>Submitted</small>
+                    <small>Created</small>
                     <strong>{formatDate(request.created_at)}</strong>
                   </div>
-
                   <div>
                     <small>Last updated</small>
                     <strong>{formatDate(request.updated_at)}</strong>
                   </div>
-
                   {request.accepted_at ? (
                     <div>
                       <small>Accepted</small>
@@ -565,99 +885,57 @@ export default async function AdminQuotationRequestDetailPage({
                   ) : null}
                 </section>
 
-                <section
-                  className={detailStyles.metaCard}
-                  style={{
-                    borderColor: "#e9b8c4",
-                    background: "#fff8fa",
-                  }}
-                >
-                  <span style={{ color: "#a33c56" }}>DANGER ZONE</span>
-                  <div>
-                    <small>Delete quotation</small>
-                    <strong>
-                      {request.order_id
-                        ? "Unavailable — linked to an order"
-                        : "Permanently remove this quotation"}
-                    </strong>
+                <section className={`${detailStyles.clientCard} ${detailStyles.deleteCard}`}>
+                  <div className={detailStyles.sectionHeader}>
+                    <div>
+                      <span>DANGER ZONE</span>
+                      <h2>Delete quotation</h2>
+                      <p>
+                        Only use this for quotations that should be permanently removed.
+                      </p>
+                    </div>
                   </div>
 
                   {request.order_id ? (
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.72rem",
-                        lineHeight: 1.6,
-                        color: "#8b5a66",
-                      }}
-                    >
-                      This quotation is already part of an order/payment record, so
-                      it cannot be deleted here.
-                    </p>
+                    <div className={detailStyles.infoBox}>
+                      This quotation is already linked to an order, so it cannot be
+                      deleted from here.
+                    </div>
                   ) : (
-                    <form action={deleteQuotationRequest}>
+                    <form
+                      action={deleteQuotationRequest}
+                      className={detailStyles.deleteForm}
+                    >
                       <input type="hidden" name="id" value={request.id} />
 
-                      <label
-                        style={{
-                          display: "grid",
-                          gap: 7,
-                          marginTop: 10,
-                          fontSize: "0.68rem",
-                          fontWeight: 700,
-                        }}
-                      >
-                        Type DELETE to confirm
+                      <label className={detailStyles.deleteField}>
+                        <span>Type DELETE to confirm</span>
                         <input
                           type="text"
                           name="confirmation"
                           placeholder="DELETE"
                           autoComplete="off"
                           required
-                          style={{
-                            width: "100%",
-                            minHeight: 42,
-                            border: "1px solid #dfb2bd",
-                            borderRadius: 10,
-                            padding: "0 12px",
-                            background: "#fff",
-                          }}
                         />
                       </label>
 
+                      <p className={detailStyles.deleteHelp}>
+                        This permanently removes the quotation, quotation items,
+                        Note Log, and Activity Log.
+                      </p>
+
                       <button
+                        className={detailStyles.deleteButton}
                         type="submit"
-                        style={{
-                          width: "100%",
-                          minHeight: 42,
-                          marginTop: 10,
-                          border: "1px solid #b74460",
-                          borderRadius: 10,
-                          background: "#b74460",
-                          color: "#fff",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                        }}
                       >
                         Delete Quotation
                       </button>
-
-                      <p
-                        style={{
-                          margin: "8px 0 0",
-                          fontSize: "0.65rem",
-                          lineHeight: 1.5,
-                          color: "#8b5a66",
-                        }}
-                      >
-                        This permanently deletes the quotation together with its
-                        quotation items, Activity Log, and Note Log.
-                      </p>
                     </form>
                   )}
                 </section>
               </aside>
             </section>
+
           </div>
         </section>
       </div>
