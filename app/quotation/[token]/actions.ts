@@ -186,10 +186,37 @@ export async function acceptQuotation(formData: FormData) {
     String(quotation.business_name ?? "").trim() ||
     "Customer";
 
-  const customerEmail = String(quotation.email ?? "").trim().toLowerCase();
+  const submittedEmail = String(
+    formData.get("customer_email") ?? "",
+  )
+    .trim()
+    .toLowerCase();
 
-  if (!customerEmail) {
+  const customerEmail =
+    submittedEmail || String(quotation.email ?? "").trim().toLowerCase();
+
+  const emailLooksValid =
+    customerEmail.length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail);
+
+  if (!emailLooksValid) {
     redirect(reviewPath(token, "error=email"));
+  }
+
+  // Keep the quotation contact email in sync with what the client confirms.
+  if (customerEmail !== String(quotation.email ?? "").trim().toLowerCase()) {
+    const { error: emailUpdateError } = await supabase
+      .from("quotation_requests")
+      .update({
+        email: customerEmail,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", quotation.id);
+
+    if (emailUpdateError) {
+      console.error("Unable to save quotation customer email:", emailUpdateError);
+      redirect(reviewPath(token, "error=email-save"));
+    }
   }
 
   // The client chooses the payment method/plan on the quotation link.

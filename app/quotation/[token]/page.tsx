@@ -514,6 +514,47 @@ export default async function ClientQuotationPage({
                     <form action={acceptQuotation}>
                       <input type="hidden" name="token" value={token} />
 
+                      <label
+                        style={{
+                          display: "grid",
+                          gap: 7,
+                          marginBottom: 16,
+                          color: "#4d3f45",
+                          fontSize: ".82rem",
+                          fontWeight: 800,
+                        }}
+                      >
+                        Email for this order
+                        <input
+                          type="email"
+                          name="customer_email"
+                          defaultValue={quotation.email ?? ""}
+                          placeholder="you@example.com"
+                          autoComplete="email"
+                          required
+                          style={{
+                            width: "100%",
+                            minHeight: 44,
+                            padding: "0 12px",
+                            border: "1px solid rgba(27,22,24,.14)",
+                            borderRadius: 12,
+                            background: "#fff",
+                            color: "inherit",
+                            font: "inherit",
+                          }}
+                        />
+                        <span
+                          style={{
+                            color: "rgba(27,22,24,.58)",
+                            fontSize: ".72rem",
+                            fontWeight: 600,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          We&apos;ll use this for your order and payment record.
+                        </span>
+                      </label>
+
                       <div style={{ display: "grid", gap: 12, marginBottom: 16 }}>
                         <label style={{ display: "block", padding: 14, border: "1px solid rgba(27,22,24,.12)", borderRadius: 14, cursor: "pointer" }}>
                           <input type="radio" name="payment_choice" value="PROVIDER_FULL" required />
