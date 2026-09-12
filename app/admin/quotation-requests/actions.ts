@@ -726,8 +726,6 @@ export async function updateQuotationRequest(formData: FormData) {
       note,
       details: {
         change_type: "TOTAL_CHANGED",
-        order_total_before: oldOrderTotal,
-        order_total_after: newOrderTotal,
         ...commonTotals,
       },
     });

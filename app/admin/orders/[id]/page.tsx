@@ -121,7 +121,7 @@ export default async function OrderDetailsPage({
     order.payment_terms === "FULL" &&
     Number(order.processing_fee_percent ?? 0) <= 0.005;
 
-  let bpiProof: {
+  type BpiProofRecord = {
     id: string;
     status: string;
     original_filename: string | null;
@@ -130,7 +130,9 @@ export default async function OrderDetailsPage({
     submitted_at: string;
     rejection_reason: string | null;
     file_path: string;
-  } | null = null;
+  };
+
+  let bpiProof: BpiProofRecord | null = null;
   let bpiProofSignedUrl: string | null = null;
 
   if (isBpiDirectOrder) {
@@ -145,7 +147,7 @@ export default async function OrderDetailsPage({
     if (proofError) {
       console.error("Admin BPI proof load error:", proofError);
     } else if (data) {
-      bpiProof = data as typeof bpiProof;
+      bpiProof = data as BpiProofRecord;
       const { data: signed } = await adminSupabase.storage
         .from("payment-proofs")
         .createSignedUrl(data.file_path, 60 * 15);

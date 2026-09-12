@@ -115,10 +115,12 @@ export default async function CustomProjectCheckoutPage({
   const isBpiDirect =
     checkout.order.payment_terms === "FULL" && processingFeePercent <= 0.005;
 
-  let bpiProof: {
+  type BpiProofRecord = {
     status: "PENDING" | "VERIFIED" | "REJECTED";
     rejection_reason: string | null;
-  } | null = null;
+  };
+
+  let bpiProof: BpiProofRecord | null = null;
 
   if (isBpiDirect && checkout.currentPayment) {
     const { data, error: proofError } = await supabase
@@ -132,7 +134,7 @@ export default async function CustomProjectCheckoutPage({
     if (proofError) {
       console.error("BPI proof status load error:", proofError);
     } else {
-      bpiProof = data as typeof bpiProof;
+      bpiProof = data as BpiProofRecord | null;
     }
   }
 
@@ -457,13 +459,6 @@ export default async function CustomProjectCheckoutPage({
                   requested yet. TCL Systems &amp; Digitals PH will activate the
                   next payment when it is due.
                 </p>
-              </div>
-            ) : null}
-
-            {checkout.state === "FULLY_PAID" ? (
-              <div className={styles.stateBox}>
-                <strong>Fully paid ✓</strong>
-                <p>No balance is currently due for this project.</p>
               </div>
             ) : null}
 
