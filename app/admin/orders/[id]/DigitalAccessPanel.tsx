@@ -5,11 +5,9 @@ import {
   resetFileDownloads,
   revokeDownloadAccess,
 } from "./actions";
-import OrderWebsiteDeliveryPanel from "./OrderWebsiteDeliveryPanel";
 
 const MAX_DOWNLOADS = 3;
 const ACCESS_DAYS = 7;
-const SIMPLE_WEBSITE_SLUG = "simple-business-website-template";
 
 type FileRow = {
   id: string;
@@ -51,14 +49,12 @@ function maskIp(ip: string | null) {
 
   if (ip.includes(":")) {
     const parts = ip.split(":").filter(Boolean);
-
     return parts.length > 2
       ? `${parts.slice(0, 2).join(":")}:••••`
       : "IPv6 ••••";
   }
 
   const parts = ip.split(".");
-
   return parts.length === 4
     ? `${parts[0]}.${parts[1]}.•••.${parts[3]}`
     : "•••";
@@ -69,7 +65,6 @@ function resultLabel(result: string | null) {
   if (result === "LIMIT_REACHED") return "Limit reached";
   if (result === "EXPIRED") return "Expired";
   if (result === "ERROR") return "Error";
-
   return result || "Unknown";
 }
 
@@ -82,6 +77,7 @@ export default async function DigitalAccessPanel({
   paidAt,
   createdAt,
   accessExpiresAt,
+  isCustomProject = false,
 }: {
   orderId: string;
   orderNumber: string;
@@ -91,69 +87,14 @@ export default async function DigitalAccessPanel({
   paidAt: string | null;
   createdAt: string;
   accessExpiresAt: string | null;
+  isCustomProject?: boolean;
 }) {
   if (!productId) return null;
 
   const admin = createAdminSupabaseClient();
 
-  /*
-   * First identify the product.
-   *
-   * The Simple Business Website Template uses its own personalized
-   * order delivery system instead of reusable product_files.
-   */
-  const { data: product, error: productError } = await admin
-    .from("products")
-    .select("id,slug")
-    .eq("id", productId)
-    .maybeSingle();
-
-  if (productError) {
-    console.error(
-      "Unable to identify product for digital access:",
-      productError,
-    );
-  }
-
-  if (product?.slug === SIMPLE_WEBSITE_SLUG) {
-    const { data: order, error: orderError } = await admin
-      .from("orders")
-      .select(
-        "selected_design_name,delivery_status,delivered_at,download_access_expires_at",
-      )
-      .eq("id", orderId)
-      .maybeSingle();
-
-    if (orderError) {
-      console.error(
-        "Unable to load website delivery order information:",
-        orderError,
-      );
-    }
-
-    return (
-      <OrderWebsiteDeliveryPanel
-        orderId={orderId}
-        orderNumber={orderNumber}
-        productId={productId}
-        paymentStatus={paymentStatus}
-        orderStatus={orderStatus}
-        selectedDesignName={order?.selected_design_name ?? null}
-        deliveryStatus={order?.delivery_status ?? null}
-        deliveredAt={order?.delivered_at ?? null}
-        accessExpiresAt={
-          order?.download_access_expires_at ??
-          accessExpiresAt
-        }
-      />
-    );
-  }
-
-  /*
-   * Every other downloadable product continues using the existing
-   * reusable product-file delivery system below.
-   */
-  const [filesResult, countersResult, logsResult] = await Promise.all([
+  const [filesResult, countersResult, logsResult, projectResult] =
+    await Promise.all([
     admin
       .from("product_files")
       .select("id,display_name,display_order")
@@ -163,9 +104,7 @@ export default async function DigitalAccessPanel({
 
     admin
       .from("order_downloads")
-      .select(
-        "product_file_id,download_count,last_downloaded_at",
-      )
+      .select("product_file_id,download_count,last_downloaded_at")
       .eq("order_id", orderId),
 
     admin
@@ -176,6 +115,14 @@ export default async function DigitalAccessPanel({
       .eq("order_id", orderId)
       .order("downloaded_at", { ascending: false })
       .limit(100),
+
+    isCustomProject
+      ? admin
+          .from("project_requirements")
+          .select("project_status")
+          .eq("order_id", orderId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const files = (filesResult.data ?? []) as FileRow[];
@@ -190,19 +137,31 @@ export default async function DigitalAccessPanel({
     files.map((file) => [file.id, file.display_name]),
   );
 
+  const customProjectCompleted =
+    !isCustomProject ||
+    projectResult.data?.project_status === "COMPLETED";
+
   const fallbackExpiry = new Date(
     new Date(paidAt || createdAt).getTime() +
       ACCESS_DAYS * 86400000,
   );
 
+  /*
+   * Never invent a paid-at fallback expiry for a quoted/custom project.
+   * Its access clock begins only when project_status becomes COMPLETED.
+   */
   const expiry = accessExpiresAt
     ? new Date(accessExpiresAt)
-    : fallbackExpiry;
+    : isCustomProject
+      ? null
+      : fallbackExpiry;
 
   const active =
     paymentStatus === "COMPLETED" &&
     orderStatus !== "CANCELLED" &&
-    expiry.getTime() > Date.now();
+    customProjectCompleted &&
+    Boolean(expiry) &&
+    (expiry?.getTime() ?? 0) > Date.now();
 
   const totalDownloadsUsed = counters.reduce(
     (total, row) =>
@@ -239,7 +198,13 @@ export default async function DigitalAccessPanel({
 
         <div>
           <span>ACCESS EXPIRES</span>
-          <strong>{formatDateTime(expiry.toISOString())}</strong>
+          <strong>
+            {isCustomProject && !customProjectCompleted
+              ? "Starts when completed"
+              : expiry
+                ? formatDateTime(expiry.toISOString())
+                : "—"}
+          </strong>
         </div>
 
         <div>
@@ -253,6 +218,12 @@ export default async function DigitalAccessPanel({
         </div>
       </div>
 
+      {isCustomProject && !customProjectCompleted ? (
+        <div className={styles.empty}>
+          Access has not started yet. The 7-day access period will begin when
+          this custom project is marked Completed.
+        </div>
+      ) : (
       <div className={styles.controls}>
         <form action={extendDownloadAccess}>
           <input type="hidden" name="order_id" value={orderId} />
@@ -278,7 +249,6 @@ export default async function DigitalAccessPanel({
 
         <form action={revokeDownloadAccess}>
           <input type="hidden" name="order_id" value={orderId} />
-
           <label>Stop future downloads</label>
 
           <button type="submit" className={styles.revoke}>
@@ -286,11 +256,11 @@ export default async function DigitalAccessPanel({
           </button>
         </form>
       </div>
+      )}
 
       <div className={styles.section}>
         <div className={styles.sectionTitle}>
           <span>PROTECTED FILES</span>
-
           <p>
             Each file can be downloaded up to {MAX_DOWNLOADS} times.
           </p>
@@ -306,7 +276,6 @@ export default async function DigitalAccessPanel({
                 <article key={file.id} className={styles.fileRow}>
                   <div className={styles.fileInfo}>
                     <strong>{file.display_name}</strong>
-
                     <small>
                       Last downloaded:{" "}
                       {formatDateTime(
@@ -320,7 +289,6 @@ export default async function DigitalAccessPanel({
                       {Math.min(used, MAX_DOWNLOADS)} /{" "}
                       {MAX_DOWNLOADS}
                     </strong>
-
                     <span>
                       {Math.max(0, MAX_DOWNLOADS - used)} remaining
                     </span>
@@ -332,16 +300,13 @@ export default async function DigitalAccessPanel({
                       name="order_id"
                       value={orderId}
                     />
-
                     <input
                       type="hidden"
                       name="product_file_id"
                       value={file.id}
                     />
 
-                    <button type="submit">
-                      Reset Downloads
-                    </button>
+                    <button type="submit">Reset Downloads</button>
                   </form>
                 </article>
               );
@@ -357,7 +322,6 @@ export default async function DigitalAccessPanel({
       <div className={styles.section}>
         <div className={styles.sectionTitle}>
           <span>DOWNLOAD HISTORY</span>
-
           <p>
             Recent successful and blocked download attempts. IP
             addresses are masked in the admin display.
@@ -382,24 +346,19 @@ export default async function DigitalAccessPanel({
                 {logs.map((log) => (
                   <tr key={log.id}>
                     <td>{formatDateTime(log.downloaded_at)}</td>
-
                     <td>
                       {namesByFile.get(log.product_file_id) ||
                         "Product file"}
                     </td>
-
                     <td>{log.device_type || "Unknown"}</td>
-
                     <td>
                       {[log.browser, log.operating_system]
                         .filter(Boolean)
                         .join(" · ") || "Unknown"}
                     </td>
-
                     <td>
                       <code>{maskIp(log.ip_address)}</code>
                     </td>
-
                     <td>
                       <span
                         className={`${styles.result} ${

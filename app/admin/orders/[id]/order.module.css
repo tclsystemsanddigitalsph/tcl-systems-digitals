@@ -20,7 +20,7 @@
 }
 
 .backButton {
-  min-height: 42px;
+  min-height: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -119,7 +119,7 @@
 
 .contentGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
+  grid-template-columns: minmax(0, 2.15fr) minmax(330px, 1fr);
   align-items: start;
   gap: 20px;
 }
@@ -735,8 +735,8 @@
   background: #fff;
   color: var(--text-soft);
   font: inherit;
-  font-size: .61rem;
-  font-weight: 850;
+  font-size: .72rem;
+  font-weight: 900;
   cursor: pointer;
   box-sizing: border-box;
   list-style: none;
@@ -848,12 +848,12 @@
 .refundSubmit,
 .cancelSubmit,
 .deleteSubmit {
-  min-height: 40px;
+  min-height: 44px;
   margin-top: 2px;
   border-radius: 10px;
   font: inherit;
-  font-size: .62rem;
-  font-weight: 850;
+  font-size: .7rem;
+  font-weight: 900;
   cursor: pointer;
 }
 
@@ -915,7 +915,7 @@
 }
 
 .actionUnavailable {
-  min-height: 42px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -923,9 +923,9 @@
   border: 1px dashed var(--border-strong);
   border-radius: 11px;
   background: #fafafa;
-  color: var(--text-light);
-  font-size: .6rem;
-  font-weight: 800;
+  color: var(--text-soft);
+  font-size: .7rem;
+  font-weight: 900;
   box-sizing: border-box;
 }
 
@@ -1032,4 +1032,164 @@
   .refundAmounts {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* =========================================================
+   ORDER ACTIONS — stronger visual hierarchy
+   ========================================================= */
+
+.orderActionsSection {
+  padding: 18px;
+  border: 1px solid var(--border-strong);
+  background: #fffdfd;
+}
+
+.orderActionsHeading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.orderActionsHeading > span {
+  margin: 0;
+  color: var(--pink-600);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.orderActionsHeading > p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.orderActionTrigger,
+.actionUnavailable {
+  min-height: 48px;
+  padding: 0 15px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.orderActionTrigger {
+  box-shadow: 0 1px 2px rgba(45, 30, 36, 0.03);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.orderActionTrigger:hover {
+  transform: translateY(-1px);
+  border-color: var(--pink-300);
+  box-shadow: 0 5px 14px rgba(93, 50, 69, 0.07);
+}
+
+.cancelTrigger {
+  background: #fff8fa;
+  color: #8f405e;
+}
+
+.deleteTrigger {
+  background: #fff5f6;
+  color: #98434d;
+}
+
+.actionUnavailable {
+  border-style: solid;
+  border-color: var(--border);
+  background: #f7f5f6;
+  color: #8d8286;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.actionChevron {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--pink-200);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.actionChevron::before {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.orderActionPanel {
+  margin-top: 9px;
+  padding: 17px;
+  border-color: var(--border-strong);
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(62, 37, 47, 0.05);
+}
+
+.actionEyebrow {
+  font-size: 0.56rem;
+}
+
+.orderActionPanel h3 {
+  font-size: 0.9rem;
+}
+
+.orderActionPanel > p {
+  font-size: 0.67rem;
+  line-height: 1.55;
+}
+
+.actionForm label {
+  font-size: 0.64rem;
+}
+
+.refundSubmit,
+.cancelSubmit,
+.deleteSubmit {
+  min-height: 45px;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+
+/* Compact Order Actions heading */
+.orderActionsHeading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.orderActionsHeading > div > span {
+  display: block;
+  margin: 0;
+  color: var(--pink-600);
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.orderActionsHeading > div > h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.94rem;
+  font-weight: 850;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.orderActionsHeading > div > p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.62rem;
+  line-height: 1.45;
 }

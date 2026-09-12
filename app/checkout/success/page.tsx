@@ -2,124 +2,228 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import CopyOrderNumberButton from "@/components/CopyOrderNumberButton";
+import CopyReceiptLinkButton from "@/components/CopyReceiptLinkButton";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { getSiteSettings } from "@/lib/site-settings";
+import { ensureProjectRequirementsForPaidOrder } from "@/lib/project-requirements";
 import styles from "../checkout.module.css";
+import actionStyles from "./success-actions.module.css";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Payment Successful | TCL Systems & Digitals PH",
-  robots: {
-    index: false,
-    follow: false,
-  },
+  robots: { index: false, follow: false },
 };
 
-const SIMPLE_WEBSITE_SLUG =
-  "simple-business-website-template";
+const MAX_DOWNLOADS = 3;
+const ACCESS_DAYS = 7;
 
-function formatAmount(
-  amount: number,
-  currency: string,
-) {
+function formatAmount(amount: number, currency: string) {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
-    currency: currency || "PHP",
+    currency,
   }).format(amount);
 }
 
-export default async function SimpleBusinessWebsiteSuccessPage({
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+export default async function CheckoutSuccessPage({
   searchParams,
 }: {
   searchParams: Promise<{
     receipt?: string | string[];
+    download?: string | string[];
   }>;
 }) {
   const params = await searchParams;
-
   const receiptToken =
-    typeof params.receipt === "string"
-      ? params.receipt.trim()
-      : "";
+    typeof params.receipt === "string" ? params.receipt.trim() : "";
+  const downloadMessage =
+    typeof params.download === "string" ? params.download : "";
 
-  const supabase =
-    createAdminSupabaseClient();
-
-  let order: {
-    order_number: string;
-    customer_name: string | null;
-    product_name: string;
-    product_id: string | null;
-    selected_design_name: string | null;
-    total_amount: number;
-    currency: string;
-    payment_status: string;
-    order_status: string | null;
+  let order: any = null;
+  let product: any = null;
+  let files: Array<{ id: string; displayName: string; count: number }> = [];
+  let downloadExpiryMinutes = 30;
+  let accessExpiresAt: string | null = null;
+  let projectRequirements: {
+    id: string;
+    secureToken: string;
+    requirementsStatus: string;
+    projectStatus: string;
   } | null = null;
 
-  let validProduct = false;
+  try {
+    const settings = await getSiteSettings();
+    downloadExpiryMinutes = settings.download_link_expiry_minutes;
+  } catch (error) {
+    console.error("Unable to load download expiry setting:", error);
+  }
 
   if (receiptToken) {
-    const {
-      data: orderData,
-      error: orderError,
-    } = await supabase
+    const supabase = createAdminSupabaseClient();
+
+    const { data: orderData, error } = await supabase
       .from("orders")
       .select(
-        "order_number,customer_name,product_name,product_id,selected_design_name,total_amount,currency,payment_status,order_status",
+        "id,order_number,customer_name,product_id,product_name,total_amount,currency,payment_status,payment_terms,order_status,paypal_order_id,paid_at,created_at,download_access_expires_at",
       )
       .eq("receipt_token", receiptToken)
       .eq("payment_status", "COMPLETED")
       .maybeSingle();
 
-    if (orderError) {
-      console.error(
-        "Unable to load Simple Business Website order:",
-        orderError,
-      );
+    if (error) {
+      console.error("Unable to load completed order:", error);
     }
 
     if (orderData) {
       order = {
         ...orderData,
-        total_amount: Number(
-          orderData.total_amount ?? 0,
-        ),
+        total_amount: Number(orderData.total_amount),
       };
 
-      if (orderData.product_id) {
-        const {
-          data: product,
-          error: productError,
-        } = await supabase
-          .from("products")
-          .select("slug")
-          .eq(
-            "id",
-            orderData.product_id,
-          )
+      try {
+        projectRequirements =
+          await ensureProjectRequirementsForPaidOrder(orderData.id);
+      } catch (requirementsError) {
+        console.error(
+          "Unable to prepare project requirements:",
+          requirementsError,
+        );
+      }
+
+      const isCustomQuotedProject =
+        orderData.payment_terms === "FULL" ||
+        orderData.payment_terms === "DEPOSIT_50";
+
+      if (isCustomQuotedProject) {
+        /*
+         * Custom quoted projects start their access window only after project
+         * completion, not when the payment becomes COMPLETED.
+         *
+         * Also clear any legacy expiry that may have been created by the old
+         * payment-based rule while the project is still in progress.
+         */
+        const projectCompleted =
+          projectRequirements?.projectStatus === "COMPLETED";
+
+        if (projectCompleted) {
+          accessExpiresAt = orderData.download_access_expires_at || null;
+        } else {
+          accessExpiresAt = null;
+
+          if (orderData.download_access_expires_at) {
+            const { error: clearExpiryError } = await supabase
+              .from("orders")
+              .update({
+                download_access_expires_at: null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", orderData.id);
+
+            if (clearExpiryError) {
+              console.error(
+                "Unable to clear early custom-project access expiry:",
+                clearExpiryError,
+              );
+            }
+          }
+        }
+      } else if (!orderData.download_access_expires_at) {
+        /*
+         * Ready-made digital products keep the existing behavior:
+         * access starts after successful payment.
+         */
+        const base = new Date(orderData.paid_at || orderData.created_at);
+        const expires = new Date(
+          base.getTime() + ACCESS_DAYS * 86400000,
+        ).toISOString();
+
+        const { data: updated } = await supabase
+          .from("orders")
+          .update({
+            download_access_expires_at: expires,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", orderData.id)
+          .is("download_access_expires_at", null)
+          .select("download_access_expires_at")
           .maybeSingle();
 
-        if (productError) {
-          console.error(
-            "Unable to verify Simple Business Website product:",
-            productError,
-          );
-        }
+        accessExpiresAt = updated?.download_access_expires_at || expires;
+      } else {
+        accessExpiresAt = orderData.download_access_expires_at;
+      }
 
-        validProduct =
-          product?.slug ===
-          SIMPLE_WEBSITE_SLUG;
+      if (orderData.product_id) {
+        const { data: productData } = await supabase
+          .from("products")
+          .select("name,slug,post_purchase_instructions,delivery_method")
+          .eq("id", orderData.product_id)
+          .maybeSingle();
+
+        product = productData;
+
+        const { data: fileRows } = await supabase
+          .from("product_files")
+          .select("id,display_name,display_order")
+          .eq("product_id", orderData.product_id)
+          .eq("is_active", true)
+          .order("display_order")
+          .order("display_name");
+
+        const { data: counters } = await supabase
+          .from("order_downloads")
+          .select("product_file_id,download_count")
+          .eq("order_id", orderData.id);
+
+        const countMap = new Map(
+          (counters ?? []).map((item: any) => [
+            item.product_file_id,
+            Number(item.download_count ?? 0),
+          ]),
+        );
+
+        files = (fileRows ?? []).map((file: any) => ({
+          id: file.id,
+          displayName: file.display_name,
+          count: countMap.get(file.id) ?? 0,
+        }));
       }
     }
   }
 
   const validReceipt =
-    Boolean(order) &&
-    validProduct &&
-    order?.payment_status ===
-      "COMPLETED";
+    Boolean(order) && order?.payment_status === "COMPLETED";
+
+  const accessActive =
+    Boolean(accessExpiresAt) &&
+    Date.now() < new Date(accessExpiresAt as string).getTime() &&
+    order?.order_status !== "CANCELLED";
+
+  const footerButtonStyle = {
+    minWidth: 150,
+    minHeight: 48,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  } as const;
+
+  const requirementsButtonLabel =
+    projectRequirements?.requirementsStatus === "SUBMITTED" ||
+    projectRequirements?.requirementsStatus === "RESUBMITTED" ||
+    projectRequirements?.requirementsStatus === "APPROVED"
+      ? "View Project Requirements →"
+      : projectRequirements?.requirementsStatus === "IN_PROGRESS" ||
+          projectRequirements?.requirementsStatus === "NEED_MORE_INFO"
+        ? "Continue Project Requirements →"
+        : "Complete Project Requirements →";
 
   return (
     <>
@@ -127,18 +231,14 @@ export default async function SimpleBusinessWebsiteSuccessPage({
 
       <main
         className={styles.page}
-        style={{
-          minHeight:
-            "calc(100vh - 160px)",
-        }}
+        style={{ minHeight: "calc(100vh - 160px)" }}
       >
         <div className="container">
           <nav
             aria-label="Page navigation"
             style={{
               display: "flex",
-              justifyContent:
-                "flex-end",
+              justifyContent: "flex-end",
               marginBottom: 28,
             }}
           >
@@ -155,56 +255,33 @@ export default async function SimpleBusinessWebsiteSuccessPage({
             </Link>
           </nav>
 
-          {!validReceipt ||
-          !order ? (
+          {!validReceipt ? (
             <section
               style={{
                 maxWidth: 720,
                 margin: "0 auto",
-                padding:
-                  "clamp(34px,6vw,58px)",
+                padding: "clamp(34px,6vw,58px)",
                 background: "#fff",
-                border:
-                  "1px solid var(--border)",
+                border: "1px solid var(--border)",
                 borderRadius: 24,
                 textAlign: "center",
               }}
             >
-              <span className="section-kicker">
-                Order verification
-              </span>
-
-              <h1>
-                We couldn&apos;t verify
-                this receipt.
-              </h1>
-
+              <span className="section-kicker">Order verification</span>
+              <h1>We couldn&apos;t verify this receipt.</h1>
               <p
                 style={{
-                  color:
-                    "var(--text-soft)",
+                  color: "var(--text-soft)",
                   lineHeight: 1.7,
                 }}
               >
-                This page is only
-                available for a verified
-                Simple Business Website
-                Template purchase.
+                Purchase instructions and files are only available after a
+                verified completed payment.
               </p>
-
               <Link
                 href="/shop"
                 className="button button-primary"
-                style={{
-                  minWidth: 150,
-                  minHeight: 48,
-                  display:
-                    "inline-flex",
-                  alignItems:
-                    "center",
-                  justifyContent:
-                    "center",
-                }}
+                style={footerButtonStyle}
               >
                 Back to Shop
               </Link>
@@ -213,80 +290,54 @@ export default async function SimpleBusinessWebsiteSuccessPage({
             <section
               style={{
                 width: "100%",
-                maxWidth: 820,
+                maxWidth: 860,
                 margin: "0 auto",
-                padding:
-                  "clamp(34px,6vw,64px)",
+                padding: "clamp(34px,6vw,64px)",
                 background: "#fff",
-                border:
-                  "1px solid var(--border)",
+                border: "1px solid var(--border)",
                 borderRadius: 24,
-                boxShadow:
-                  "0 18px 50px rgba(49,37,41,.08)",
+                boxShadow: "0 18px 50px rgba(49,37,41,.08)",
               }}
             >
-              <div
-                style={{
-                  textAlign: "center",
-                }}
-              >
+              <div style={{ textAlign: "center" }}>
                 <div
                   aria-hidden="true"
                   style={{
                     width: 72,
                     height: 72,
-                    margin:
-                      "0 auto 24px",
+                    margin: "0 auto 24px",
                     display: "flex",
-                    alignItems:
-                      "center",
-                    justifyContent:
-                      "center",
-                    borderRadius:
-                      "50%",
-                    background:
-                      "rgba(217,86,139,.12)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    background: "rgba(217,86,139,.12)",
                     fontSize: 32,
                   }}
                 >
                   ✓
                 </div>
 
-                <span className="section-kicker">
-                  Payment successful
-                </span>
+                <span className="section-kicker">Payment received</span>
 
                 <h1
                   style={{
-                    margin:
-                      "14px 0",
-                    fontSize:
-                      "clamp(2rem,5vw,3rem)",
+                    margin: "14px 0",
+                    fontSize: "clamp(2rem,5vw,3rem)",
                   }}
                 >
                   Thank you
-                  {order.customer_name
-                    ? `, ${order.customer_name}`
-                    : ""}
-                  !
+                  {order.customer_name ? `, ${order.customer_name}` : ""}!
                 </h1>
 
                 <p
                   style={{
-                    maxWidth: 620,
-                    margin:
-                      "0 auto",
-                    color:
-                      "var(--text-soft)",
-                    lineHeight: 1.75,
+                    color: "var(--text-soft)",
+                    lineHeight: 1.7,
                   }}
                 >
-                  Your payment has been
-                  confirmed. We&apos;ll
-                  now prepare your
-                  personalized website
-                  package for your
-                  selected design.
+                  Your payment for{" "}
+                  <strong>{product?.name ?? order.product_name}</strong> was
+                  completed successfully.
                 </p>
               </div>
 
@@ -294,303 +345,325 @@ export default async function SimpleBusinessWebsiteSuccessPage({
                 style={{
                   marginTop: 32,
                   padding: 20,
-                  border:
-                    "1px solid var(--border)",
+                  border: "1px solid var(--border)",
                   borderRadius: 16,
                   display: "grid",
-                  gap: 16,
+                  gap: 14,
                 }}
               >
                 <div>
-                  <small>
-                    ORDER NUMBER
-                  </small>
-
+                  <small>ORDER NUMBER</small>
                   <br />
-
-                  <span
-                    style={{
-                      display:
-                        "inline-flex",
-                      alignItems:
-                        "center",
-                      gap: 8,
-                      marginTop: 4,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <strong>
-                      {
-                        order.order_number
-                      }
-                    </strong>
-
-                    <CopyOrderNumberButton
-                      orderNumber={
-                        order.order_number
-                      }
-                    />
-                  </span>
+                  <strong>{order.order_number}</strong>
                 </div>
 
                 <div>
-                  <small>
-                    PRODUCT
-                  </small>
-
+                  <small>AMOUNT PAID</small>
                   <br />
-
-                  <strong
-                    style={{
-                      display:
-                        "inline-block",
-                      marginTop: 4,
-                    }}
-                  >
-                    {order.product_name}
+                  <strong>
+                    {formatAmount(order.total_amount, order.currency)}
                   </strong>
                 </div>
 
-                <div
-                  style={{
-                    padding:
-                      "14px 16px",
-                    border:
-                      "1px solid rgba(217,86,139,.18)",
-                    borderRadius: 12,
-                    background:
-                      "rgba(217,86,139,.055)",
-                  }}
-                >
-                  <small>
-                    SELECTED DESIGN
-                  </small>
-
-                  <br />
-
-                  <strong
-                    style={{
-                      display:
-                        "inline-block",
-                      marginTop: 4,
-                    }}
-                  >
-                    {order.selected_design_name ||
-                      "Selected design"}
-                  </strong>
-                </div>
-
-                <div>
-                  <small>
-                    AMOUNT PAID
-                  </small>
-
-                  <br />
-
-                  <strong
-                    style={{
-                      display:
-                        "inline-block",
-                      marginTop: 4,
-                    }}
-                  >
-                    {formatAmount(
-                      order.total_amount,
-                      order.currency,
-                    )}
-                  </strong>
-                </div>
+                {order.paypal_order_id ? (
+                  <div>
+                    <small>PAYPAL REFERENCE</small>
+                    <br />
+                    <strong>{order.paypal_order_id}</strong>
+                  </div>
+                ) : null}
               </div>
 
               <section
                 style={{
-                  marginTop: 26,
-                  padding:
-                    "clamp(24px,4vw,32px)",
-                  border:
-                    "1px solid rgba(217,86,139,.22)",
+                  marginTop: 30,
+                  padding: "clamp(22px,4vw,30px)",
+                  border: "1px solid var(--border)",
                   borderRadius: 18,
-                  background:
-                    "linear-gradient(145deg, rgba(217,86,139,.08), rgba(255,255,255,.98))",
+                  background: "rgba(217,86,139,.055)",
                 }}
               >
+                <span className="section-kicker">Your instructions</span>
+                <h2>
+                  Instructions for {product?.name ?? order.product_name}
+                </h2>
+
                 <div
                   style={{
-                    display: "flex",
-                    alignItems:
-                      "flex-start",
-                    gap: 16,
+                    color: "var(--text-soft)",
+                    lineHeight: 1.8,
+                    whiteSpace: "pre-wrap",
                   }}
                 >
-                  <div
-                    aria-hidden="true"
+                  {product?.post_purchase_instructions?.trim() ||
+                    "Your payment has been confirmed. TCL Systems & Digitals PH will contact you with the next steps for this purchase."}
+                </div>
+              </section>
+
+              {projectRequirements ? (
+                <section
+                  aria-labelledby="project-requirements-heading"
+                  style={{
+                    marginTop: 24,
+                    padding: "clamp(24px,4vw,32px)",
+                    border: "1px solid rgba(217,86,139,.22)",
+                    borderRadius: 18,
+                    background:
+                      "linear-gradient(145deg, rgba(217,86,139,.08), rgba(255,255,255,.96))",
+                  }}
+                >
+                  <span className="section-kicker">Next step</span>
+
+                  <h2
+                    id="project-requirements-heading"
                     style={{
-                      width: 48,
-                      height: 48,
-                      flex:
-                        "0 0 48px",
-                      display: "flex",
-                      alignItems:
-                        "center",
-                      justifyContent:
-                        "center",
-                      borderRadius:
-                        "50%",
-                      background:
-                        "#fff",
-                      border:
-                        "1px solid rgba(217,86,139,.2)",
-                      fontSize: 22,
+                      marginTop: 10,
+                      marginBottom: 10,
+                      fontSize: "clamp(1.4rem,4vw,1.9rem)",
                     }}
                   >
-                    ⏳
-                  </div>
+                    Complete your project requirements
+                  </h2>
 
-                  <div>
-                    <span className="section-kicker">
-                      Status: Processing
-                    </span>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "var(--text-soft)",
+                      lineHeight: 1.75,
+                    }}
+                  >
+                    Before we begin your customized setup, please tell us about
+                    your business, branding, content, workflow, and the options
+                    needed for your purchased package. Your form is connected
+                    directly to order <strong>{order.order_number}</strong>.
+                  </p>
 
-                    <h2
+                  <div
+                    style={{
+                      marginTop: 18,
+                      padding: "13px 15px",
+                      borderRadius: 12,
+                      background: "rgba(255,255,255,.72)",
+                      border: "1px solid rgba(217,86,139,.15)",
+                    }}
+                  >
+                    <small
                       style={{
-                        margin:
-                          "10px 0 8px",
+                        display: "block",
+                        marginBottom: 4,
+                        color: "var(--text-soft)",
+                        fontWeight: 700,
+                        letterSpacing: ".06em",
                       }}
                     >
-                      Your website package
-                      is being prepared.
-                    </h2>
+                      REQUIREMENTS STATUS
+                    </small>
+                    <strong>
+                      {projectRequirements.requirementsStatus
+                        .replaceAll("_", " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (letter) =>
+                          letter.toUpperCase(),
+                        )}
+                    </strong>
+                  </div>
+
+                  <Link
+                    href={`/project-requirements/${encodeURIComponent(
+                      projectRequirements.secureToken,
+                    )}`}
+                    className="button button-primary"
+                    style={{
+                      width: "100%",
+                      minHeight: 52,
+                      marginTop: 20,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                    }}
+                  >
+                    {requirementsButtonLabel}
+                  </Link>
+
+                  <p
+                    style={{
+                      margin: "12px 0 0",
+                      color: "var(--text-soft)",
+                      fontSize: ".86rem",
+                      lineHeight: 1.55,
+                      textAlign: "center",
+                    }}
+                  >
+                    Keep this receipt page private. Your project requirements
+                    link is unique to this purchase.
+                  </p>
+                </section>
+              ) : null}
+
+              {files.length > 0 ? (
+                <section
+                  style={{
+                    marginTop: 24,
+                    padding: "clamp(22px,4vw,30px)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 18,
+                  }}
+                >
+                  <span className="section-kicker">Your files</span>
+                  <h2>Download your purchase</h2>
+
+                  {downloadMessage ? (
+                    <div
+                      style={{
+                        marginBottom: 16,
+                        padding: 12,
+                        borderRadius: 12,
+                        background: "#fff4f6",
+                        color: "#8d4051",
+                      }}
+                    >
+                      {downloadMessage === "expired"
+                        ? "Your 7-day download access has expired. Please contact TCL if you need access restored."
+                        : downloadMessage === "limit"
+                          ? "The 3-download limit for this file has been reached. Please contact TCL if you need access restored."
+                          : downloadMessage === "error"
+                            ? "We could not prepare this download. Please try again or contact TCL."
+                            : "This file is currently unavailable."}
+                    </div>
+                  ) : null}
+
+                  <div
+                    style={{
+                      marginBottom: 20,
+                      padding: "14px 16px",
+                      border: "1px solid rgba(217,86,139,.18)",
+                      borderRadius: 14,
+                      background: "rgba(217,86,139,.06)",
+                    }}
+                  >
+                    <strong
+                      style={{
+                        display: "block",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Important Download Information
+                    </strong>
 
                     <p
                       style={{
                         margin: 0,
-                        color:
-                          "var(--text-soft)",
-                        lineHeight: 1.75,
+                        color: "var(--text-soft)",
+                        lineHeight: 1.65,
                       }}
                     >
-                      Please allow up to{" "}
-                      <strong>
-                        24 hours
-                      </strong>{" "}
-                      for TCL Systems
-                      &amp; Digitals PH to
-                      prepare your
-                      personalized website
-                      package.
+                      Your files are available for <strong>7 days</strong>{" "}
+                      after purchase, with up to{" "}
+                      <strong>3 downloads per file</strong>. Each secure file
+                      link is temporary and expires after{" "}
+                      <strong>{downloadExpiryMinutes} minutes</strong>. Clicking
+                      a file below will start the download automatically. Please
+                      save your files to your device and keep this private
+                      receipt link secure. If your access period or download
+                      limit is reached, contact TCL Systems &amp; Digitals PH
+                      for assistance.
                     </p>
 
-                    <p
-                      style={{
-                        margin:
-                          "12px 0 0",
-                        color:
-                          "var(--text-soft)",
-                        lineHeight: 1.75,
-                      }}
-                    >
-                      Once your package is
-                      ready, you&apos;ll
-                      be able to download
-                      it through the Order
-                      Status page.
-                    </p>
+                    {accessExpiresAt ? (
+                      <p
+                        style={{
+                          margin: "10px 0 0",
+                          fontWeight: 700,
+                        }}
+                      >
+                        Access expires: {formatDateTime(accessExpiresAt)}
+                      </p>
+                    ) : null}
                   </div>
+
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {files.map((file) => {
+                      const remaining = Math.max(
+                        0,
+                        MAX_DOWNLOADS - file.count,
+                      );
+                      const enabled = accessActive && remaining > 0;
+
+                      return enabled ? (
+                        <a
+                          key={file.id}
+                          href={`/api/download/${encodeURIComponent(
+                            receiptToken,
+                          )}/${encodeURIComponent(file.id)}`}
+                          className="button button-primary"
+                          style={{
+                            width: "100%",
+                            minHeight: 50,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <span>{file.displayName}</span>
+                          <span>
+                            {remaining} of {MAX_DOWNLOADS} remaining ↓
+                          </span>
+                        </a>
+                      ) : (
+                        <div
+                          key={file.id}
+                          style={{
+                            padding: 14,
+                            border: "1px solid var(--border)",
+                            borderRadius: 12,
+                            opacity: 0.65,
+                          }}
+                        >
+                          <strong>{file.displayName}</strong>
+                          <div>
+                            {remaining > 0
+                              ? "Access expired"
+                              : "Download limit reached"}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
+
+              <div className={actionStyles.actions}>
+                <div className={actionStyles.secondarySlot}>
+                  <CopyReceiptLinkButton />
                 </div>
-              </section>
-
-              <section
-                style={{
-                  marginTop: 24,
-                  padding:
-                    "clamp(22px,4vw,28px)",
-                  border:
-                    "1px solid var(--border)",
-                  borderRadius: 18,
-                  textAlign: "center",
-                }}
-              >
-                <span className="section-kicker">
-                  Keep track of your order
-                </span>
-
-                <h2
-                  style={{
-                    margin:
-                      "10px 0",
-                  }}
-                >
-                  Check your order status
-                  anytime
-                </h2>
-
-                <p
-                  style={{
-                    maxWidth: 620,
-                    margin:
-                      "0 auto",
-                    color:
-                      "var(--text-soft)",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  Use your order number
-                  and the same email
-                  address used at checkout
-                  to check when your
-                  website package is
-                  ready.
-                </p>
 
                 <Link
-                  href="/order-status"
-                  className="button button-primary"
-                  style={{
-                    width: "100%",
-                    maxWidth: 360,
-                    minHeight: 52,
-                    marginTop: 20,
-                    display:
-                      "inline-flex",
-                    alignItems:
-                      "center",
-                    justifyContent:
-                      "center",
-                    textAlign:
-                      "center",
-                  }}
+                  href="/shop"
+                  className={`button button-primary ${actionStyles.primaryAction}`}
+                  style={footerButtonStyle}
                 >
-                  Check Order Status →
+                  Back to Shop
                 </Link>
-              </section>
 
-              <div
-                style={{
-                  marginTop: 24,
-                  paddingTop: 20,
-                  borderTop:
-                    "1px solid var(--border)",
-                  display: "flex",
-                  justifyContent:
-                    "flex-end",
-                }}
-              >
-                <Link
-                  href="/"
-                  className="button button-secondary"
-                  style={{
-                    minWidth: 160,
-                    minHeight: 48,
-                    display:
-                      "inline-flex",
-                    alignItems:
-                      "center",
-                    justifyContent:
-                      "center",
-                  }}
-                >
-                  Return Home
-                </Link>
+                {product?.slug ? (
+                  <>
+                    <Link
+                      href={`/shop/${encodeURIComponent(product.slug)}`}
+                      className={actionStyles.desktopViewProduct}
+                    >
+                      View Product →
+                    </Link>
+
+                    <Link
+                      href={`/shop/${encodeURIComponent(product.slug)}`}
+                      className={actionStyles.mobileViewProduct}
+                    >
+                      View Product →
+                    </Link>
+                  </>
+                ) : null}
               </div>
             </section>
           )}

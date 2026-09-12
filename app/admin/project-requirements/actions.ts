@@ -34,6 +34,7 @@ const DELIVERY_STATUSES = new Set([
 ]);
 
 const CUSTOM_PAYMENT_TERMS = new Set(["FULL", "DEPOSIT_50"]);
+const CUSTOM_PROJECT_ACCESS_DAYS = 7;
 
 async function requireAdmin() {
   const auth = await createServerSupabaseClient();
@@ -92,7 +93,7 @@ export async function updateProjectRequirements(formData: FormData) {
 
   const { data: currentRequest, error: currentRequestError } = await supabase
     .from("project_requirements")
-    .select("id,order_id")
+    .select("id,order_id,project_status,completed_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -106,7 +107,7 @@ export async function updateProjectRequirements(formData: FormData) {
 
   const { data: linkedOrder, error: linkedOrderError } = await supabase
     .from("orders")
-    .select("id,payment_terms,balance_due,order_status")
+    .select("id,payment_terms,balance_due,order_status,download_access_expires_at")
     .eq("id", currentRequest.order_id)
     .maybeSingle();
 
@@ -165,8 +166,19 @@ export async function updateProjectRequirements(formData: FormData) {
     payload.approved_at = now;
   }
 
+  const isCompletingNow =
+    projectStatus === "COMPLETED" &&
+    currentRequest.project_status !== "COMPLETED";
+
   if (projectStatus === "COMPLETED") {
-    payload.completed_at = now;
+    payload.completed_at =
+      currentRequest.completed_at || now;
+  } else if (currentRequest.project_status === "COMPLETED") {
+    /*
+     * If Admin reopens a completed project, the completion/access window
+     * should stop until the project is completed again.
+     */
+    payload.completed_at = null;
   }
 
   const { data: updated, error } = await supabase
@@ -189,15 +201,32 @@ export async function updateProjectRequirements(formData: FormData) {
     );
   }
 
+  const orderUpdate: Record<string, unknown> = {
+    delivery_status: deliveryStatus,
+    delivered_at: deliveryStatus === "DELIVERED" ? now : null,
+    updated_at: now,
+  };
+
+  /*
+   * Quoted/custom projects do not start their 7-day delivery/download
+   * access window when payment is made. The clock begins only when the
+   * project is actually marked COMPLETED.
+   */
+  if (isCustomPaymentOrder) {
+    if (isCompletingNow) {
+      orderUpdate.download_access_expires_at = new Date(
+        Date.now() + CUSTOM_PROJECT_ACCESS_DAYS * 86400000,
+      ).toISOString();
+    } else if (projectStatus !== "COMPLETED") {
+      orderUpdate.download_access_expires_at = null;
+    }
+  }
+
   const { data: updatedOrder, error: orderError } = await supabase
     .from("orders")
-    .update({
-      delivery_status: deliveryStatus,
-      delivered_at: deliveryStatus === "DELIVERED" ? now : null,
-      updated_at: now,
-    })
+    .update(orderUpdate)
     .eq("id", currentRequest.order_id)
-    .select("id,delivery_status")
+    .select("id,delivery_status,download_access_expires_at")
     .maybeSingle();
 
   if (orderError || !updatedOrder) {

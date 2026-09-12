@@ -206,6 +206,18 @@ export default async function SimpleBusinessWebsiteTemplatePage() {
     <>
       <SiteHeader />
 
+      {/* Mobile product navigation: always visible directly under SiteHeader */}
+      <nav className="template-mobile-nav" aria-label="Product navigation">
+        <a href="#overview">Overview</a>
+        <a href="#choose-design">Choose Design</a>
+        <a href="#included">What&apos;s Included</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#compare">Compare</a>
+        <a href="#before-purchasing">Before Purchasing</a>
+        <a href="#purchase">Ready to Choose</a>
+      </nav>
+
+      {/* Desktop/tablet side navigation */}
       <details className="template-side-nav">
         <summary aria-label="Open page navigation">
           <span className="template-side-nav-icon">☰</span>
@@ -2557,6 +2569,10 @@ export default async function SimpleBusinessWebsiteTemplatePage() {
           scroll-margin-top: 110px;
         }
 
+        .template-mobile-nav {
+          display: none;
+        }
+
         .template-side-nav {
           position: fixed;
           z-index: 90;
@@ -2700,61 +2716,41 @@ export default async function SimpleBusinessWebsiteTemplatePage() {
             scroll-margin-top: 138px;
           }
 
-          /*
-           * Mobile: this becomes a real secondary navigation row directly
-           * underneath SiteHeader instead of floating over the hero.
-           */
+          /* Hide the collapsible desktop side navigation on phones. */
           .template-side-nav {
+            display: none !important;
+          }
+
+          /*
+           * Always-visible product navigation directly under the main SiteHeader.
+           * Horizontal scrolling keeps every section available without wrapping.
+           */
+          .template-mobile-nav {
             position: relative;
             z-index: 35;
-            top: auto;
-            left: auto;
-            right: auto;
-            bottom: auto;
+            display: flex;
             width: 100%;
-            transform: none;
-            border-bottom: 1px solid rgba(234, 217, 223, 0.92);
-            background: rgba(255, 250, 252, 0.97);
-            box-shadow: 0 5px 16px rgba(104, 64, 79, 0.045);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-          }
-
-          .template-side-nav > summary {
-            display: none;
-          }
-
-          .template-side-nav .template-side-nav-panel,
-          .template-side-nav:not([open]) .template-side-nav-panel {
-            position: static;
-            display: flex !important;
-            width: 100%;
-            max-height: none;
             padding: 8px 12px 9px;
             align-items: center;
             gap: 7px;
             overflow-x: auto;
             overflow-y: hidden;
-            border: 0;
-            border-radius: 0;
-            background: transparent;
-            box-shadow: none;
-            transform: none;
+            border-bottom: 1px solid rgba(234, 217, 223, 0.92);
+            background: rgba(255, 250, 252, 0.98);
+            box-shadow: 0 5px 16px rgba(104, 64, 79, 0.045);
             scrollbar-width: none;
             -ms-overflow-style: none;
             overscroll-behavior-x: contain;
             -webkit-overflow-scrolling: touch;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
           }
 
-          .template-side-nav-panel::-webkit-scrollbar {
+          .template-mobile-nav::-webkit-scrollbar {
             display: none;
           }
 
-          .template-side-nav-label {
-            display: none;
-          }
-
-          .template-side-nav-panel a {
+          .template-mobile-nav a {
             display: inline-flex;
             min-height: 34px;
             flex: 0 0 auto;
@@ -2768,15 +2764,16 @@ export default async function SimpleBusinessWebsiteTemplatePage() {
             font-size: 0.59rem;
             font-weight: 800;
             line-height: 1;
+            text-decoration: none;
             white-space: nowrap;
             box-shadow: 0 3px 10px rgba(99, 61, 76, 0.035);
           }
 
-          .template-side-nav-panel a:first-of-type {
+          .template-mobile-nav a:first-child {
             margin-left: 2px;
           }
 
-          .template-side-nav-panel a:last-of-type {
+          .template-mobile-nav a:last-child {
             margin-right: 2px;
           }
         }

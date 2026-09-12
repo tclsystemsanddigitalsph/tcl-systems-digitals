@@ -5,7 +5,6 @@ import { getCustomCheckoutState } from "@/lib/custom-order-payments";
 import CustomCheckoutActions from "./CustomCheckoutActions";
 import PaymentSuccessCloser from "./PaymentSuccessCloser";
 import BpiProofUpload from "./BpiProofUpload";
-import AccountNumberCopyButton from "./AccountNumberCopyButton";
 import styles from "./custom-checkout.module.css";
 
 export const dynamic = "force-dynamic";
@@ -395,25 +394,7 @@ export default async function CustomProjectCheckoutPage({
                     <div><small>Amount to transfer</small><strong style={{ display: "block" }}>{money(amountDue)}</strong></div>
                     <div><small>Bank</small><strong style={{ display: "block" }}>BPI</strong></div>
                     <div><small>Account name</small><strong style={{ display: "block" }}>{bpiAccountName || "Not configured"}</strong></div>
-                    <div>
-                      <small>Account number</small>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          flexWrap: "wrap",
-                          marginTop: 2,
-                        }}
-                      >
-                        <strong>{bpiAccountNumber || "Not configured"}</strong>
-                        {bpiAccountNumber ? (
-                          <AccountNumberCopyButton
-                            accountNumber={bpiAccountNumber}
-                          />
-                        ) : null}
-                      </div>
-                    </div>
+                    <div><small>Account number</small><strong style={{ display: "block" }}>{bpiAccountNumber || "Not configured"}</strong></div>
                   </div>
 
                   {bpiDetailsReady ? (

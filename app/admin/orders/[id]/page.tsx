@@ -14,6 +14,7 @@ import {
 } from "./actions";
 import CopyPaymentLinkButton from "./CopyPaymentLinkButton";
 import DigitalAccessPanel from "./DigitalAccessPanel";
+import BpiTransferVerificationPanel from "./BpiTransferVerificationPanel";
 
 type OrderDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -24,6 +25,8 @@ type OrderDetailsPageProps = {
     refund_processed?: string;
     amount_updated?: string;
     payment_requested?: string;
+    bpi_verified?: string;
+    bpi_rejected?: string;
   }>;
 };
 
@@ -113,6 +116,42 @@ export default async function OrderDetailsPage({
 
   const totalAmount = Number(order.total_amount ?? 0);
   const isCustomQuotationOrder = Boolean(order.payment_terms);
+  const isBpiDirectOrder =
+    isCustomQuotationOrder &&
+    order.payment_terms === "FULL" &&
+    Number(order.processing_fee_percent ?? 0) <= 0.005;
+
+  let bpiProof: {
+    id: string;
+    status: string;
+    original_filename: string | null;
+    reference_number: string | null;
+    customer_notes: string | null;
+    submitted_at: string;
+    rejection_reason: string | null;
+    file_path: string;
+  } | null = null;
+  let bpiProofSignedUrl: string | null = null;
+
+  if (isBpiDirectOrder) {
+    const { data, error: proofError } = await adminSupabase
+      .from("bank_transfer_proofs")
+      .select("id,status,original_filename,reference_number,customer_notes,submitted_at,rejection_reason,file_path")
+      .eq("order_id", order.id)
+      .order("submitted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (proofError) {
+      console.error("Admin BPI proof load error:", proofError);
+    } else if (data) {
+      bpiProof = data as typeof bpiProof;
+      const { data: signed } = await adminSupabase.storage
+        .from("payment-proofs")
+        .createSignedUrl(data.file_path, 60 * 15);
+      bpiProofSignedUrl = signed?.signedUrl ?? null;
+    }
+  }
   const amountPaid = isCustomQuotationOrder
     ? Number(order.amount_paid ?? 0)
     : order.payment_status === "COMPLETED"
@@ -240,16 +279,65 @@ export default async function OrderDetailsPage({
             paidAt={order.paid_at}
             createdAt={order.created_at}
             accessExpiresAt={order.download_access_expires_at}
+            isCustomProject={isCustomQuotationOrder}
           />
 
           <div style={{ height: "20px" }} />
 
-          <section className={styles.orderActionsSection}>
-            <div className={styles.orderActionsHeading}>
-              <span>ORDER ACTIONS</span>
-              <p>Tap an action to expand it. Tap it again to collapse.</p>
+          {isBpiDirectOrder ? (
+            <>
+              {query.bpi_verified === "1" ? (
+                <div style={{ marginBottom: 14, padding: "10px 12px", border: "1px solid #cfe5d3", borderRadius: 10, background: "#f5fff7", color: "#2f6f42", fontSize: ".68rem", fontWeight: 800 }}>
+                  BPI transfer verified and payment marked as paid.
+                </div>
+              ) : null}
+              {query.bpi_rejected === "1" ? (
+                <div style={{ marginBottom: 14, padding: "10px 12px", border: "1px solid #efc7c7", borderRadius: 10, background: "#fff7f7", color: "#914343", fontSize: ".68rem", fontWeight: 800 }}>
+                  Proof rejected. The client can now upload a replacement from the same private payment link.
+                </div>
+              ) : null}
+              <BpiTransferVerificationPanel
+                orderId={order.id}
+                proof={bpiProof}
+                signedUrl={bpiProofSignedUrl}
+              />
+              <div style={{ height: "20px" }} />
+            </>
+          ) : null}
+
+          <section
+            className={styles.orderActionsSection}
+            style={{
+              marginBottom: 22,
+              padding: 18,
+              border: "1px solid #eadbe1",
+              borderRadius: 18,
+              background: "linear-gradient(180deg, #fff 0%, #fff9fb 100%)",
+              boxShadow: "0 10px 30px rgba(99, 55, 72, 0.06)",
+            }}
+          >
+            <div
+              className={styles.orderActionsHeading}
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                gap: 16,
+                marginBottom: 12,
+              }}
+            >
+              <div>
+                <span>ORDER ACTIONS</span>
+                <h2>Manage order</h2>
+                <p>Refund, cancel, or delete this order when needed.</p>
+              </div>
             </div>
-            <div className={styles.orderActionsGrid}>
+            <div
+              className={styles.orderActionsGrid}
+              style={{
+                gap: 10,
+              }}
+            >
               {order.payment_status === "COMPLETED" && order.refund_status !== "REFUNDED" ? (
                 <details className={styles.orderAction}>
                   <summary className={`${styles.orderActionTrigger} ${styles.refundTrigger}`}>
@@ -287,7 +375,24 @@ export default async function OrderDetailsPage({
                     </details>
                   </div>
                 </details>
-              ) : <div className={styles.actionUnavailable}>Refund unavailable</div>}
+              ) : (
+                <div
+                  className={styles.actionUnavailable}
+                  style={{
+                    minHeight: 42,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid #eadde2",
+                    borderRadius: 12,
+                    background: "#faf7f8",
+                    color: "#9a8a90",
+                    fontWeight: 800,
+                  }}
+                >
+                  Refund unavailable
+                </div>
+              )}
 
               {order.order_status !== "CANCELLED" ? (
                 <details className={styles.orderAction}>
@@ -387,59 +492,222 @@ export default async function OrderDetailsPage({
                       ) : null}
                     </div>
                   ) : null}
-                  <div className={styles.breakdown}>
-                    <div><span>Project price</span><strong>{formatMoney(Number(order.base_price ?? 0))}</strong></div>
-                    <div><span>Processing fee ({Number(order.processing_fee_percent ?? 0)}%)</span><strong>{formatMoney(Number(order.processing_fee ?? 0))}</strong></div>
-                    <div className={styles.totalRow}><span>Customer total</span><strong>{formatMoney(Number(order.total_amount ?? 0))}</strong></div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: 18,
+                      padding: "18px 0 4px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "minmax(0, 1fr) auto",
+                        columnGap: 24,
+                        rowGap: 10,
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ color: "var(--text-light)" }}>Project price</span>
+                      <strong>{formatMoney(Number(order.base_price ?? 0))}</strong>
+
+                      <span style={{ color: "var(--text-light)" }}>
+                        Processing fee ({Number(order.processing_fee_percent ?? 0)}%)
+                      </span>
+                      <strong>{formatMoney(Number(order.processing_fee ?? 0))}</strong>
+
+                      <span style={{ fontWeight: 800 }}>Project total</span>
+                      <strong style={{ color: "#c84478", fontSize: ".9rem" }}>
+                        {formatMoney(Number(order.total_amount ?? 0))}
+                      </strong>
+                    </div>
+
                     {isCustomQuotationOrder ? (
-                      <>
-                        <div><span>Amount paid</span><strong>{formatMoney(amountPaid)}</strong></div>
-                        <div><span>Balance due</span><strong>{formatMoney(balanceDue)}</strong></div>
-                      </>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "minmax(0, 1fr) auto",
+                          columnGap: 24,
+                          rowGap: 10,
+                          alignItems: "center",
+                          paddingTop: 16,
+                          borderTop: "1px solid #f0e4e8",
+                        }}
+                      >
+                        <span style={{ color: "var(--text-light)" }}>Paid</span>
+                        <strong>{formatMoney(amountPaid)}</strong>
+
+                        <span style={{ fontWeight: 800 }}>Remaining</span>
+                        <strong>{formatMoney(balanceDue)}</strong>
+                      </div>
                     ) : null}
                   </div>
                 </div>
 
                 {isCustomQuotationOrder && order.order_status !== "CANCELLED" ? (
-                  <details style={{ marginTop: "18px", borderTop: "1px solid var(--border)", paddingTop: "16px" }}>
-                    <summary style={{ cursor: "pointer", color: "var(--text)", fontSize: "0.68rem", fontWeight: 900 }}>
-                      Edit Custom Project Amount
+                  <details
+                    style={{
+                      marginTop: 18,
+                      border: "1px solid #eadbe1",
+                      borderRadius: 14,
+                      background: "#fffafb",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <summary
+                      style={{
+                        minHeight: 48,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "0 16px",
+                        cursor: "pointer",
+                        color: "#3a2d32",
+                        fontSize: ".66rem",
+                        fontWeight: 900,
+                        letterSpacing: ".01em",
+                        listStyle: "none",
+                      }}
+                    >
+                      <span>Edit Custom Project Amount</span>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: 27,
+                          height: 27,
+                          border: "1px solid #e3c8d2",
+                          borderRadius: 999,
+                          background: "#fff",
+                          color: "#b64072",
+                          fontSize: ".9rem",
+                          lineHeight: 1,
+                        }}
+                      >
+                        +
+                      </span>
                     </summary>
 
-                    <form action={updateCustomProjectAmount} className={styles.actionForm} style={{ marginTop: "14px" }}>
+                    <form
+                      action={updateCustomProjectAmount}
+                      className={styles.actionForm}
+                      style={{
+                        display: "grid",
+                        gap: 14,
+                        padding: "16px",
+                        borderTop: "1px solid #f0e4e8",
+                        background: "#fff",
+                      }}
+                    >
                       <input type="hidden" name="order_id" value={order.id} />
 
-                      <label htmlFor={`custom-project-price-${order.id}`}>
-                        Project price before processing fee
+                      <label
+                        htmlFor={`custom-project-price-${order.id}`}
+                        style={{
+                          display: "grid",
+                          gap: 7,
+                          color: "#3a2d32",
+                          fontSize: ".6rem",
+                          fontWeight: 800,
+                        }}
+                      >
+                        <span>Project price before processing fee</span>
+                        <input
+                          id={`custom-project-price-${order.id}`}
+                          name="base_price"
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          inputMode="decimal"
+                          defaultValue={Number(order.base_price ?? 0).toFixed(2)}
+                          required
+                          style={{
+                            width: "100%",
+                            minHeight: 42,
+                            padding: "0 12px",
+                            border: "1px solid #e3c8d2",
+                            borderRadius: 10,
+                            background: "#fff",
+                            color: "#2f2529",
+                            font: "inherit",
+                            fontSize: ".72rem",
+                            outline: "none",
+                          }}
+                        />
                       </label>
-                      <input
-                        id={`custom-project-price-${order.id}`}
-                        name="base_price"
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        inputMode="decimal"
-                        defaultValue={Number(order.base_price ?? 0).toFixed(2)}
-                        required
-                      />
 
-                      <label htmlFor={`custom-project-reason-${order.id}`}>
-                        Reason for adjustment
+                      <label
+                        htmlFor={`custom-project-reason-${order.id}`}
+                        style={{
+                          display: "grid",
+                          gap: 7,
+                          color: "#3a2d32",
+                          fontSize: ".6rem",
+                          fontWeight: 800,
+                        }}
+                      >
+                        <span>Reason for adjustment</span>
+                        <textarea
+                          id={`custom-project-reason-${order.id}`}
+                          name="reason"
+                          rows={3}
+                          maxLength={1000}
+                          placeholder="Example: Added inventory management feature +₱4,000"
+                          required
+                          style={{
+                            width: "100%",
+                            minHeight: 92,
+                            padding: "11px 12px",
+                            border: "1px solid #e3c8d2",
+                            borderRadius: 10,
+                            background: "#fff",
+                            color: "#2f2529",
+                            font: "inherit",
+                            fontSize: ".68rem",
+                            lineHeight: 1.5,
+                            resize: "vertical",
+                            outline: "none",
+                          }}
+                        />
                       </label>
-                      <textarea
-                        id={`custom-project-reason-${order.id}`}
-                        name="reason"
-                        rows={3}
-                        maxLength={1000}
-                        placeholder="Example: Added inventory management feature +₱4,000"
-                        required
-                      />
 
-                      <div style={{ padding: "10px 12px", borderRadius: "10px", background: "#fff8fa", color: "var(--text-soft)", fontSize: "0.58rem", lineHeight: 1.6 }}>
-                        Previous successful payments will never be changed. The processing fee, customer total, and remaining balance are recalculated from the new project price. The new total cannot be lower than the amount already paid.
+                      <div
+                        style={{
+                          padding: "11px 12px",
+                          border: "1px solid #f0e1e7",
+                          borderRadius: 10,
+                          background: "#fff8fa",
+                          color: "#75656b",
+                          fontSize: ".57rem",
+                          lineHeight: 1.55,
+                        }}
+                      >
+                        Successful payments stay unchanged. The 6% processing fee,
+                        customer total, and remaining balance will recalculate from
+                        the new project price.
                       </div>
 
-                      <button type="submit">Update Project Amount</button>
+                      <button
+                        type="submit"
+                        style={{
+                          width: "100%",
+                          minHeight: 43,
+                          border: "1px solid #c84478",
+                          borderRadius: 10,
+                          background: "#d9588b",
+                          color: "#fff",
+                          font: "inherit",
+                          fontSize: ".66rem",
+                          fontWeight: 900,
+                          letterSpacing: ".01em",
+                          cursor: "pointer",
+                          boxShadow: "0 8px 18px rgba(201, 68, 120, 0.16)",
+                        }}
+                      >
+                        Update Project Amount
+                      </button>
                     </form>
                   </details>
                 ) : null}
@@ -526,57 +794,156 @@ export default async function OrderDetailsPage({
               order.order_status !== "CANCELLED" &&
               amountPaid > 0 &&
               balanceDue > 0.005 ? (
-                <section className={styles.card}>
+                <section
+                  className={styles.card}
+                  style={{
+                    overflow: "hidden",
+                    border: "1px solid #e8cbd7",
+                    background: "linear-gradient(180deg, #fff 0%, #fff8fb 100%)",
+                    boxShadow: "0 10px 30px rgba(141, 82, 103, 0.07)",
+                  }}
+                >
                   <div className={styles.cardHeader}>
                     <span>BALANCE PAYMENT</span>
-                    <h2>Request final / additional payment</h2>
+                    <h2>Request remaining balance</h2>
                   </div>
 
-                  <div className={styles.referenceList}>
-                    <div>
-                      <span>Amount already paid</span>
-                      <strong>{formatMoney(amountPaid)}</strong>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                      borderTop: "1px solid #f0e4e8",
+                      borderBottom: "1px solid #f0e4e8",
+                    }}
+                  >
+                    <div style={{ padding: "15px 16px", borderRight: "1px solid #f0e4e8" }}>
+                      <span style={{ display: "block", color: "var(--text-light)", fontSize: ".57rem", fontWeight: 800 }}>
+                        PAID
+                      </span>
+                      <strong style={{ display: "block", marginTop: 5, fontSize: ".92rem" }}>
+                        {formatMoney(amountPaid)}
+                      </strong>
                     </div>
-                    <div>
-                      <span>Current remaining balance</span>
-                      <strong>{formatMoney(balanceDue)}</strong>
+
+                    <div style={{ padding: "15px 16px", borderRight: "1px solid #f0e4e8" }}>
+                      <span style={{ display: "block", color: "var(--text-light)", fontSize: ".57rem", fontWeight: 800 }}>
+                        REMAINING
+                      </span>
+                      <strong style={{ display: "block", marginTop: 5, fontSize: ".92rem", color: "#b64072" }}>
+                        {formatMoney(balanceDue)}
+                      </strong>
                     </div>
-                    <div>
-                      <span>Last activated</span>
-                      <strong>{formatDateTime(order.final_payment_requested_at)}</strong>
+
+                    <div style={{ padding: "15px 16px" }}>
+                      <span style={{ display: "block", color: "var(--text-light)", fontSize: ".57rem", fontWeight: 800 }}>
+                        LAST ACTIVATED
+                      </span>
+                      <strong style={{ display: "block", marginTop: 5, fontSize: ".72rem" }}>
+                        {formatDateTime(order.final_payment_requested_at)}
+                      </strong>
                     </div>
                   </div>
 
-                  <div className={styles.cardBody}>
-                    <p>
-                      Activate the current balance when it is ready to be collected.
-                      This works for the second 50% payment and for any later amount
-                      added after a scope change.
+                  <div
+                    className={styles.cardBody}
+                    style={{ paddingBottom: 6 }}
+                  >
+                    <p style={{ marginBottom: 0 }}>
+                      Activate the current remaining balance when it is ready to be collected.
+                      The customer will continue using the same private checkout link.
                     </p>
-                    <p>
-                      The customer keeps using the same private custom checkout link.
-                      If a pending balance request already exists, this button refreshes
-                      it to the latest saved balance instead of creating a duplicate.
-                    </p>
                   </div>
 
-                  <form action={requestCustomProjectPayment}>
+                  <form
+                    action={requestCustomProjectPayment}
+                    style={{ padding: "8px 16px 18px" }}
+                  >
                     <input type="hidden" name="order_id" value={order.id} />
-                    <button type="submit">
+                    <button
+                      type="submit"
+                      style={{
+                        width: "100%",
+                        minHeight: 44,
+                        border: "1px solid #c84478",
+                        borderRadius: 12,
+                        background: "#d9588b",
+                        color: "#fff",
+                        font: "inherit",
+                        fontSize: ".68rem",
+                        fontWeight: 900,
+                        letterSpacing: ".01em",
+                        cursor: "pointer",
+                        boxShadow: "0 8px 20px rgba(201, 68, 120, 0.18)",
+                      }}
+                    >
                       Request {formatMoney(balanceDue)} →
                     </button>
                   </form>
                 </section>
               ) : null}
 
-              {isCustomQuotationOrder && order.payment_status !== "COMPLETED" && order.order_status !== "CANCELLED" ? (
-                <section className={styles.checkoutCard}>
-                  <span>PRIVATE PAYMENT CHECKOUT</span><h2>Customer payment link</h2>
-                  {query.checkout_created === "1" ? <div className={styles.checkoutCreated}>Checkout created successfully.</div> : null}
-                  <p>This secure link always uses the latest saved project balance. The customer can pay through PayPal or QR Ph when a payment stage is active.</p>
-                  <div className={styles.checkoutUrl}><code>/checkout/custom/{order.receipt_token}</code></div>
-                  <CopyPaymentLinkButton path={`/checkout/custom/${order.receipt_token}`} />
-                  <a href={`/checkout/custom/${order.receipt_token}`} target="_blank" rel="noreferrer">Open Payment Checkout →</a>
+              {isCustomQuotationOrder &&
+              order.payment_status !== "COMPLETED" &&
+              order.order_status !== "CANCELLED" ? (
+                <section
+                  className={styles.checkoutCard}
+                  style={{
+                    border: "1px solid #e8cbd7",
+                    borderRadius: 18,
+                    background: "#fff",
+                    boxShadow: "0 10px 28px rgba(99, 55, 72, 0.06)",
+                  }}
+                >
+                  <span>PRIVATE PAYMENT CHECKOUT</span>
+                  <h2>Customer payment link</h2>
+
+                  {query.checkout_created === "1" ? (
+                    <div className={styles.checkoutCreated}>
+                      Checkout created successfully.
+                    </div>
+                  ) : null}
+
+                  <p style={{ marginBottom: 14 }}>
+                    Reuse this private link for every active custom-project payment.
+                  </p>
+
+                  <div
+                    className={styles.checkoutUrl}
+                    style={{
+                      marginBottom: 10,
+                      padding: "11px 12px",
+                      borderRadius: 10,
+                      background: "#fbf8f9",
+                    }}
+                  >
+                    <code>/checkout/custom/{order.receipt_token}</code>
+                  </div>
+
+                  <div style={{ display: "grid", gap: 9 }}>
+                    <CopyPaymentLinkButton
+                      path={`/checkout/custom/${order.receipt_token}`}
+                    />
+
+                    <a
+                      href={`/checkout/custom/${order.receipt_token}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        minHeight: 42,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 11,
+                        background: "#2f2529",
+                        color: "#fff",
+                        fontSize: ".65rem",
+                        fontWeight: 900,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Open Payment Checkout →
+                    </a>
+                  </div>
                 </section>
               ) : null}
 

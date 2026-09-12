@@ -120,10 +120,18 @@ export default async function AdminQuotationRequestsPage() {
               </div>
 
               <div className={styles.topbarActions}>
+                <Link
+                  className={styles.primaryButton}
+                  href="/admin/quotation-requests/new"
+                >
+                  + Add Manual Quotation
+                </Link>
+
                 <Link className={styles.secondaryButton} href="/admin">
                   Dashboard
                 </Link>
-                <Link className={styles.primaryButton} href="/">
+
+                <Link className={styles.secondaryButton} href="/">
                   View Store
                 </Link>
               </div>
@@ -278,6 +286,13 @@ export default async function AdminQuotationRequestsPage() {
                     New quotation requests submitted through the store will
                     appear here.
                   </p>
+
+                  <Link
+                    className={styles.primaryButton}
+                    href="/admin/quotation-requests/new"
+                  >
+                    + Add Manual Quotation
+                  </Link>
                 </div>
               )}
             </section>

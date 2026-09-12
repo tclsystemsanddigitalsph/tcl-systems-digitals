@@ -8,6 +8,70 @@ import styles from "./quote.module.css";
 
 export const dynamic = "force-dynamic";
 
+function QuotationLayout({
+  productName,
+  productSlug,
+  category,
+  backHref,
+}: {
+  productName: string;
+  productSlug: string;
+  category: string;
+  backHref: string;
+}) {
+  return (
+    <>
+      <SiteHeader />
+
+      <main className={styles.page}>
+        <section className={styles.hero}>
+          <div className={`container ${styles.heroInner}`}>
+            <div>
+              <span className="section-kicker">Request a Quotation</span>
+              <h1>Tell us what you want to build.</h1>
+              <p>
+                Share your project idea, who will use it, how it should work,
+                the features you may need, and the problem you want it to solve.
+                TCL will review the actual scope before preparing a quotation.
+              </p>
+            </div>
+
+            <aside className={styles.productCard}>
+              <small>Selected service</small>
+              <strong>{productName}</strong>
+              <span>{category}</span>
+              <b>For Quotation</b>
+            </aside>
+          </div>
+        </section>
+
+        <section className={styles.formSection}>
+          <div className="container">
+            <div className={styles.topline}>
+              <Link href={backHref} className={styles.back}>
+                ← Back to Product
+              </Link>
+
+              <span>
+                For business, personal, educational, organization, and custom
+                web system projects.
+              </span>
+            </div>
+
+            <QuoteForm
+              productName={productName}
+              productSlug={productSlug}
+              category={category}
+            />
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter />
+    </>
+  );
+}
+
 export default async function QuotePage({
   params,
 }: {
@@ -15,71 +79,21 @@ export default async function QuotePage({
 }) {
   const { slug } = await params;
 
-  /*
-   * The custom-business-website quotation page must always be available.
-   * It is a permanent custom-service entry point used by the homepage,
-   * product page, and site header.
-   *
-   * We still try to load the catalog record so the displayed name/category
-   * stay synced with Admin when the product exists.
-   */
   if (slug === "custom-business-website") {
     const catalogProduct = await getCatalogProduct(slug);
 
     const productName =
       catalogProduct?.name?.trim() || "Custom Business Website";
     const productCategory =
-      catalogProduct?.category?.trim() || "Websites";
+      catalogProduct?.category?.trim() || "Custom Development";
 
     return (
-      <>
-        <SiteHeader />
-
-        <main className={styles.page}>
-          <section className={styles.hero}>
-            <div className={`container ${styles.heroInner}`}>
-              <div>
-                <span className="section-kicker">Request a Quotation</span>
-                <h1>Tell us what your business needs.</h1>
-                <p>
-                  Answer the questions below so TCL can understand your setup,
-                  required features, and project scope before preparing a quote.
-                </p>
-              </div>
-
-              <aside className={styles.productCard}>
-                <small>Selected service</small>
-                <strong>{productName}</strong>
-                <span>{productCategory}</span>
-                <b>For Quotation</b>
-              </aside>
-            </div>
-          </section>
-
-          <section className={styles.formSection}>
-            <div className="container">
-              <div className={styles.topline}>
-                <Link
-                  href="/shop/custom-business-website"
-                  className={styles.back}
-                >
-                  ← Back to Product
-                </Link>
-
-                <span>Usually takes only a few minutes to complete.</span>
-              </div>
-
-              <QuoteForm
-                productName={productName}
-                productSlug="custom-business-website"
-                category={productCategory}
-              />
-            </div>
-          </section>
-        </main>
-
-        <SiteFooter />
-      </>
+      <QuotationLayout
+        productName={productName}
+        productSlug="custom-business-website"
+        category={productCategory}
+        backHref="/shop/custom-business-website"
+      />
     );
   }
 
@@ -124,53 +138,11 @@ export default async function QuotePage({
   }
 
   return (
-    <>
-      <SiteHeader />
-
-      <main className={styles.page}>
-        <section className={styles.hero}>
-          <div className={`container ${styles.heroInner}`}>
-            <div>
-              <span className="section-kicker">Request a Quotation</span>
-              <h1>Tell us what your business needs.</h1>
-              <p>
-                Answer the questions below so TCL can understand your setup,
-                required features, and project scope before preparing a quote.
-              </p>
-            </div>
-
-            <aside className={styles.productCard}>
-              <small>Selected service</small>
-              <strong>{product.name}</strong>
-              <span>{product.category}</span>
-              <b>For Quotation</b>
-            </aside>
-          </div>
-        </section>
-
-        <section className={styles.formSection}>
-          <div className="container">
-            <div className={styles.topline}>
-              <Link
-                href={`/shop/${encodeURIComponent(product.slug)}`}
-                className={styles.back}
-              >
-                ← Back to Product
-              </Link>
-
-              <span>Usually takes only a few minutes to complete.</span>
-            </div>
-
-            <QuoteForm
-              productName={product.name}
-              productSlug={product.slug}
-              category={product.category}
-            />
-          </div>
-        </section>
-      </main>
-
-      <SiteFooter />
-    </>
+    <QuotationLayout
+      productName={product.name}
+      productSlug={product.slug}
+      category={product.category}
+      backHref={`/shop/${encodeURIComponent(product.slug)}`}
+    />
   );
 }

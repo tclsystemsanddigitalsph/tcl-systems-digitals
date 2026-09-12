@@ -64,14 +64,32 @@ export default async function ProductPage({
             </nav>
 
             <div className="shop-hero-inner">
-              <span className="section-kicker">{product.category}</span>
+              {isCustomBusinessWebsite ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: 8,
+                    marginBottom: 14,
+                  }}
+                >
+                  <span className="shop-category-button">FOR QUOTATION</span>
+                  <span className="section-kicker" style={{ margin: 0 }}>
+                    {product.category}
+                  </span>
+                </div>
+              ) : (
+                <span className="section-kicker">{product.category}</span>
+              )}
+
               <h1>{product.name}</h1>
 
               {product.short_description ? (
                 <p>{product.short_description}</p>
               ) : null}
 
-              {product.badge ? (
+              {!isCustomBusinessWebsite && product.badge ? (
                 <span className="shop-category-button">{product.badge}</span>
               ) : null}
 

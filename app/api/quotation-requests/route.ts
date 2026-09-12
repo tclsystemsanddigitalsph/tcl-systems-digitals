@@ -10,6 +10,8 @@ type QuotePayload = {
   email?: unknown;
   contactNumber?: unknown;
   preferredContact?: unknown;
+
+  projectContext?: unknown;
   businessType?: unknown;
   businessLocation?: unknown;
   businessAge?: unknown;
@@ -17,6 +19,12 @@ type QuotePayload = {
   locationCount?: unknown;
   currentLink?: unknown;
   existingWebsite?: unknown;
+
+  userTypes?: unknown;
+  accessModel?: unknown;
+  adminRequirements?: unknown;
+  deviceRequirements?: unknown;
+
   visitorActions?: unknown;
   selfManage?: unknown;
   userAccounts?: unknown;
@@ -24,6 +32,7 @@ type QuotePayload = {
   onlinePayments?: unknown;
   integrationNeeded?: unknown;
   uncertaintyNotes?: unknown;
+
   offerings?: unknown;
   currentProcess?: unknown;
   mainProblems?: unknown;
@@ -34,6 +43,12 @@ type QuotePayload = {
   deliveryNeeds?: unknown;
   adminAccess?: unknown;
   integrations?: unknown;
+
+  dataManagement?: unknown;
+  recurringChanges?: unknown;
+  usageRules?: unknown;
+  resultsReporting?: unknown;
+
   logoReady?: unknown;
   brandingReady?: unknown;
   contentReady?: unknown;
@@ -61,8 +76,8 @@ function cleanFeatures(value: unknown) {
     .filter((item): item is string => typeof item === "string")
     .map((item) => item.trim())
     .filter(Boolean)
-    .slice(0, 100)
-    .map((item) => item.slice(0, 200));
+    .slice(0, 150)
+    .map((item) => item.slice(0, 220));
 }
 
 function getAdminClient() {
@@ -120,21 +135,25 @@ export async function POST(request: Request) {
     }
 
     const fullName = requiredString(body.fullName, "Full name", 200);
-    const businessName = requiredString(
+    const projectName = requiredString(
       body.businessName,
-      "Business / project name",
+      "Project / business / organization name",
       200,
     );
     const email = requiredString(body.email, "Email", 320);
-    const contactNumber = requiredString(body.contactNumber, "Contact number", 200);
-    const businessType = requiredString(body.businessType, "Project type", 300);
+    const contactNumber = requiredString(
+      body.contactNumber,
+      "Contact number",
+      200,
+    );
+    const projectType = requiredString(body.businessType, "Project type", 300);
     const offerings = requiredString(
       body.offerings,
-      "Website purpose / content",
+      "Project purpose / content",
     );
-    const visitorActions = requiredString(
+    const userActions = requiredString(
       body.visitorActions,
-      "What visitors should be able to do",
+      "What users should be able to do",
     );
     const mainProblems = requiredString(body.mainProblems, "Project needs");
     const mainGoal = requiredString(body.mainGoal, "Project goal");
@@ -155,39 +174,56 @@ export async function POST(request: Request) {
         product_slug: product.slug,
         product_name: product.name,
         category: product.category,
+
         full_name: fullName,
-        business_name: businessName,
+        business_name: projectName,
         email,
         contact_number: contactNumber,
         preferred_contact: cleanString(body.preferredContact, 100),
-        business_type: businessType,
+
+        project_context: cleanString(body.projectContext, 200),
+        business_type: projectType,
         business_location: cleanString(body.businessLocation, 300),
-        business_age: cleanString(body.businessAge, 100),
-        staff_count: cleanString(body.staffCount, 100),
-        location_count: cleanString(body.locationCount, 100),
+        business_age: cleanString(body.businessAge, 150),
+        staff_count: cleanString(body.staffCount, 150),
+        location_count: cleanString(body.locationCount, 150),
         current_link: cleanString(body.currentLink, 1000),
         existing_website: cleanString(body.existingWebsite, 200),
-        visitor_actions: visitorActions,
+
+        user_types: cleanString(body.userTypes, 1200),
+        access_model: cleanString(body.accessModel, 1200),
+        admin_requirements: cleanString(body.adminRequirements),
+        device_requirements: cleanString(body.deviceRequirements, 1000),
+
+        visitor_actions: userActions,
         self_manage: cleanString(body.selfManage, 300),
-        user_accounts: cleanString(body.userAccounts, 200),
+        user_accounts: cleanString(body.userAccounts, 300),
         sell_online: cleanString(body.sellOnline, 300),
         online_payments: cleanString(body.onlinePayments, 200),
         integration_needed: cleanString(body.integrationNeeded, 200),
         uncertainty_notes: cleanString(body.uncertaintyNotes),
+
         offerings,
         current_process: cleanString(body.currentProcess),
         main_problems: mainProblems,
         selected_features: cleanFeatures(body.selectedFeatures),
         main_goal: mainGoal,
-        expected_volume: cleanString(body.expectedVolume, 300),
+        expected_volume: cleanString(body.expectedVolume, 500),
         payment_methods: cleanString(body.paymentMethods, 500),
         delivery_needs: cleanString(body.deliveryNeeds, 1000),
-        admin_access: cleanString(body.adminAccess, 1000),
+        admin_access: cleanString(body.adminAccess, 1200),
         integrations: cleanString(body.integrations),
+
+        data_management: cleanString(body.dataManagement),
+        recurring_changes: cleanString(body.recurringChanges),
+        usage_rules: cleanString(body.usageRules),
+        results_reporting: cleanString(body.resultsReporting),
+
         logo_ready: cleanString(body.logoReady, 100),
         branding_ready: cleanString(body.brandingReady, 100),
         content_ready: cleanString(body.contentReady, 100),
         domain_status: cleanString(body.domainStatus, 200),
+
         budget,
         timeline,
         notes: cleanString(body.notes),

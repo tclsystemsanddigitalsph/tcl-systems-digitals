@@ -9,30 +9,60 @@ type Props = {
   category: string;
 };
 
+const projectContextOptions = [
+  "Business / commercial",
+  "Personal",
+  "School / education",
+  "Teacher / classroom use",
+  "Student project",
+  "Organization / community",
+  "Professional / portfolio",
+  "Internal team / office use",
+  "Event / campaign",
+  "Other",
+];
+
+const projectTypeOptions = [
+  "Business / information website",
+  "Booking / appointment system",
+  "Quiz / reviewer / exam system",
+  "Online shop / e-commerce",
+  "Admin / management system",
+  "Client / customer portal",
+  "Member / student portal",
+  "Portfolio / professional website",
+  "Personal website",
+  "Blog / publication",
+  "Organization / advocacy website",
+  "Event / registration system",
+  "Landing page / campaign website",
+  "Custom web application / system",
+  "Other / not sure yet",
+];
+
 const featureGroups = [
   {
     title: "Pages & content",
-    description: "Choose the pages or content areas you may want.",
+    description: "For websites, portals, and information-based projects.",
     options: [
       "Home / landing page",
-      "About page",
-      "Services page",
+      "About / information page",
+      "Services",
       "Products / catalog",
       "Portfolio / projects",
-      "Gallery",
+      "Gallery / media",
       "Blog / articles",
-      "Advocacy / information pages",
       "Pricing / packages",
-      "FAQ page",
+      "FAQ",
       "Testimonials / reviews",
-      "Team / staff profiles",
-      "Locations / branches",
+      "Profiles / directory",
       "Policies / legal pages",
+      "Custom content pages",
     ],
   },
   {
-    title: "Forms & visitor actions",
-    description: "What should visitors be able to do on the website?",
+    title: "Forms, bookings & submissions",
+    description: "Ways users can send information or complete actions.",
     options: [
       "Contact form",
       "Inquiry form",
@@ -41,18 +71,74 @@ const featureGroups = [
       "Reservation system",
       "Event registration",
       "Application form",
+      "Quiz / test / exam form",
+      "Survey / assessment",
       "Custom forms",
-      "Newsletter signup",
       "File uploads",
-      "Search",
+      "Document submission",
+    ],
+  },
+  {
+    title: "Accounts, access & permissions",
+    description: "For projects that need logins or different user roles.",
+    options: [
+      "Admin dashboard",
+      "One admin only",
+      "Multiple admins",
+      "Individual user accounts",
+      "Student accounts",
+      "Teacher accounts",
+      "Customer / client accounts",
+      "Member accounts",
+      "Staff accounts",
+      "Role-based permissions",
+      "Private / restricted content",
+      "Account approval",
+      "Password reset",
+    ],
+  },
+  {
+    title: "Management & data",
+    description: "For systems where the admin creates or manages records.",
+    options: [
+      "Content management",
+      "Create / edit / delete records",
+      "Bulk import / upload",
+      "CSV / spreadsheet import",
+      "Search / filters",
       "Categories / tags",
-      "Social media links",
-      "Telegram / Messenger / WhatsApp contact",
+      "Status management",
+      "Approval workflow",
+      "Data export",
+      "Reports / analytics",
+      "Activity / history log",
+      "Custom dashboard workflow",
+    ],
+  },
+  {
+    title: "Quiz, reviewer & learning features",
+    description: "Useful for education, training, assessments, or reviewer systems.",
+    options: [
+      "Multiple questionnaire / exam sets",
+      "Question bank",
+      "Manual question creation",
+      "Bulk question import",
+      "One question at a time",
+      "Multiple-choice questions",
+      "Attempt limits",
+      "Unlimited attempts",
+      "Instant result / score",
+      "Answer review",
+      "Reveal correct answer after each question",
+      "Reveal correct answers after completion",
+      "Randomized questions",
+      "Randomized answer choices",
+      "Progress tracking",
     ],
   },
   {
     title: "Selling & payments",
-    description: "Useful for shops, paid services, digital products, and memberships.",
+    description: "For shops, paid services, subscriptions, or paid access.",
     options: [
       "Online shop / cart",
       "Online payments",
@@ -60,62 +146,46 @@ const featureGroups = [
       "Digital product delivery",
       "Inventory tracking",
       "Product variants",
-      "Shipping / delivery options",
-      "Pickup options",
-      "Promo or discount tools",
+      "Shipping / delivery",
+      "Pickup",
+      "Promo / discount tools",
+      "Subscriptions / memberships",
     ],
   },
   {
-    title: "Accounts & management",
-    description: "For websites that need an editable backend or user access.",
+    title: "Notifications & automation",
+    description: "For projects that need alerts or automatic actions.",
     options: [
-      "Admin dashboard",
-      "Content management",
-      "Customer accounts",
-      "Member accounts",
-      "Member-only content",
-      "Customer database",
-      "Staff accounts",
-      "Multiple staff schedules",
-      "Multiple business locations",
-      "Reports / analytics",
       "Email notifications",
       "Automated emails",
-      "Custom dashboard workflow",
+      "Admin notifications",
+      "User notifications",
+      "Booking reminders",
+      "Status updates",
+      "Custom workflow automation",
+      "Scheduled actions",
     ],
   },
   {
-    title: "Technical & setup",
-    description: "Optional technical features and integrations.",
+    title: "Technical & integrations",
+    description: "Optional setup and connections with other services.",
     options: [
       "Third-party integrations",
-      "Google Calendar integration",
-      "Domain setup assistance",
-      "Basic SEO setup",
-      "Analytics setup",
-      "Custom workflow automation",
-      "Multi-language website",
+      "Google Calendar",
+      "Google Sheets",
+      "Email / Gmail",
+      "Payment provider integration",
+      "Analytics",
+      "Basic SEO",
+      "Custom domain setup",
+      "Multi-language",
+      "Mobile-friendly responsive design",
       "Not sure yet — recommend what I need",
     ],
   },
 ] as const;
 
 const featureOptions = featureGroups.flatMap((group) => [...group.options]);
-
-const projectTypeOptions = [
-  "Business website",
-  "Booking / service website",
-  "Online shop / e-commerce",
-  "Portfolio / professional website",
-  "Personal website",
-  "Blog / publication",
-  "Advocacy / organization website",
-  "Event website",
-  "Membership / community website",
-  "Landing page / campaign website",
-  "Custom web system",
-  "Other / not sure yet",
-];
 
 const budgetOptions = [
   "Below ₱5,000",
@@ -258,11 +328,14 @@ export default function QuoteForm({
       productSlug,
       productName,
       category,
+
       fullName: value("full_name"),
       businessName: value("business_name"),
       email: value("email"),
       contactNumber: value("contact_number"),
       preferredContact: value("preferred_contact"),
+
+      projectContext: value("project_context"),
       businessType: value("business_type"),
       businessLocation: value("business_location"),
       businessAge: value("business_age"),
@@ -270,6 +343,12 @@ export default function QuoteForm({
       locationCount: value("location_count"),
       currentLink: value("current_link"),
       existingWebsite: value("existing_website"),
+
+      userTypes: value("user_types"),
+      accessModel: value("access_model"),
+      adminRequirements: value("admin_requirements"),
+      deviceRequirements: value("device_requirements"),
+
       visitorActions: value("visitor_actions"),
       selfManage: value("self_manage"),
       userAccounts: value("user_accounts"),
@@ -277,6 +356,7 @@ export default function QuoteForm({
       onlinePayments: value("online_payments"),
       integrationNeeded: value("integration_needed"),
       uncertaintyNotes: value("uncertainty_notes"),
+
       offerings: value("offerings"),
       currentProcess: value("current_process"),
       mainProblems: value("main_problems"),
@@ -287,6 +367,12 @@ export default function QuoteForm({
       deliveryNeeds: value("delivery_needs"),
       adminAccess: value("admin_access"),
       integrations: value("integrations"),
+
+      dataManagement: value("data_management"),
+      recurringChanges: value("recurring_changes"),
+      usageRules: value("usage_rules"),
+      resultsReporting: value("results_reporting"),
+
       logoReady: value("logo_ready"),
       brandingReady: value("branding_ready"),
       contentReady: value("content_ready"),
@@ -322,59 +408,49 @@ export default function QuoteForm({
           : "• No specific features selected yet";
 
       const message = [
-        "TCL QUOTATION REQUEST",
+        "TCL CUSTOM PROJECT QUOTATION REQUEST",
         "",
         `Request ID: ${result.requestId ?? "Saved"}`,
         `Service: ${productName}`,
         `Category: ${category}`,
         "",
-        "CONTACT DETAILS",
+        "CONTACT",
         `Name: ${displayValue(payload.fullName)}`,
-        `Business / project name: ${displayValue(payload.businessName)}`,
+        `Project / business / organization: ${displayValue(payload.businessName)}`,
         `Email: ${displayValue(payload.email)}`,
         `Mobile / Telegram: ${displayValue(payload.contactNumber)}`,
         `Preferred contact: ${displayValue(payload.preferredContact)}`,
         "",
-        "PROJECT DETAILS",
+        "PROJECT",
+        `Context: ${displayValue(payload.projectContext)}`,
         `Project type: ${displayValue(payload.businessType)}`,
-        `Location / audience area: ${displayValue(payload.businessLocation)}`,
-        `Project / business stage: ${displayValue(payload.businessAge)}`,
-        `Team size: ${displayValue(payload.staffCount)}`,
-        `Number of locations: ${displayValue(payload.locationCount)}`,
-        `Existing website / social link: ${displayValue(payload.currentLink)}`,
-        `Already has a website: ${displayValue(payload.existingWebsite)}`,
-        `Products, services, content, or purpose: ${displayValue(payload.offerings)}`,
+        `Purpose / content: ${displayValue(payload.offerings)}`,
+        `Main goal: ${displayValue(payload.mainGoal)}`,
+        `Problem to solve: ${displayValue(payload.mainProblems)}`,
         "",
-        "HOW THE WEBSITE SHOULD WORK",
-        `What visitors should be able to do: ${displayValue(payload.visitorActions)}`,
-        `Needs to update website themselves: ${displayValue(payload.selfManage)}`,
-        `Needs user/customer accounts: ${displayValue(payload.userAccounts)}`,
-        `Will sell online: ${displayValue(payload.sellOnline)}`,
-        `Needs online payments: ${displayValue(payload.onlinePayments)}`,
-        `Needs platform integrations: ${displayValue(payload.integrationNeeded)}`,
-        `Unsure / wants TCL recommendation: ${displayValue(payload.uncertaintyNotes)}`,
+        "USERS & ACCESS",
+        `Who will use it: ${displayValue(payload.userTypes)}`,
+        `Account / access setup: ${displayValue(payload.accessModel)}`,
+        `Admin needs: ${displayValue(payload.adminRequirements)}`,
+        `Expected users / activity: ${displayValue(payload.expectedVolume)}`,
         "",
-        "CURRENT SETUP",
-        `Current process / setup: ${displayValue(payload.currentProcess)}`,
-        `Main problems / needs: ${displayValue(payload.mainProblems)}`,
+        "WORKFLOW",
+        `What users should be able to do: ${displayValue(payload.visitorActions)}`,
+        `Current process: ${displayValue(payload.currentProcess)}`,
+        `Data / content management: ${displayValue(payload.dataManagement)}`,
+        `Recurring changes: ${displayValue(payload.recurringChanges)}`,
+        `Rules / limits: ${displayValue(payload.usageRules)}`,
+        `Results / reports: ${displayValue(payload.resultsReporting)}`,
         "",
-        "PROJECT REQUIREMENTS",
+        "FEATURES",
         featureText,
         "",
-        `Main goal: ${displayValue(payload.mainGoal)}`,
-        `Expected visitors / customers / bookings / orders: ${displayValue(
-          payload.expectedVolume,
-        )}`,
-        `Payment methods needed: ${displayValue(payload.paymentMethods)}`,
-        `Delivery / fulfillment needs: ${displayValue(payload.deliveryNeeds)}`,
-        `Admin / editor access needs: ${displayValue(payload.adminAccess)}`,
-        `Integrations / tools: ${displayValue(payload.integrations)}`,
-        "",
-        "BRANDING & CONTENT",
-        `Logo ready: ${displayValue(payload.logoReady)}`,
-        `Brand colors / style ready: ${displayValue(payload.brandingReady)}`,
-        `Photos / written content ready: ${displayValue(payload.contentReady)}`,
-        `Domain status: ${displayValue(payload.domainStatus)}`,
+        "TECHNICAL / MANAGEMENT",
+        `Admin / editor access: ${displayValue(payload.adminAccess)}`,
+        `Devices: ${displayValue(payload.deviceRequirements)}`,
+        `Integrations: ${displayValue(payload.integrations)}`,
+        `Online payments: ${displayValue(payload.onlinePayments)}`,
+        `Payment methods: ${displayValue(payload.paymentMethods)}`,
         "",
         "BUDGET & TIMELINE",
         `Budget: ${displayValue(payload.budget)}`,
@@ -393,9 +469,7 @@ export default function QuoteForm({
       setSubmitted(true);
 
       window.open(
-        `https://t.me/tclsystemsanddigitalsph?text=${encodeURIComponent(
-          message,
-        )}`,
+        `https://t.me/tclsystemsanddigitalsph?text=${encodeURIComponent(message)}`,
         "_blank",
         "noopener,noreferrer",
       );
@@ -434,11 +508,11 @@ export default function QuoteForm({
           </label>
 
           <label>
-            Business / project / brand name *
+            Project / business / organization name *
             <input
               name="business_name"
               required
-              placeholder="Business, organization, blog, personal brand, etc."
+              placeholder="Project name, school, business, organization, personal brand, etc."
             />
           </label>
 
@@ -467,6 +541,7 @@ export default function QuoteForm({
               <option>Telegram</option>
               <option>Email</option>
               <option>Mobile</option>
+              <option>Messenger</option>
             </select>
           </label>
         </div>
@@ -476,18 +551,29 @@ export default function QuoteForm({
         <div className={styles.sectionHeading}>
           <span>02</span>
           <div>
-            <h2>What are you building?</h2>
+            <h2>Project type & purpose</h2>
             <p>
-              This form works for businesses, professionals, creators,
-              organizations, blogs, portfolios, personal sites, shops, and
-              custom systems.
+              Tell us what kind of project this is. It does not have to be for a
+              business.
             </p>
           </div>
         </div>
 
         <div className={styles.gridTwo}>
           <label>
-            Project type *
+            This project is mainly for *
+            <select name="project_context" required defaultValue="">
+              <option value="" disabled>
+                Select
+              </option>
+              {projectContextOptions.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            What are you building? *
             <select name="business_type" required defaultValue="">
               <option value="" disabled>
                 Select a project type
@@ -502,55 +588,67 @@ export default function QuoteForm({
             Location / audience area
             <input
               name="business_location"
-              placeholder="City / country, worldwide, or online only"
+              placeholder="Philippines, worldwide, school only, online only, etc."
             />
           </label>
 
           <label>
-            Project / business stage
+            Project stage
             <select name="business_age" defaultValue="">
               <option value="">Select</option>
+              <option>Idea / planning stage</option>
               <option>Not launched yet</option>
-              <option>New / under 1 year</option>
-              <option>1–3 years</option>
-              <option>3–5 years</option>
-              <option>5+ years</option>
-              <option>Personal / not a business</option>
+              <option>Already using a manual process</option>
+              <option>Existing system needs improvement</option>
+              <option>Existing website needs replacement</option>
+              <option>Already active / operating</option>
             </select>
           </label>
 
           <label>
-            Team size
+            People managing the project
             <input
               name="staff_count"
-              placeholder="Solo, small team, organization, not applicable"
+              placeholder="Just me, 1 teacher, small team, office staff, etc."
             />
           </label>
 
           <label>
-            Number of physical locations
+            Locations / groups / branches
             <input
               name="location_count"
-              placeholder="1, multiple, online only, or not applicable"
+              placeholder="1 school, multiple branches, one group, not applicable"
             />
           </label>
 
           <label>
-            Existing website / social page
+            Existing website / form / system / page
             <input
               name="current_link"
-              placeholder="Website, Facebook, Instagram, blog, portfolio, etc."
+              placeholder="Website, Google Form, Facebook page, existing app, etc."
             />
+          </label>
+
+          <label>
+            Do you already have an existing website or system?
+            <select name="existing_website" defaultValue="No">
+              <option>Yes</option>
+              <option>No</option>
+              <option>Only social media / another platform</option>
+              <option>Using Google Forms / spreadsheets / manual tools</option>
+              <option>Currently being built</option>
+              <option>Not sure</option>
+            </select>
           </label>
         </div>
 
         <label>
-          What will the website represent or contain? *
+          Describe the project and what it is for *
           <textarea
             name="offerings"
             required
             rows={4}
-            placeholder="Tell us about your services, products, articles, advocacy, portfolio, organization, personal content, or other purpose."
+            placeholder="Example: a reviewer system for students, booking website for clients, internal record system, portfolio, online shop, information site, or another custom idea."
           />
         </label>
       </section>
@@ -559,93 +657,69 @@ export default function QuoteForm({
         <div className={styles.sectionHeading}>
           <span>03</span>
           <div>
-            <h2>How should the website work?</h2>
+            <h2>Users & access</h2>
             <p>
-              These questions help TCL understand the actual experience you need,
-              even if you are not sure which technical features are required.
+              Who will use the project, and does anyone need a private account or
+              special access?
             </p>
           </div>
         </div>
 
         <label>
-          What should visitors be able to do on the website? *
+          Who will use it?
           <textarea
-            name="visitor_actions"
-            required
-            rows={4}
-            placeholder="Example: read articles, browse services, send inquiries, book appointments, buy products, register for events, view my portfolio, download files, or simply learn more about me."
+            name="user_types"
+            rows={3}
+            placeholder="Example: only me, one teacher/admin, students, customers, staff, members, public visitors, or different types of users."
           />
         </label>
 
         <div className={styles.gridTwo}>
           <label>
-            Do you already have an existing website?
-            <select name="existing_website" defaultValue="No">
-              <option>Yes</option>
-              <option>No</option>
-              <option>Currently being built</option>
-              <option>Only social media / another platform</option>
-              <option>Not sure</option>
-            </select>
-          </label>
-
-          <label>
-            Do you need to update the website yourself?
-            <select name="self_manage" defaultValue="Not sure">
-              <option>Yes — I want to manage content myself</option>
-              <option>No — I can request future updates</option>
-              <option>Only certain parts</option>
-              <option>Not sure</option>
-            </select>
-          </label>
-
-          <label>
-            Do you need user / customer accounts?
+            Do users need their own accounts?
             <select name="user_accounts" defaultValue="No">
-              <option>Yes</option>
               <option>No</option>
+              <option>Yes — individual accounts</option>
+              <option>Yes — shared/group accounts</option>
+              <option>Only admin accounts</option>
               <option>Maybe / not sure</option>
             </select>
           </label>
 
           <label>
-            Will you sell anything online?
-            <select name="sell_online" defaultValue="No">
-              <option>No</option>
-              <option>Physical products</option>
-              <option>Digital products</option>
-              <option>Services</option>
-              <option>Subscriptions / memberships</option>
-              <option>Multiple types</option>
-              <option>Maybe / not sure</option>
-            </select>
-          </label>
-
-          <label>
-            Do you need online payments?
-            <select name="online_payments" defaultValue="No">
-              <option>Yes</option>
-              <option>No</option>
-              <option>Maybe / not sure</option>
-            </select>
-          </label>
-
-          <label>
-            Do you need integrations with another platform?
-            <select name="integration_needed" defaultValue="Not sure">
-              <option>Yes</option>
-              <option>No</option>
+            Do you need to manage content or records yourself?
+            <select name="self_manage" defaultValue="Not sure">
+              <option>Yes — I need an admin dashboard</option>
+              <option>Only certain parts</option>
+              <option>No — TCL can handle future updates</option>
               <option>Not sure</option>
             </select>
           </label>
         </div>
 
         <label>
-          Anything you&apos;re unsure about or want TCL to recommend?
+          Explain the account / access setup you want
           <textarea
-            name="uncertainty_notes"
-            rows={3}
-            placeholder="Tell us what you are unsure about. TCL can recommend a simpler setup based on your goals and budget."
+            name="access_model"
+            rows={4}
+            placeholder="Example: 1 admin only; every student must have their own account; accounts should not be shared; staff have different permissions; public users do not need login."
+          />
+        </label>
+
+        <label>
+          What should the admin or owner be able to manage?
+          <textarea
+            name="admin_requirements"
+            rows={4}
+            placeholder="Example: create questionnaire sets, import questions, edit users, approve records, update services, view results, change settings, manage bookings, export data, etc."
+          />
+        </label>
+
+        <label>
+          Devices the project should work well on
+          <input
+            name="device_requirements"
+            placeholder="Phone, tablet, laptop, desktop, all devices, or any special requirement"
           />
         </label>
       </section>
@@ -654,20 +728,30 @@ export default function QuoteForm({
         <div className={styles.sectionHeading}>
           <span>04</span>
           <div>
-            <h2>Current setup & goals</h2>
+            <h2>Workflow & main functions</h2>
             <p>
-              Tell us what you use now, what is not working well, and what you
-              want the new website to improve.
+              Explain what happens from the moment someone opens the project
+              until they finish what they need to do.
             </p>
           </div>
         </div>
 
         <label>
-          How do you currently manage your online presence or workflow?
+          What should users be able to do? *
+          <textarea
+            name="visitor_actions"
+            required
+            rows={5}
+            placeholder="Example: log in, choose a questionnaire set, answer one question at a time, see a score, review correct answers, book an appointment, buy a product, upload a file, submit a request, or view information."
+          />
+        </label>
+
+        <label>
+          How do you currently do this?
           <textarea
             name="current_process"
             rows={4}
-            placeholder="Example: social media only, an old website, manual bookings, Google Forms, spreadsheets, a free blog, or nothing yet."
+            placeholder="Example: Google Forms, spreadsheets, chat messages, manual records, social media, paper forms, old website, or no current system."
           />
         </label>
 
@@ -677,7 +761,7 @@ export default function QuoteForm({
             name="main_problems"
             required
             rows={4}
-            placeholder="Examples: look more professional, publish articles, accept bookings, sell online, organize inquiries, automate work, showcase projects, or make information easier to find."
+            placeholder="What is difficult, repetitive, confusing, slow, or missing in your current process?"
           />
         </label>
 
@@ -687,7 +771,7 @@ export default function QuoteForm({
             name="main_goal"
             required
             rows={3}
-            placeholder="What should this website help you accomplish?"
+            placeholder="What should the finished project help you accomplish?"
           />
         </label>
       </section>
@@ -696,10 +780,10 @@ export default function QuoteForm({
         <div className={styles.sectionHeading}>
           <span>05</span>
           <div>
-            <h2>Pages & features</h2>
+            <h2>Features & system requirements</h2>
             <p>
-              Tick anything that may apply. You can choose as many as you want,
-              and it is completely okay to select “Not sure yet.”
+              Select anything that may apply. These are for planning only and do
+              not automatically become part of the final quotation.
             </p>
           </div>
         </div>
@@ -708,8 +792,8 @@ export default function QuoteForm({
           <span>Selected</span>
           <strong>{selectedFeatures.length}</strong>
           <p>
-            These choices help TCL prepare the right scope. Selecting a feature
-            does not automatically add it to the final quotation.
+            You can select several options, or choose “Not sure yet” if you want
+            TCL to recommend the right setup.
           </p>
         </div>
 
@@ -749,21 +833,100 @@ export default function QuoteForm({
         <div className={styles.sectionHeading}>
           <span>06</span>
           <div>
-            <h2>Visitors, workflow & management</h2>
+            <h2>Data, content & rules</h2>
             <p>
-              Skip anything that does not apply. These details help estimate
-              complexity, integrations, and ongoing management needs.
+              This helps TCL estimate how much data the system needs to manage
+              and whether there are special rules or recurring changes.
+            </p>
+          </div>
+        </div>
+
+        <label>
+          What information, content, or records will the admin manage?
+          <textarea
+            name="data_management"
+            rows={4}
+            placeholder="Example: questionnaire sets and questions, students, services, appointments, products, customers, documents, scores, applications, or other records. Mention whether you prefer manual entry, import, or both."
+          />
+        </label>
+
+        <label>
+          Will this information change regularly?
+          <textarea
+            name="recurring_changes"
+            rows={3}
+            placeholder="Example: students change every semester, new questionnaires every week, products change monthly, appointments are added daily, or data rarely changes."
+          />
+        </label>
+
+        <label>
+          Are there any limits, rules, permissions, or special conditions?
+          <textarea
+            name="usage_rules"
+            rows={4}
+            placeholder="Example: 3 attempts per quiz, unlimited attempts, one account per student, only admin can create sets, bookings require approval, certain users can only see certain records."
+          />
+        </label>
+
+        <label>
+          Results, reports, history, or tracking needed
+          <textarea
+            name="results_reporting"
+            rows={4}
+            placeholder="Example: instant score, answer review, progress history, booking history, reports, export to spreadsheet, admin analytics, or no tracking needed."
+          />
+        </label>
+      </section>
+
+      <section className={styles.formCard}>
+        <div className={styles.sectionHeading}>
+          <span>07</span>
+          <div>
+            <h2>Volume, management & integrations</h2>
+            <p>
+              These details help estimate database use, admin complexity, and
+              outside services.
             </p>
           </div>
         </div>
 
         <div className={styles.gridTwo}>
           <label>
-            Expected activity
+            Expected users / activity
             <input
               name="expected_volume"
-              placeholder="Visitors, inquiries, bookings, orders, members, readers, etc."
+              placeholder="Example: 30 students per class, 500 members, 20 bookings/week, not sure"
             />
+          </label>
+
+          <label>
+            Admin / editor access
+            <input
+              name="admin_access"
+              placeholder="Example: 1 admin, 2 teachers, owner + staff, different roles"
+            />
+          </label>
+
+          <label>
+            Will you sell anything online?
+            <select name="sell_online" defaultValue="No">
+              <option>No</option>
+              <option>Physical products</option>
+              <option>Digital products</option>
+              <option>Services</option>
+              <option>Subscriptions / memberships</option>
+              <option>Multiple types</option>
+              <option>Maybe / not sure</option>
+            </select>
+          </label>
+
+          <label>
+            Do you need online payments?
+            <select name="online_payments" defaultValue="No">
+              <option>Yes</option>
+              <option>No</option>
+              <option>Maybe / not sure</option>
+            </select>
           </label>
 
           <label>
@@ -778,16 +941,17 @@ export default function QuoteForm({
             Delivery / fulfillment needs
             <input
               name="delivery_needs"
-              placeholder="Shipping, pickup, digital download, service only, not applicable"
+              placeholder="Shipping, pickup, digital file, service only, not applicable"
             />
           </label>
 
           <label>
-            Admin / editor access
-            <input
-              name="admin_access"
-              placeholder="Who should be able to edit content or manage the system?"
-            />
+            Need another platform connected?
+            <select name="integration_needed" defaultValue="Not sure">
+              <option>Yes</option>
+              <option>No</option>
+              <option>Not sure</option>
+            </select>
           </label>
         </div>
 
@@ -796,19 +960,27 @@ export default function QuoteForm({
           <textarea
             name="integrations"
             rows={3}
-            placeholder="Google Calendar, Gmail, social media, payment providers, spreadsheets, analytics, newsletter tools, existing platforms, etc."
+            placeholder="Google Calendar, Sheets, Gmail, payment provider, analytics, existing school/business platform, social media, etc."
+          />
+        </label>
+
+        <label>
+          Anything technical you are unsure about?
+          <textarea
+            name="uncertainty_notes"
+            rows={3}
+            placeholder="You can describe the result you want even if you do not know the technical term. TCL can recommend the simplest suitable setup."
           />
         </label>
       </section>
 
       <section className={styles.formCard}>
         <div className={styles.sectionHeading}>
-          <span>07</span>
+          <span>08</span>
           <div>
-            <h2>Branding & content</h2>
+            <h2>Branding & design</h2>
             <p>
-              These do not need to be complete yet. We only use this information
-              to understand what still needs to be prepared.
+              Skip anything that does not apply to your project.
             </p>
           </div>
         </div>
@@ -816,7 +988,7 @@ export default function QuoteForm({
         <div className={styles.gridTwo}>
           <label>
             Do you already have a logo?
-            <select name="logo_ready" defaultValue="Yes">
+            <select name="logo_ready" defaultValue="Not applicable">
               <option>Yes</option>
               <option>No</option>
               <option>Still being made</option>
@@ -825,8 +997,8 @@ export default function QuoteForm({
           </label>
 
           <label>
-            Brand colors / visual style ready?
-            <select name="branding_ready" defaultValue="Yes">
+            Colors / visual style ready?
+            <select name="branding_ready" defaultValue="Not applicable">
               <option>Yes</option>
               <option>No</option>
               <option>Need help choosing</option>
@@ -835,22 +1007,24 @@ export default function QuoteForm({
           </label>
 
           <label>
-            Photos / written content ready?
+            Photos / written content / materials ready?
             <select name="content_ready" defaultValue="Some">
               <option>Yes</option>
               <option>Some</option>
               <option>No</option>
-              <option>Need help organizing content</option>
+              <option>Need help organizing</option>
+              <option>Not applicable</option>
             </select>
           </label>
 
           <label>
             Domain status
-            <select name="domain_status" defaultValue="No domain yet">
+            <select name="domain_status" defaultValue="Not sure yet">
               <option>No domain yet</option>
               <option>Already have a domain</option>
               <option>Need help choosing a domain</option>
               <option>Free Vercel subdomain is okay</option>
+              <option>Not applicable</option>
               <option>Not sure yet</option>
             </select>
           </label>
@@ -859,12 +1033,12 @@ export default function QuoteForm({
 
       <section className={styles.formCard}>
         <div className={styles.sectionHeading}>
-          <span>08</span>
+          <span>09</span>
           <div>
             <h2>Budget, timeline & final notes</h2>
             <p>
-              This helps TCL recommend a realistic scope based on what matters
-              most to you.
+              TCL uses these details to recommend a realistic scope and prepare
+              the quotation.
             </p>
           </div>
         </div>
@@ -900,7 +1074,7 @@ export default function QuoteForm({
           <textarea
             name="notes"
             rows={5}
-            placeholder="Examples you like, must-have functions, special requests, questions, accessibility needs, design preferences, or anything you are unsure about."
+            placeholder="Add examples, exact quantities, special rules, must-have functions, references, questions, or any details that may affect the project scope."
           />
         </label>
       </section>
@@ -920,11 +1094,12 @@ export default function QuoteForm({
 
       <section className={styles.submitCard}>
         <div>
-          <small>Quotation request</small>
+          <small>Custom project quotation</small>
           <h2>Ready to send your project details?</h2>
           <p>
-            TCL will review your needs first and prepare a quotation based on
-            the actual scope. You are not charged by submitting this form.
+            TCL will review the actual workflow and requirements first. The
+            final quotation will be based on the agreed project scope, and you
+            are not charged by submitting this form.
           </p>
         </div>
 
