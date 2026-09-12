@@ -6,7 +6,7 @@ import CustomCheckoutActions from "./CustomCheckoutActions";
 import PaymentSuccessCloser from "./PaymentSuccessCloser";
 import BpiProofUpload from "./BpiProofUpload";
 import AccountNumberCopyButton from "./AccountNumberCopyButton";
-import styles from "../custom-checkout.module.css";
+import styles from "./custom-checkout.module.css";
 
 export const dynamic = "force-dynamic";
 

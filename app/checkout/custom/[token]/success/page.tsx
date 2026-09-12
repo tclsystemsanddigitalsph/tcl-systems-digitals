@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCustomCheckoutState } from "@/lib/custom-order-payments";
-import styles from "../../custom-checkout.module.css";
+import styles from "../custom-checkout.module.css";
 
 export const dynamic = "force-dynamic";
 
