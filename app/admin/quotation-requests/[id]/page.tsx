@@ -130,8 +130,10 @@ function DetailSection({
 
 export default async function AdminQuotationRequestDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ updated?: string; note_added?: string }>;
 }) {
   const authSupabase = await createServerSupabaseClient();
 
@@ -142,6 +144,7 @@ export default async function AdminQuotationRequestDetailPage({
   if (!user) redirect("/admin/login");
 
   const { id } = await params;
+  const query = await searchParams;
   const adminSupabase = createAdminSupabaseClient();
 
   const { data: request, error } = await adminSupabase
@@ -286,6 +289,40 @@ export default async function AdminQuotationRequestDetailPage({
                 ← Back to Quotations
               </Link>
             </header>
+
+            {query.updated === "1" ? (
+              <div
+                role="status"
+                style={{
+                  marginBottom: 18,
+                  padding: "13px 16px",
+                  border: "1px solid #efc8d5",
+                  borderRadius: 14,
+                  background: "#fff7fa",
+                  color: "#6f3348",
+                  fontWeight: 700,
+                }}
+              >
+                ✓ Quotation updated successfully.
+              </div>
+            ) : null}
+
+            {query.note_added === "1" ? (
+              <div
+                role="status"
+                style={{
+                  marginBottom: 18,
+                  padding: "13px 16px",
+                  border: "1px solid #efc8d5",
+                  borderRadius: 14,
+                  background: "#fff7fa",
+                  color: "#6f3348",
+                  fontWeight: 700,
+                }}
+              >
+                ✓ Note added successfully.
+              </div>
+            ) : null}
 
             <section className={detailStyles.overviewCard}>
               <div className={detailStyles.overviewIntro}>
@@ -638,7 +675,7 @@ export default async function AdminQuotationRequestDetailPage({
                   >
                     <input
                       type="hidden"
-                      name="quotation_request_id"
+                      name="id"
                       value={request.id}
                     />
                     <textarea

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { buildQuotationReadyEmail } from "@/lib/quotation-ready-email";
+import { sendTclEmail } from "@/lib/resend";
 
 const allowedStatuses = [
   "NEW",
@@ -627,12 +629,70 @@ export async function updateQuotationRequest(formData: FormData) {
     }
   }
 
+  /*
+   * Send the customer email only the first time this save moves the
+   * quotation into QUOTED. Editing/saving an already-QUOTED quotation
+   * must not send another "quotation ready" email.
+   *
+   * Email failure does not roll back the quotation. The quotation has
+   * already been saved successfully, so we log the delivery problem and
+   * keep the admin workflow usable.
+   */
+  if (oldStatus !== "QUOTED" && status === "QUOTED") {
+    const customerEmail = normalized(previousRequest.email).toLowerCase();
+    const secureToken = normalized(previousRequest.secure_token);
+
+    if (customerEmail && secureToken && quotedAmount !== null) {
+      const siteUrl = (
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        process.env.SITE_URL ||
+        "http://localhost:3000"
+      ).replace(/\/+$/, "");
+
+      const quotationReference =
+        normalized(previousRequest.reference_number) ||
+        normalized(previousRequest.quotation_number) ||
+        `QT-${String(previousRequest.id).slice(0, 8).toUpperCase()}`;
+
+      const email = buildQuotationReadyEmail({
+        customerName: previousRequest.full_name,
+        customerEmail,
+        quotationReference,
+        projectName: previousRequest.product_name,
+        businessName: previousRequest.business_name,
+        quotedAmount,
+        quotationUrl: `${siteUrl}/quotation/${secureToken}`,
+        quotedAt: payload.quoted_at ?? now,
+      });
+
+      try {
+        await sendTclEmail({
+          to: email.recipient,
+          subject: email.subject,
+          html: email.html,
+          text: email.text,
+        });
+      } catch (emailError) {
+        console.error("Quotation ready email send error:", emailError);
+      }
+    } else {
+      console.warn("Quotation ready email skipped because contact/link data is incomplete.", {
+        quotationId: id,
+        hasEmail: Boolean(customerEmail),
+        hasSecureToken: Boolean(secureToken),
+        hasQuotedAmount: quotedAmount !== null,
+      });
+    }
+  }
+
   revalidatePath("/admin/quotation-requests");
   revalidatePath(`/admin/quotation-requests/${id}`);
 
   if (previousRequest.order_id) {
     revalidatePath(`/admin/orders/${previousRequest.order_id}`);
   }
+
+  redirect(`/admin/quotation-requests/${id}?updated=1`);
 }
 
 export async function addManualQuotationNote(formData: FormData) {
@@ -705,6 +765,7 @@ export async function addManualQuotationNote(formData: FormData) {
   }
 
   revalidatePath(`/admin/quotation-requests/${id}`);
+  redirect(`/admin/quotation-requests/${id}?note_added=1`);
 }
 
 export async function deleteQuotationRequest(formData: FormData) {

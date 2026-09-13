@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { sendTclEmail } from "@/lib/resend";
+import { buildCustomPaymentReceiptEmail } from "@/lib/custom-payment-receipt-email";
 
 export type CustomPaymentStage = "FULL" | "DEPOSIT" | "FINAL";
 
@@ -785,6 +787,64 @@ export async function completeCustomOrderPayment({
       remainingBalance: balanceDue,
       fullyPaid,
     });
+
+    /*
+     * Send exactly one customer receipt for the payment transition that this
+     * call completed. Repeated PayPal callbacks / PayMongo webhooks / BPI
+     * verification calls see an already-COMPLETED payment and skip this block.
+     *
+     * Email delivery is intentionally non-blocking for accounting: a Resend
+     * failure must never turn a successful payment into a failed callback.
+     */
+    const customerEmail = String(order.customer_email ?? "").trim().toLowerCase();
+    const receiptToken = String(order.receipt_token ?? "").trim();
+
+    if (customerEmail && receiptToken) {
+      const siteUrl = (
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        process.env.SITE_URL ||
+        "http://localhost:3000"
+      ).replace(/\/+$/, "");
+
+      const paymentReference =
+        provider === "PAYPAL"
+          ? paypalCaptureId || payment.paypal_capture_id || payment.paypal_order_id
+          : provider === "PAYMONGO"
+            ? paymongoPaymentId ||
+              payment.paymongo_payment_id ||
+              payment.paymongo_checkout_session_id
+            : null;
+
+      const receiptEmail = buildCustomPaymentReceiptEmail({
+        customerName: order.customer_name,
+        customerEmail,
+        orderNumber: order.order_number,
+        productName: order.product_name,
+        paymentStage: payment.payment_stage,
+        provider,
+        paymentReference,
+        subtotal: asMoney(order.base_price),
+        processingFeePercent: asMoney(order.processing_fee_percent),
+        processingFee: asMoney(order.processing_fee),
+        amountJustPaid: asMoney(payment.amount),
+        cumulativePaid: amountPaid,
+        remainingBalance: balanceDue,
+        totalAmount,
+        paidAt: now,
+        checkoutUrl: `${siteUrl}/checkout/custom/${receiptToken}`,
+      });
+
+      try {
+        await sendTclEmail({
+          to: receiptEmail.recipient,
+          subject: receiptEmail.subject,
+          html: receiptEmail.html,
+          text: receiptEmail.text,
+        });
+      } catch (emailError) {
+        console.error("Custom payment receipt email error:", emailError);
+      }
+    }
   }
 
   return {

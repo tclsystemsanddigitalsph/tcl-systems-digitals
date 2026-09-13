@@ -4,6 +4,8 @@ import {
   completeCustomOrderPayment,
 } from "@/lib/custom-order-payments";
 import { verifyPayMongoWebhookSignature } from "@/lib/paymongo";
+import { sendTclEmail } from "@/lib/resend";
+import { buildRegularOrderReceiptEmail } from "@/lib/order-confirmation-email";
 
 export const dynamic = "force-dynamic";
 
@@ -320,7 +322,7 @@ export async function POST(request: Request) {
   } = await supabase
     .from("orders")
     .select(
-      "id,order_number,total_amount,currency,payment_status,paymongo_checkout_session_id,paymongo_payment_id",
+      "id,order_number,customer_name,customer_email,product_name,base_price,processing_fee,total_amount,currency,payment_status,payment_provider,order_status,receipt_token,created_at,paymongo_checkout_session_id,paymongo_payment_id",
     )
     .eq("payment_provider", "PAYMONGO")
     .eq("paymongo_checkout_session_id", session.id)
@@ -330,7 +332,7 @@ export async function POST(request: Request) {
     const fallback = await supabase
       .from("orders")
       .select(
-        "id,order_number,total_amount,currency,payment_status,paymongo_checkout_session_id,paymongo_payment_id",
+        "id,order_number,customer_name,customer_email,product_name,base_price,processing_fee,total_amount,currency,payment_status,payment_provider,order_status,receipt_token,created_at,paymongo_checkout_session_id,paymongo_payment_id",
       )
       .eq("payment_provider", "PAYMONGO")
       .eq("order_number", referenceNumber)
@@ -463,6 +465,77 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Order could not be completed." },
       { status: 409 },
+    );
+  }
+
+  // Send the regular storefront receipt only for the webhook request that
+  // successfully changed this order from PENDING -> COMPLETED.
+  // PayMongo webhook retries hit the already-completed branches above, so
+  // they do not send another receipt.
+  try {
+    const customerEmail = String(order.customer_email ?? "").trim();
+
+    if (customerEmail) {
+      const siteUrl = (
+        process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+        "http://localhost:3000"
+      ).replace(/\/$/, "");
+
+      const receiptToken = String(order.receipt_token ?? "").trim();
+      const statusUrl = receiptToken
+        ? `${siteUrl}/order-status?token=${encodeURIComponent(receiptToken)}`
+        : `${siteUrl}/order-status`;
+
+      const paymentReference =
+        validation.paidPayment?.id ??
+        completedOrder.paymongo_payment_id ??
+        session.id;
+
+      const receipt = buildRegularOrderReceiptEmail({
+        customerName: order.customer_name,
+        customerEmail,
+        orderNumber: String(order.order_number),
+        orderDate: new Intl.DateTimeFormat("en-PH", {
+          dateStyle: "long",
+          timeStyle: "short",
+          timeZone: "Asia/Manila",
+        }).format(new Date(completedOrder.paid_at ?? now)),
+        productName: String(order.product_name ?? "TCL Order"),
+        paymentMethod: "PayMongo — Card / QR Ph",
+        paymentReference,
+        subtotal: Number(order.base_price ?? 0),
+        processingFee: Number(order.processing_fee ?? 0),
+        totalPaid: Number(order.total_amount ?? 0),
+        currency: String(order.currency ?? "PHP"),
+        orderStatus: String(order.order_status ?? "PAID"),
+        statusUrl,
+        accessReady: false,
+      });
+
+      const emailResult = await sendTclEmail({
+        to: customerEmail,
+        subject: receipt.subject,
+        html: receipt.html,
+        text: receipt.text,
+      });
+
+      if (!emailResult.ok) {
+        console.error(
+          "Regular PayMongo order completed but receipt email was not sent:",
+          emailResult,
+        );
+      }
+    } else {
+      console.error(
+        "Regular PayMongo order completed without a customer email:",
+        order.id,
+      );
+    }
+  } catch (emailError) {
+    // Payment completion must never fail just because an email provider fails.
+    console.error(
+      "Regular PayMongo receipt email failed after payment completion:",
+      emailError,
     );
   }
 

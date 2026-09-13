@@ -2,6 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { sendTclEmail } from "@/lib/resend";
+import {
+  buildQuotationAcceptedAdminEmail,
+  buildQuotationAcceptedCustomerEmail,
+} from "@/lib/quotation-accepted-email";
 
 const CUSTOM_PRODUCT_SLUG = "custom-business-website";
 const FULL_PAYMENT_FEE_PERCENT = 4;
@@ -378,6 +383,81 @@ export async function acceptQuotation(formData: FormData) {
       },
     ],
   });
+
+  /*
+   * Acceptance notifications happen only after this request successfully
+   * claims the quotation (QUOTED -> ACCEPTED). Concurrent/repeated accepts
+   * are redirected earlier, so they do not send duplicate acceptance emails.
+   */
+  if (order.receipt_token) {
+    const siteUrl = (
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.SITE_URL ||
+      "http://localhost:3000"
+    ).replace(/\/+$/, "");
+
+    const checkoutUrl = `${siteUrl}/checkout/custom/${order.receipt_token}`;
+
+    const emailInput = {
+      customerName,
+      customerEmail,
+      orderNumber: String(order.order_number ?? orderNumber),
+      projectName: product.name || quotation.product_name,
+      businessName: quotation.business_name,
+      quotedAmount,
+      processingFeePercent,
+      processingFee,
+      totalAmount,
+      amountDueNow,
+      paymentChoice,
+      checkoutUrl,
+      acceptedAt: now,
+    };
+
+    const customerEmailMessage =
+      buildQuotationAcceptedCustomerEmail(emailInput);
+
+    try {
+      await sendTclEmail({
+        to: customerEmailMessage.recipient,
+        subject: customerEmailMessage.subject,
+        html: customerEmailMessage.html,
+        text: customerEmailMessage.text,
+      });
+    } catch (emailError) {
+      console.error("Quotation accepted customer email error:", emailError);
+    }
+
+    /*
+     * Optional admin alert recipient.
+     * Set TCL_ADMIN_EMAIL in .env.local / Vercel to receive this alert.
+     * Falling back to RESEND_REPLY_TO_EMAIL keeps the setup simple if that
+     * address is already your TCL inbox.
+     */
+    const adminEmail = (
+      process.env.TCL_ADMIN_EMAIL ||
+      process.env.RESEND_REPLY_TO_EMAIL ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+    if (adminEmail) {
+      const adminEmailMessage =
+        buildQuotationAcceptedAdminEmail(emailInput, adminEmail);
+
+      try {
+        await sendTclEmail({
+          to: adminEmailMessage.recipient,
+          subject: adminEmailMessage.subject,
+          html: adminEmailMessage.html,
+          text: adminEmailMessage.text,
+        });
+      } catch (emailError) {
+        console.error("Quotation accepted admin email error:", emailError);
+      }
+    }
+  }
 
   redirect(`/checkout/custom/${order.receipt_token}`);
 }
