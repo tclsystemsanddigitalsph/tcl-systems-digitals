@@ -5,20 +5,27 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./SiteHeader.module.css";
 
-const navItems = [
+const mainNavItems = [
   { label: "Shop", href: "/shop" },
   { label: "Portfolio", href: "/portfolio" },
-  { label: "Order Status", href: "/order-status" },
-  { label: "About Me", href: "/#about" },
-  { label: "Reviews", href: "/#reviews" },
+  { label: "About", href: "/about" },
+];
+
+const helpItems = [
   { label: "How It Works", href: "/how-it-works" },
   { label: "FAQ", href: "/faqs" },
+  { label: "Order Status", href: "/order-status" },
 ];
 
 export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
 
-  const closeMenu = () => setMenuOpen(false);
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setMobileHelpOpen(false);
+  };
 
   return (
     <>
@@ -43,21 +50,51 @@ export default function SiteHeader() {
           </Link>
 
           <nav className="desktop-nav" aria-label="Main navigation">
-            {navItems.map((item) => (
+            {mainNavItems.map((item) => (
               <Link href={item.href} key={item.href}>
                 {item.label}
               </Link>
             ))}
+
+            <div
+              className={styles.helpMenu}
+              onMouseEnter={() => setHelpOpen(true)}
+              onMouseLeave={() => setHelpOpen(false)}
+            >
+              <button
+                type="button"
+                className={styles.helpTrigger}
+                aria-expanded={helpOpen}
+                onClick={() => setHelpOpen((current) => !current)}
+              >
+                Help
+                <span
+                  className={`${styles.chevron} ${
+                    helpOpen ? styles.chevronOpen : ""
+                  }`}
+                  aria-hidden="true"
+                >
+                  ▾
+                </span>
+              </button>
+
+              {helpOpen && (
+                <div className={styles.helpDropdown}>
+                  {helpItems.map((item) => (
+                    <Link
+                      href={item.href}
+                      key={item.href}
+                      onClick={() => setHelpOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           <div className={styles.desktopActions}>
-            <Link
-              href="/admin/login"
-              className={`${styles.actionButton} ${styles.adminButton}`}
-            >
-              Admin Sign In
-            </Link>
-
             <a
               href="https://t.me/tclsystemsanddigitalsph"
               target="_blank"
@@ -112,16 +149,40 @@ export default function SiteHeader() {
               className={styles.mobileNavigation}
               aria-label="Mobile navigation"
             >
-              {navItems.map((item) => (
-                <Link
-                  href={item.href}
-                  key={item.href}
-                  onClick={closeMenu}
-                >
+              {mainNavItems.map((item) => (
+                <Link href={item.href} key={item.href} onClick={closeMenu}>
                   <span>{item.label}</span>
                   <span aria-hidden="true">›</span>
                 </Link>
               ))}
+
+              <button
+                type="button"
+                className={styles.mobileHelpTrigger}
+                aria-expanded={mobileHelpOpen}
+                onClick={() => setMobileHelpOpen((current) => !current)}
+              >
+                <span>Help</span>
+                <span
+                  className={`${styles.mobileHelpChevron} ${
+                    mobileHelpOpen ? styles.mobileHelpChevronOpen : ""
+                  }`}
+                  aria-hidden="true"
+                >
+                  ›
+                </span>
+              </button>
+
+              {mobileHelpOpen && (
+                <div className={styles.mobileHelpLinks}>
+                  {helpItems.map((item) => (
+                    <Link href={item.href} key={item.href} onClick={closeMenu}>
+                      <span>{item.label}</span>
+                      <span aria-hidden="true">›</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </nav>
 
             <div className={styles.mobileBottom}>
@@ -139,14 +200,6 @@ export default function SiteHeader() {
 
                 <span aria-hidden="true">↗</span>
               </a>
-
-              <Link
-                href="/admin/login"
-                className={styles.mobileAdmin}
-                onClick={closeMenu}
-              >
-                Admin Sign In
-              </Link>
             </div>
 
             <p className={styles.drawerFooter}>

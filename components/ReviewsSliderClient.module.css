@@ -1,18 +1,19 @@
 .shell {
   width: 100%;
   min-width: 0;
+  margin-top: 30px;
   box-sizing: border-box;
-  overflow: visible;
 }
 
 .slider {
   display: flex;
   width: 100%;
   min-width: 0;
-  box-sizing: border-box;
-  gap: 24px;
+  gap: 18px;
+  padding: 4px 2px 8px;
   overflow-x: auto;
   overflow-y: hidden;
+  box-sizing: border-box;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -25,68 +26,195 @@
 
 .reviewCard {
   position: relative;
-  box-sizing: border-box;
-  flex: 0 0 calc((100% - 48px) / 3);
-  width: calc((100% - 48px) / 3);
+  flex: 0 0 calc((100% - 36px) / 3);
+  width: calc((100% - 36px) / 3);
   min-width: 0;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 24px 22px;
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid #f0dce4;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(93, 55, 68, 0.07);
   scroll-snap-align: start;
 }
 
-.cardTop {
-  position: relative;
+.featured {
+  position: absolute;
+  top: 17px;
+  right: 18px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #fff1f6;
+  color: #c4517d;
+  font-size: 8px;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reviewTop {
   display: flex;
-  width: 100%;
-  min-height: 52px;
   align-items: center;
-  margin-bottom: 22px;
+  gap: 10px;
+  min-height: 34px;
+  margin: 0 0 14px;
 }
 
 .quoteIcon {
-  position: relative;
-  z-index: 2;
-  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  margin: 0;
+  border-radius: 11px;
+  background: #fff2f6;
+  color: #d8578a;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .stars {
-  position: absolute;
-  top: 50%;
-  left: 50%;
   width: max-content;
   margin: 0;
-  transform: translate(-50%, -50%);
-  white-space: nowrap;
-  text-align: center;
+  color: #dc5d8e;
+  font-size: 14px;
   line-height: 1;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.reviewText {
+  margin: 0;
+  color: #6f6267;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 1.7;
+  text-align: left;
+  word-spacing: normal;
+  letter-spacing: normal;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.client {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: auto;
+  padding-top: 22px;
+  border-top: 1px solid #f2e3e9;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd8e6, #f39cbd);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.clientInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.clientInfo strong {
+  overflow-wrap: anywhere;
+  color: #3d3035;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.clientInfo span {
+  overflow-wrap: anywhere;
+  color: #9a898f;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.product {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: #fff8fa;
+}
+
+.product span {
+  flex: 0 0 auto;
+  color: #aa949c;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product strong {
+  min-width: 0;
+  color: #c4517d;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .controls {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-top: 22px;
+  gap: 12px;
+  margin-top: 18px;
 }
 
 .arrow {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
   display: inline-flex;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
   align-items: center;
   justify-content: center;
   padding: 0;
   border: 1px solid #e9bfd0;
-  border-radius: 999px;
-  background: #fff;
+  border-radius: 50%;
+  background: #ffffff;
   color: #b84e77;
-  font-size: 1rem;
+  font-size: 14px;
   line-height: 1;
   cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.arrow:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #d8578a;
+  background: #fff8fb;
 }
 
 .arrow:disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: default;
 }
 
@@ -107,6 +235,7 @@
   border-radius: 999px;
   background: #e8c5d3;
   cursor: pointer;
+  transition: width 160ms ease, background 160ms ease;
 }
 
 .activeDot {
@@ -116,115 +245,138 @@
 
 @media (max-width: 1024px) {
   .slider {
-    gap: 18px;
+    gap: 16px;
   }
 
   .reviewCard {
-    flex-basis: calc((100% - 18px) / 2);
-    width: calc((100% - 18px) / 2);
+    flex-basis: calc((100% - 16px) / 2);
+    width: calc((100% - 16px) / 2);
+    min-height: 310px;
   }
 }
 
 @media (max-width: 650px) {
   .shell {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 22px;
+    overflow: hidden;
   }
 
   .slider {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-
-    /* Gives the top border/shadow breathing room so it is not clipped. */
-    padding: 8px 0 2px !important;
-
-    gap: 0 !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scroll-padding: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    gap: 12px;
+    padding: 3px 0 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-padding: 0;
   }
 
   .reviewCard {
-    box-sizing: border-box !important;
-    flex: 0 0 100% !important;
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    scroll-snap-align: start !important;
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    padding: 20px 17px 17px;
+    border-radius: 18px;
+    scroll-snap-align: start;
   }
 
-  .cardTop {
-    min-height: 42px;
-    margin-bottom: 14px;
+  .featured {
+    top: 14px;
+    right: 14px;
+    padding: 4px 7px;
+    font-size: 7px;
+  }
+
+  .reviewTop {
+    min-height: 32px;
+    gap: 9px;
+    margin-bottom: 12px;
+    padding-right: 64px;
   }
 
   .quoteIcon {
-    width: 42px !important;
-    height: 42px !important;
-    border-radius: 13px !important;
-    font-size: 1.25rem !important;
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    border-radius: 10px;
+    font-size: 20px;
   }
 
   .stars {
-    font-size: 1rem !important;
-    letter-spacing: 1px !important;
+    font-size: 12px;
+    letter-spacing: 0.5px;
   }
 
   .reviewText {
-    margin: 0 0 18px !important;
-    font-size: 0.9rem !important;
-    line-height: 1.58 !important;
+    width: 100%;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.6;
+    text-align: left;
+    word-spacing: normal;
+    letter-spacing: normal;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .client {
-    gap: 11px !important;
-    padding-top: 16px !important;
-    margin-top: 0 !important;
+    gap: 9px;
+    margin-top: 18px;
+    padding-top: 16px;
   }
 
   .avatar {
-    width: 46px !important;
-    height: 46px !important;
-    flex: 0 0 46px !important;
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .clientInfo strong {
+    font-size: 10px;
+  }
+
+  .clientInfo span {
+    font-size: 8px;
   }
 
   .product {
-    margin-top: 14px !important;
-    padding: 11px 13px !important;
-    border-radius: 13px !important;
+    gap: 8px;
+    margin-top: 11px;
+    padding: 9px 10px;
+  }
+
+  .product span {
+    font-size: 7px;
+  }
+
+  .product strong {
+    font-size: 8px;
   }
 
   .controls {
-    margin-top: 16px;
+    gap: 9px;
+    margin-top: 13px;
   }
 
   .arrow {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
   }
 }
 
-@media (max-width: 390px) {
-  .reviewCard {
-    flex-basis: 100% !important;
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
+@media (prefers-reduced-motion: reduce) {
+  .slider {
+    scroll-behavior: auto;
   }
 
-  .stars {
-    font-size: 0.9rem !important;
-    letter-spacing: 0.5px !important;
-  }
-
-  .reviewText {
-    font-size: 0.86rem !important;
+  .arrow,
+  .dot {
+    transition: none;
   }
 }

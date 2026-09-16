@@ -9,7 +9,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 16px;
+  padding: 0 18px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 750;
@@ -26,16 +26,95 @@
   transform: translateY(-1px);
 }
 
-.adminButton {
-  border: 1px solid var(--border-strong);
-  background: #ffffff;
-  color: var(--text);
-}
-
 .contactButton {
   border: 1px solid transparent;
   background: linear-gradient(135deg, var(--pink-500), var(--pink-700));
   color: #ffffff;
+}
+
+/* ========================================
+   DESKTOP HELP DROPDOWN
+======================================== */
+
+.helpMenu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+}
+
+.helpTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #62545a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: normal;
+  letter-spacing: normal;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.helpTrigger:hover {
+  color: var(--pink-700);
+}
+
+.chevron {
+  display: inline-block;
+  color: var(--pink-600);
+  font-size: 10px;
+  line-height: 1;
+  transition: transform 0.18s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.helpDropdown {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: 50%;
+  z-index: 1000;
+  width: 190px;
+  padding: 7px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(93, 55, 68, 0.14);
+  transform: translateX(-50%);
+}
+
+.helpDropdown::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: 10px;
+}
+
+.helpDropdown a {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 11px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.helpDropdown a:hover {
+  background: var(--pink-100);
+  color: var(--pink-700);
 }
 
 /* ========================================
@@ -74,30 +153,18 @@
   top: 0;
   right: 0;
   z-index: 999;
-
   width: min(88vw, 360px);
   height: 100dvh;
-
   display: flex;
   flex-direction: column;
-
   padding:
     max(22px, env(safe-area-inset-top))
     20px
     max(18px, env(safe-area-inset-bottom));
-
   overflow-y: auto;
-
   border-left: 1px solid var(--border);
-  background:
-    linear-gradient(
-      180deg,
-      #fffdfd 0%,
-      #fff8fb 100%
-    );
-
+  background: linear-gradient(180deg, #fffdfd 0%, #fff8fb 100%);
   box-shadow: -22px 0 55px rgba(93, 55, 68, 0.16);
-
   animation: mobileDrawerIn 0.24s ease;
 }
 
@@ -147,24 +214,17 @@
 .closeButton {
   width: 40px;
   height: 40px;
-
   display: grid;
   place-items: center;
-
   flex-shrink: 0;
-
   padding: 0;
-
   border: 1px solid var(--border);
   border-radius: 50%;
-
   background: #ffffff;
   color: var(--text);
-
   font-size: 25px;
   font-weight: 300;
   line-height: 1;
-
   cursor: pointer;
 }
 
@@ -178,34 +238,82 @@
   border-top: 1px solid var(--border);
 }
 
-.mobileNavigation a {
+.mobileNavigation > a,
+.mobileHelpTrigger {
+  width: 100%;
   min-height: 54px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-
+  padding: 0;
+  border: 0;
   border-bottom: 1px solid var(--border);
-
+  background: transparent;
   color: var(--text);
+  font: inherit;
   font-size: 14px;
   font-weight: 700;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
 
-.mobileNavigation a span:last-child {
+.mobileNavigation > a > span:last-child,
+.mobileHelpTrigger > span:last-child {
   color: var(--pink-500);
   font-size: 22px;
   font-weight: 400;
 }
 
-.mobileNavigation a:active {
+.mobileNavigation > a:active,
+.mobileHelpTrigger:active {
   color: var(--pink-700);
 }
 
+.mobileHelpChevron {
+  display: inline-block;
+  transition: transform 0.18s ease;
+}
+
+.mobileHelpChevronOpen {
+  transform: rotate(90deg);
+}
+
+.mobileHelpLinks {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 0 7px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.mobileHelpLinks a {
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 8px 0 12px;
+  border-radius: 11px;
+  color: var(--text-light);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.mobileHelpLinks a:active {
+  background: var(--pink-100);
+  color: var(--pink-700);
+}
+
+.mobileHelpLinks a span:last-child {
+  color: var(--pink-400);
+  font-size: 18px;
+}
+
 /* ========================================
-   BOTTOM ACTIONS
+   BOTTOM ACTION
 ======================================== */
 
 .mobileBottom {
@@ -216,20 +324,15 @@
 
 .mobileContact {
   min-height: 62px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-
   padding: 13px 16px;
-
   border: 1px solid var(--pink-200);
   border-radius: 17px;
-
   background: var(--pink-100);
   color: var(--pink-700);
-
   text-decoration: none;
 }
 
@@ -256,31 +359,10 @@
   font-size: 17px;
 }
 
-.mobileAdmin {
-  min-height: 47px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: 1px solid var(--border-strong);
-  border-radius: 15px;
-
-  background: #ffffff;
-  color: var(--text);
-
-  font-size: 12px;
-  font-weight: 750;
-
-  text-decoration: none;
-}
-
 .drawerFooter {
   margin: auto 0 0;
   padding-top: 28px;
-
   color: var(--text-light);
-
   font-size: 9px;
   font-weight: 650;
   text-align: center;
@@ -298,33 +380,24 @@
   .mobileMenuButton {
     width: 42px;
     height: 42px;
-
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-
     flex: 0 0 42px;
-
     gap: 4px;
-
     margin-left: auto;
     padding: 0;
-
     border: 1px solid var(--border-strong);
     border-radius: 13px;
-
     background: #fff8fb;
-
     cursor: pointer;
   }
 
   .mobileMenuButton span {
     width: 18px;
     height: 2px;
-
     display: block;
-
     border-radius: 999px;
     background: var(--pink-700);
   }
@@ -347,5 +420,10 @@
 @media (prefers-reduced-motion: reduce) {
   .mobileDrawer {
     animation: none;
+  }
+
+  .chevron,
+  .mobileHelpChevron {
+    transition: none;
   }
 }

@@ -1,98 +1,95 @@
-import Image from "next/image";
 import Link from "next/link";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import ReviewsSliderClient from "@/components/ReviewsSliderClient";
+import BackToTop from "@/components/BackToTop";
 import "./home-redesign.css";
 
-const featuredProducts = [
-  {
-    category: "Booking System",
-    title: "Booking System Templates",
-    description:
-      "Ready-to-use digital resources designed to help small business owners organize, present, and manage their brand more professionally.",
-    price: "₱2,999",
-    tag: "Best Seller",
-    href: "/shop/editable-booking-system",
-    available: true,
-  },
-  {
-    category: "Digital Product",
-    title: "Business Starter Kits",
-    description:
-      "A polished online booking or online shop website with an admin dashboard, service management, scheduling tools, and a professional client experience.",
-    price: "₱1,999",
-    tag: "Customized Website",
-    href: "#",
-    available: false,
-  },
-  {
-    category: "Website Solution",
-    title: "Custom Business Website",
-    description:
-      "A customized website experience designed around your business, branding, services, and customer journey.",
-    price: "Custom Quote",
-    tag: "Made For You",
-    href: "/shop/custom-business-website",
-    available: true,
-  },
+const websiteSolutions = [
+  [
+    "STARTER",
+    "Starter Website",
+    "₱999",
+    "A clean one-page website for a simple, professional online presence.",
+    "/shop",
+    "Simple Start",
+  ],
+  [
+    "BUSINESS",
+    "Simple Business Website",
+    "₱2,999",
+    "A polished 4-page website for your brand, services, story, and contact details.",
+    "/shop",
+    "Popular",
+  ],
+  [
+    "E-COMMERCE",
+    "Basic Online Shop",
+    "₱5,999",
+    "A straightforward product storefront with cart and basic order checkout.",
+    "/shop",
+    "Sell Online",
+  ],
+  [
+    "CUSTOM DEVELOPMENT",
+    "Custom Business Website",
+    "Custom Quote",
+    "For dashboards, accounts, automation, integrations, and advanced functionality.",
+    "/shop/custom-business-website",
+    "Made For You",
+  ],
+] as const;
+
+const stack = [
+  "Next.js",
+  "React",
+  "TypeScript",
+  "JavaScript",
+  "HTML",
+  "CSS",
+  "Supabase",
+  "PostgreSQL",
+  "Vercel",
+  "GitHub",
+  "PayPal",
+  "PayMongo",
+  "Resend",
 ];
 
-const categories = [
-  {
-    number: "01",
-    title: "Booking Systems",
-    description:
-      "Modern appointment systems made for solo artists, beauty professionals, service providers, and growing businesses.",
-  },
-  {
-    number: "02",
-    title: "Website Solutions",
-    description:
-      "Clean, responsive websites designed to help your business look established and easier to trust online.",
-  },
-  {
-    number: "03",
-    title: "Digital Products",
-    description:
-      "Templates, business resources, downloadable tools, and digital products made to save you time.",
-  },
-  {
-    number: "04",
-    title: "Business Resources",
-    description:
-      "Practical digital tools that simplify your workflow and help you run your business more smoothly.",
-  },
-];
-
-const reasons = [
-  "Designed for real small-business workflows",
-  "Modern and mobile-friendly",
-  "Easy to understand and use",
-  "One-time purchase options available",
-  "Built with customization in mind",
-  "Support available when you need it",
-];
-
-const roles = [
-  "Nutrition and Dietetics Student",
-  "Virtual Assistant",
-  "Property Management VA",
-  "Nail Technician",
-  "Nail Artist",
-  "Digital Creator",
-  "Web Designer",
-  "MOM",
-];
+const solutionAreas = [
+  [
+    "01",
+    "Business Websites",
+    "Professional websites built to give businesses a stronger and more credible online presence.",
+  ],
+  [
+    "02",
+    "Booking Systems",
+    "Booking experiences with services, schedules, availability, and management tools.",
+  ],
+  [
+    "03",
+    "Online Shops",
+    "From simple product storefronts to more advanced custom e-commerce workflows.",
+  ],
+  [
+    "04",
+    "Custom Web Systems",
+    "Dashboards, portals, management tools, reviewers, and purpose-built web applications.",
+  ],
+] as const;
 
 export default async function Home() {
-  const { createAdminSupabaseClient } = await import("@/lib/supabase-admin");
+  const { createAdminSupabaseClient } = await import(
+    "@/lib/supabase-admin"
+  );
+
   const supabase = createAdminSupabaseClient();
 
   const { data: approvedReviews, error: reviewsError } = await supabase
     .from("reviews")
     .select(
-      "id,customer_name,business_name,product_name,rating,review_text,is_featured,display_order,created_at",
+      "id,customer_name,business_name,product_name,rating,review_text,is_featured,display_order,created_at"
     )
     .eq("status", "APPROVED")
     .order("is_featured", { ascending: false })
@@ -110,6 +107,10 @@ export default async function Home() {
       <SiteHeader />
 
       <main>
+        {/* =====================================================
+            HERO
+        ===================================================== */}
+
         <section className="hero">
           <div className="hero-decoration hero-decoration-one" />
           <div className="hero-decoration hero-decoration-two" />
@@ -118,530 +119,517 @@ export default async function Home() {
             <div className="hero-copy">
               <div className="eyebrow">
                 <span className="eyebrow-dot" />
-                Digital solutions for modern businesses
+                Custom-coded digital solutions
               </div>
 
               <h1>
-                Smart systems.
-                <span>Beautiful digital solutions.</span>
+                Built for your business.
+                <span>Not from a template.</span>
               </h1>
 
               <p className="hero-description">
-                Booking systems, websites, digital products, and practical
-                business tools created to make running your business feel
-                easier, cleaner, and more professional.
+                Websites, business systems, e-commerce, booking solutions, and
+                custom web applications designed and developed around how your
+                business actually works.
               </p>
 
               <div className="hero-actions">
                 <Link className="button button-primary" href="/shop">
-                  Shop Our Products
-                  <span aria-hidden="true">→</span>
-                </Link>
-
-                <a className="button button-secondary" href="#categories">
                   Explore Solutions
-                </a>
+                  <span>→</span>
+                </Link>
 
-                <Link className="button button-secondary" href="/policies">
-                  Policies
+                <Link
+                  className="button button-secondary"
+                  href="/shop/custom-business-website"
+                >
+                  Request a Quote
                 </Link>
               </div>
 
-              <div className="hero-trust">
-                <div>
-                  <strong>One-time</strong>
-                  <span>purchase options</span>
-                </div>
-                <div className="hero-trust-divider" />
-                <div>
-                  <strong>Made for</strong>
-                  <span>small businesses</span>
-                </div>
-                <div className="hero-trust-divider" />
-                <div>
-                  <strong>Built to be</strong>
-                  <span>easy to use</span>
-                </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  alignItems: "stretch",
+                  width: "100%",
+                  maxWidth: "540px",
+                  margin: "20px auto 0",
+                  paddingTop: "16px",
+                  borderTop: "1px solid #eadde2",
+                }}
+              >
+                {[
+                  ["100%", "custom coded"],
+                  ["1:1", "business-focused"],
+                  ["Web-based", "modern solutions"],
+                ].map(([value, label], index) => (
+                  <div
+                    key={value}
+                    style={{
+                      position: "relative",
+                      display: "grid",
+                      gridTemplateRows: "auto auto",
+                      alignContent: "start",
+                      justifyItems: "center",
+                      boxSizing: "border-box",
+                      minWidth: 0,
+                      padding: "0 8px",
+                    }}
+                  >
+                    {index > 0 && (
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          bottom: 0,
+                          left: 0,
+                          width: "1px",
+                          background: "#eadde2",
+                        }}
+                      />
+                    )}
+
+                    <strong
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        margin: 0,
+                        padding: 0,
+                        color: "#3b2d32",
+                        fontSize: "12px",
+                        fontWeight: 800,
+                        lineHeight: "16px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {value}
+                    </strong>
+
+                    <span
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        margin: "4px 0 0",
+                        padding: 0,
+                        color: "#88767d",
+                        fontSize: "9px",
+                        fontWeight: 500,
+                        lineHeight: "13px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <div className="hero-visual">
-              <div className="hero-glow" />
-
-              <div className="browser-card">
-                <div className="browser-topbar">
-                  <div className="browser-dots">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="browser-address">tcl.systems</div>
-                </div>
-
-                <div className="browser-content">
-                  <div className="mock-navigation">
-                    <div className="mock-logo">TCL</div>
-                    <div className="mock-links">
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                  </div>
-
-                  <div className="mock-hero">
-                    <span className="mock-badge">BOOKING SYSTEM</span>
-                    <div className="mock-title mock-title-large" />
-                    <div className="mock-title mock-title-short" />
-                    <div className="mock-copy" />
-                    <div className="mock-copy mock-copy-short" />
-                    <div className="mock-buttons">
-                      <span />
-                      <span />
-                    </div>
-                  </div>
-
-                  <div className="mock-products">
-                    <div />
-                    <div />
-                    <div />
-                  </div>
-                </div>
-              </div>
-
-              <div className="floating-card floating-card-sales">
-                <span className="floating-icon">↗</span>
-                <div>
-                  <small>Digital products</small>
-                  <strong>Built to sell</strong>
-                </div>
-              </div>
-
-              <div className="floating-card floating-card-easy">
-                <span className="floating-check">✓</span>
-                <div>
-                  <small>Made simple</small>
-                  <strong>Easy to manage</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="container brand-strip">
-            <span>BOOKING SYSTEMS</span>
-            <i />
-            <span>WEBSITES</span>
-            <i />
-            <span>DIGITAL PRODUCTS</span>
-            <i />
-            <span>BUSINESS TOOLS</span>
           </div>
         </section>
 
-        <section className="section section-white" id="shop">
-          <div className="container">
-            <div className="section-heading section-heading-row">
-              <div>
-                <span className="section-kicker">Featured products</span>
-                <h2>Made to help your business work smarter.</h2>
-              </div>
+        {/* =====================================================
+            ABOUT TCL
+        ===================================================== */}
 
-              <Link className="text-link" href="/shop">
-                View all products
+        <section className="section tcl-intro-section">
+          <div className="container tcl-intro-grid">
+            <div className="tcl-intro-copy">
+              <span className="section-kicker">About TCL</span>
+
+              <h2>Built around your business, not a template.</h2>
+
+              <p className="tcl-intro-lead">
+                TCL Systems &amp; Digitals PH creates custom-coded websites,
+                business systems, and digital solutions for businesses that
+                need more than a generic online presence.
+              </p>
+
+              <p>
+                Every project starts with what the business needs, how the
+                customer should experience it, and what should happen behind
+                the scenes.
+              </p>
+
+              <Link className="text-link" href="/about">
+                About TCL &amp; the Developer
                 <span>→</span>
               </Link>
             </div>
 
-            <div className="product-grid">
-              {featuredProducts.map((product, index) => (
-                <article className="product-card" key={product.title}>
-                  <div className={`product-preview product-preview-${index + 1}`}>
-                    <div className="product-tag">{product.tag}</div>
-
-                    {index === 0 && (
-                      <div className="preview-window">
-                        <div className="preview-window-bar">
-                          <span />
-                          <span />
-                          <span />
-                        </div>
-                        <div className="preview-window-body">
-                          <div className="preview-sidebar">
-                            <div className="preview-mini-logo" />
-                            <span />
-                            <span />
-                            <span />
-                            <span />
-                          </div>
-                          <div className="preview-dashboard">
-                            <div className="preview-dashboard-heading" />
-                            <div className="preview-stat-row">
-                              <span />
-                              <span />
-                              <span />
-                            </div>
-                            <div className="preview-chart" />
-                          </div>
-                        </div>
-                      </div>
+            <div className="developer-stat-panel">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  alignItems: "stretch",
+                  width: "100%",
+                }}
+              >
+                {[
+                  ["2026", "Established"],
+                  ["100%", "Custom Coded"],
+                  ["1:1", "Built for Your Business"],
+                ].map(([value, label], index) => (
+                  <div
+                    key={value}
+                    style={{
+                      position: "relative",
+                      display: "grid",
+                      gridTemplateRows: "auto auto",
+                      alignContent: "start",
+                      justifyItems: "center",
+                      boxSizing: "border-box",
+                      width: "100%",
+                      minWidth: 0,
+                      padding: "12px 6px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {index > 0 && (
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          position: "absolute",
+                          top: "8px",
+                          bottom: "8px",
+                          left: 0,
+                          width: "1px",
+                          background: "rgba(255,255,255,.16)",
+                        }}
+                      />
                     )}
 
-                    {index === 1 && (
-                      <div className="digital-preview">
-                        <div className="digital-sheet digital-sheet-back">
-                          <span />
-                          <span />
-                          <span />
-                        </div>
-                        <div className="digital-sheet digital-sheet-front">
-                          <small>BUSINESS</small>
-                          <strong>Starter Kits</strong>
-                          <span />
-                          <span />
-                          <span />
-                        </div>
-                      </div>
-                    )}
+                    <strong
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        margin: 0,
+                        padding: 0,
+                        textAlign: "center",
+                      }}
+                    >
+                      {value}
+                    </strong>
 
-                    {index === 2 && (
-                      <div className="website-preview">
-                        <div className="website-preview-bar">
-                          <span />
-                          <span />
-                          <span />
-                        </div>
-                        <div className="website-preview-nav">
-                          <strong>TCL</strong>
-                          <div>
-                            <span />
-                            <span />
-                            <span />
-                          </div>
-                        </div>
-                        <div className="website-preview-hero">
-                          <small>YOUR BUSINESS</small>
-                          <strong>Designed to stand out.</strong>
-                          <span />
-                          <div />
-                        </div>
-                      </div>
-                    )}
+                    <span
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        margin: "5px 0 0",
+                        padding: 0,
+                        textAlign: "center",
+                        fontSize: "9px",
+                        lineHeight: "1.2",
+                        fontWeight: 500,
+                        color: "#9a8f93",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {label}
+                    </span>
                   </div>
-
-                  <div className="product-content">
-                    <span className="product-category">{product.category}</span>
-                    <h3>{product.title}</h3>
-                    <p>{product.description}</p>
-
-                    <div className="product-footer">
-                      <div className="product-price">
-                        <small>Starts at</small>
-                        <strong>{product.price}</strong>
-                      </div>
-
-                      {product.available ? (
-                        <Link
-                          className="product-arrow"
-                          href={product.href}
-                          aria-label={`View ${product.title}`}
-                        >
-                          →
-                        </Link>
-                      ) : (
-                        <a
-                          className="product-arrow"
-                          href={product.href}
-                          aria-label={
-                            product.title === "Custom Business Website"
-                              ? `Ask about ${product.title}`
-                              : `${product.title} coming soon`
-                          }
-                        >
-                          →
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section reviews-section" id="reviews">
-          <div className="container">
-            <div className="reviews-heading">
-              <div>
-                <span className="section-kicker">Client love ♡</span>
-                <h2>Reviews &amp; recommendations.</h2>
-                <p>
-                  Kind words from clients and business owners I&apos;ve had the
-                  pleasure of creating for.
-                </p>
+                ))}
               </div>
 
-              <div className="reviews-rating-summary">
-                <strong>
-                  {reviews.length > 0
-                    ? (
-                        reviews.reduce(
-                          (sum, review) => sum + Number(review.rating || 0),
-                          0,
-                        ) / reviews.length
-                      ).toFixed(1)
-                    : "5.0"}
-                </strong>
-                <div>
-                  <span className="reviews-summary-stars">★★★★★</span>
+              <div className="developer-stack">
+                <small>TOOLS &amp; TECHNOLOGIES</small>
+
+                <div className="developer-stack-list">
+                  {stack.map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
                 </div>
               </div>
             </div>
+          </div>
+        </section>
 
-            {reviews.length > 0 ? (
-              <ReviewsSliderClient reviews={reviews} />
-            ) : (
-              <div className="reviews-empty-state">
-                Approved reviews will appear here.
-              </div>
-            )}
+        {/* =====================================================
+            WEBSITE PACKAGES
+        ===================================================== */}
 
-            <div className="reviews-recommendation">
-              <div className="reviews-recommendation-icon">♡</div>
-              <div className="reviews-recommendation-copy">
-                <span>Have you worked with TCL?</span>
-                <strong>Your feedback means a lot.</strong>
+        <section className="section section-white" id="websites">
+          <div className="container">
+            <div className="section-heading section-heading-row">
+              <div>
+                <span className="section-kicker">Website solutions</span>
+
+                <h2>
+                  Start simple. Build up when your business needs more.
+                </h2>
+
                 <p>
-                  Reviews and recommendations help other small business owners
-                  feel more confident choosing the right digital solution.
+                  Choose a straightforward website package or request a custom
+                  build for advanced functionality.
                 </p>
               </div>
-              <a className="button button-secondary" href="#contact">
-                Leave a Review
+
+              <Link className="text-link" href="/shop">
+                View Shop
                 <span>→</span>
-              </a>
+              </Link>
+            </div>
+
+            <div
+              className="website-solution-grid"
+              style={{
+                display: "grid",
+                gap: "12px",
+                width: "100%",
+              }}
+            >
+              {websiteSolutions.map(
+                ([eyebrow, title, price, description, href, tag]) => (
+                  <article
+                    className="website-solution-card"
+                    key={title}
+                    style={{
+                      boxSizing: "border-box",
+                      width: "100%",
+                      minWidth: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                    }}
+                  >
+                    <div className="website-solution-top">
+                      <span className="website-solution-eyebrow">
+                        {eyebrow}
+                      </span>
+
+                      <span
+                        className="website-solution-tag"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          width: "max-content",
+                          minWidth: "max-content",
+                          maxWidth: "none",
+                          whiteSpace: "nowrap",
+                          wordBreak: "normal",
+                          overflowWrap: "normal",
+                          paddingLeft: "10px",
+                          paddingRight: "10px",
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    </div>
+
+                    <h3
+                      style={{
+                        minHeight: "3.1em",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      {title}
+                    </h3>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        flex: "1 1 auto",
+                      }}
+                    >
+                      <strong className="website-solution-price">
+                        {price}
+                      </strong>
+
+                      <p>{description}</p>
+                    </div>
+
+                    <Link
+                      className="website-solution-link"
+                      href={href}
+                    >
+                      Learn More
+                      <span>→</span>
+                    </Link>
+                  </article>
+                )
+              )}
+            </div>
+
+            <div className="website-solution-note">
+              <span>♡</span>
+
+              <p>
+                Starter, Simple Business Website, and Basic Online Shop
+                packages do not include a self-managed admin dashboard unless
+                stated otherwise. Custom domains and additional features can
+                be quoted separately.
+              </p>
             </div>
           </div>
         </section>
 
-        <section className="section categories-section" id="categories">
+        {/* =====================================================
+            DIGITAL SOLUTIONS
+        ===================================================== */}
+
+        <section className="section solutions-section">
           <div className="container">
             <div className="section-heading centered-heading">
-              <span className="section-kicker">What we create</span>
-              <h2>Digital solutions for different stages of your business.</h2>
+              <span className="section-kicker">More than websites</span>
+
+              <h2>Digital solutions built for real workflows.</h2>
+
               <p>
-                Whether you are just starting or already growing, choose the
-                solution that matches what your business needs right now.
+                TCL also develops systems and web applications for bookings,
+                customers, orders, information, and day-to-day processes.
               </p>
             </div>
 
             <div className="category-grid">
-              {categories.map((category) => (
-                <article className="category-card" key={category.number}>
-                  <span className="category-number">{category.number}</span>
+              {solutionAreas.map(([number, title, description]) => (
+                <article className="category-card" key={number}>
+                  <span className="category-number">{number}</span>
+
                   <div>
-                    <h3>{category.title}</h3>
-                    <p>{category.description}</p>
+                    <h3>{title}</h3>
+                    <p>{description}</p>
                   </div>
+
                   <span className="category-arrow">↗</span>
                 </article>
               ))}
             </div>
-          </div>
-        </section>
 
-        <section className="section section-white">
-          <div className="container custom-grid">
-            <div className="custom-visual">
-              <div className="custom-shape custom-shape-one" />
-              <div className="custom-shape custom-shape-two" />
-
-              <div className="custom-window">
-                <div className="custom-window-header">
-                  <div>
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <small>YOUR BUSINESS</small>
-                </div>
-
-                <div className="custom-window-body">
-                  <span className="custom-pill">CUSTOMIZED FOR YOU</span>
-                  <div className="custom-window-title" />
-                  <div className="custom-window-title custom-window-title-small" />
-                  <div className="custom-window-copy" />
-                  <div className="custom-window-copy custom-window-copy-short" />
-                  <div className="custom-window-button" />
-                  <div className="custom-window-cards">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="custom-copy">
-              <span className="section-kicker">Need something more personal?</span>
-              <h2>Not everything has to come straight off the shelf.</h2>
-              <p>
-                If your business needs a more specific workflow, branding, or
-                feature set, TCL also offers customized website and system
-                services.
-              </p>
-
-              <div className="custom-points">
-                <div><span>✓</span>Customized around your business</div>
-                <div><span>✓</span>Built for your actual workflow</div>
-                <div><span>✓</span>Additional features available when needed</div>
-              </div>
-
-              <Link className="button button-primary" href="/shop/custom-business-website">
-                Ask About Customization
+            <div className="solutions-actions">
+              <Link className="button button-primary" href="/shop">
+                Browse Solutions
                 <span>→</span>
+              </Link>
+
+              <Link
+                className="button button-secondary"
+                href="/portfolio"
+              >
+                View Portfolio
               </Link>
             </div>
           </div>
         </section>
 
-        <section className="section section-white">
-          <div className="container why-grid">
-            <div className="why-copy">
-              <span className="section-kicker">Why TCL?</span>
-              <h2>Pretty is good. Functional is better. We do both.</h2>
-              <p>
-                TCL Systems &amp; Digitals PH focuses on digital products that
-                feel polished but still make sense for the person actually
-                using them.
-              </p>
+        {/* =====================================================
+            HOW IT WORKS
+        ===================================================== */}
 
-              <div className="why-list">
-                {reasons.map((reason) => (
-                  <div key={reason}>
-                    <span>✓</span>
-                    {reason}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="why-stat-card">
-              <div className="why-stat-top">
-                <span>MADE FOR</span>
-                <strong>Small Business Owners</strong>
-              </div>
-              <div className="why-stat-middle">
-                <div><strong>01</strong><span>Professional</span></div>
-                <div><strong>02</strong><span>Practical</span></div>
-                <div><strong>03</strong><span>Easy to use</span></div>
-              </div>
-              <div className="why-stat-bottom">
-                <span>Less complicated.</span>
-                <strong>More business-ready.</strong>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="section about-section" id="about">
-          <div className="container about-grid">
-            <div className="about-photo-column">
-              <div className="about-photo-decoration about-photo-decoration-one" />
-              <div className="about-photo-decoration about-photo-decoration-two" />
-
-              <div className="about-photo-frame">
-                <Image
-                  src="/marie-about.jpg"
-                  alt="Marie, founder of TCL Systems & Digitals PH"
-                  width={900}
-                  height={1200}
-                  className="about-photo"
-                />
+        <section className="section section-white home-process-section">
+          <div className="container">
+            <div className="section-heading section-heading-row">
+              <div>
+                <span className="section-kicker">How it works</span>
+                <h2>A clear process from idea to launch.</h2>
               </div>
 
-              <div className="about-photo-badge">
-                <span>♡</span>
-                <div>
-                  <small>CREATIVE GIRLY</small>
-                  <strong>with big dreams</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="about-copy">
-              <span className="section-kicker">The girl behind TCL</span>
-              <h2>
-                Hey, I&apos;m Marie.
-                <span>A hardworking girly who wears many hats.</span>
-              </h2>
-
-              <p className="about-intro">
-                I&apos;m an ND student at CEU, a Virtual Assistant, nail tech,
-                artist, and the girl behind TCL Systems &amp; Digitals PH.
-              </p>
-              <p>
-                My life is basically a mix of mommy duties, studying, working,
-                creating, doing nails, building websites, and somehow finding
-                another idea to work on in between. ♡
-              </p>
-              <p>
-                I started TCL because I wanted to combine the things I genuinely
-                enjoy — creativity, technology, business, and helping people. I
-                love turning ideas into something beautiful, functional, and
-                actually useful.
-              </p>
-              <p>
-                Whether it&apos;s creating a booking system, designing a
-                website, working on digital products, or doing a fresh set of
-                nails, the goal is always the same: create something I&apos;m
-                proud of and make things a little easier for the person on the
-                other side.
-              </p>
-
-              <div className="about-roles">
-                {roles.map((role) => (
-                  <span key={role}>{role}</span>
-                ))}
-              </div>
-
-              <div className="about-quote">
-                <span className="about-quote-mark">“</span>
-                <div>
-                  <p>
-                    A girl who studies, works, creates, and still makes room for
-                    bigger dreams.
-                  </p>
-                  <strong>Same girl. Big dreams. ♡</strong>
-                </div>
-              </div>
-
-              <Link className="button button-primary" href="/shop/custom-business-website">
-                Let&apos;s Work Together
+              <Link className="text-link" href="/how-it-works">
+                See Full Process
                 <span>→</span>
               </Link>
             </div>
+
+            <div className="home-process-grid">
+              <article>
+                <span>01</span>
+                <h3>Choose or Request</h3>
+                <p>
+                  Pick an existing solution or tell TCL what you need for a
+                  custom project.
+                </p>
+              </article>
+
+              <article>
+                <span>02</span>
+                <h3>Confirm &amp; Pay</h3>
+                <p>
+                  Review the inclusions or quotation, confirm the project, and
+                  complete the applicable payment.
+                </p>
+              </article>
+
+              <article>
+                <span>03</span>
+                <h3>Build &amp; Review</h3>
+                <p>
+                  Your website or system is developed and reviewed based on
+                  the agreed scope.
+                </p>
+              </article>
+
+              <article>
+                <span>04</span>
+                <h3>Launch</h3>
+                <p>
+                  Once everything is ready, your project is prepared for
+                  delivery, setup, or launch.
+                </p>
+              </article>
+            </div>
           </div>
         </section>
+
+        {/* Reviews */}
+<section className="section section-soft reviews-section">
+  <div className="container">
+    <div className="reviews-heading">
+      <span className="eyebrow">CLIENT LOVE ♡</span>
+
+      <h2>What clients say about working with TCL.</h2>
+
+      <p>
+        Feedback from clients and business owners who trusted TCL with their
+        digital projects.
+      </p>
+    </div>
+
+    {reviews.length > 0 ? (
+      <ReviewsSliderClient reviews={reviews} />
+    ) : (
+      <div className="empty-state">
+        <p>Client reviews will appear here soon.</p>
+      </div>
+    )}
+  </div>
+</section>
+
+        {/* =====================================================
+            FINAL CTA
+        ===================================================== */}
 
         <section className="final-cta" id="contact">
           <div className="container final-cta-inner">
             <div>
-              <span className="final-cta-kicker">Ready when you are.</span>
+              <span className="final-cta-kicker">
+                Have something specific in mind?
+              </span>
+
               <h2>
-                Give your business the
-                <span>digital upgrade it deserves.</span>
+                Let&apos;s build around
+                <span>what your business actually needs.</span>
               </h2>
+
               <p>
-                Explore ready-made systems and digital products, or ask about a
-                customized solution for your business.
+                Start with a TCL solution or request a custom quotation for a
+                more advanced website, system, or web application.
               </p>
             </div>
 
             <div className="final-cta-actions">
               <Link className="button button-white" href="/shop">
-                Browse Products
+                Explore Solutions
                 <span>→</span>
               </Link>
-              <Link className="button button-outline-light" href="/shop/custom-business-website">
+
+              <Link
+                className="button button-outline-light"
+                href="/shop/custom-business-website"
+              >
                 Request a Custom Quote
               </Link>
             </div>
@@ -649,6 +637,7 @@ export default async function Home() {
         </section>
       </main>
 
+      <BackToTop />
       <SiteFooter />
     </>
   );

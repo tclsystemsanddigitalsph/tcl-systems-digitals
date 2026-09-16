@@ -36,9 +36,7 @@ export default function ReviewsSliderClient({
     if (!firstCard) return slider.clientWidth;
 
     const computed = window.getComputedStyle(slider);
-    const gap = Number.parseFloat(
-      computed.columnGap || computed.gap || "0",
-    );
+    const gap = Number.parseFloat(computed.columnGap || computed.gap || "0");
 
     return firstCard.getBoundingClientRect().width + gap;
   }
@@ -50,9 +48,21 @@ export default function ReviewsSliderClient({
     const step = getStep();
     if (step <= 0) return;
 
+    const firstCard = slider.querySelector<HTMLElement>(
+      `.${styles.reviewCard}`,
+    );
+    if (!firstCard) return;
+
+    const gap = Number.parseFloat(
+      window.getComputedStyle(slider).columnGap ||
+        window.getComputedStyle(slider).gap ||
+        "0",
+    );
+
+    const cardWidth = firstCard.getBoundingClientRect().width;
     const nextVisible = Math.max(
       1,
-      Math.round(slider.clientWidth / step),
+      Math.round((slider.clientWidth + gap) / (cardWidth + gap)),
     );
 
     const maxIndex = Math.max(0, reviews.length - nextVisible);
@@ -80,12 +90,10 @@ export default function ReviewsSliderClient({
       scrollTimerRef.current = setTimeout(() => {
         updatePosition();
         scrollTimerRef.current = null;
-      }, 50);
+      }, 70);
     };
 
-    const onResize = () => {
-      updatePosition();
-    };
+    const onResize = () => updatePosition();
 
     slider.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
@@ -93,7 +101,6 @@ export default function ReviewsSliderClient({
     return () => {
       if (scrollTimerRef.current) {
         clearTimeout(scrollTimerRef.current);
-        scrollTimerRef.current = null;
       }
 
       slider.removeEventListener("scroll", onScroll);
@@ -120,6 +127,8 @@ export default function ReviewsSliderClient({
     });
   }
 
+  if (reviews.length === 0) return null;
+
   return (
     <div className={styles.shell}>
       <div
@@ -134,41 +143,38 @@ export default function ReviewsSliderClient({
           );
 
           return (
-            <article
-              className={`review-card ${
-                review.is_featured ? "review-card-featured" : ""
-              } ${styles.reviewCard}`}
-              key={review.id}
-            >
-              <div className={styles.cardTop}>
-                <div className={`review-quote-icon ${styles.quoteIcon}`}>
+            <article className={styles.reviewCard} key={review.id}>
+              {review.is_featured && (
+                <span className={styles.featured}>Featured</span>
+              )}
+
+              <div className={styles.reviewTop}>
+                <div className={styles.quoteIcon} aria-hidden="true">
                   “
                 </div>
 
                 <div
-                  className={`review-stars ${styles.stars}`}
+                  className={styles.stars}
                   aria-label={`${rating} out of 5 stars`}
                 >
                   {"★".repeat(rating)}
                 </div>
               </div>
 
-              <p className={`review-text ${styles.reviewText}`}>
-                {review.review_text}
-              </p>
+              <p className={styles.reviewText}>{review.review_text}</p>
 
-              <div className={`review-client ${styles.client}`}>
-                <div className={`review-avatar ${styles.avatar}`}>
+              <div className={styles.client}>
+                <div className={styles.avatar}>
                   {review.customer_name.charAt(0).toUpperCase()}
                 </div>
 
-                <div className="review-client-info">
+                <div className={styles.clientInfo}>
                   <strong>{review.customer_name}</strong>
                   <span>{review.business_name || "TCL Client"}</span>
                 </div>
               </div>
 
-              <div className={`review-product ${styles.product}`}>
+              <div className={styles.product}>
                 <span>{review.product_name ? "Purchased" : "Review"}</span>
                 <strong>
                   {review.product_name || "TCL Systems & Digitals PH"}
@@ -179,41 +185,43 @@ export default function ReviewsSliderClient({
         })}
       </div>
 
-      <div className={styles.controls}>
-        <button
-          type="button"
-          className={styles.arrow}
-          onClick={() => goTo(activeIndex - 1)}
-          disabled={activeIndex <= 0}
-          aria-label="Previous review"
-        >
-          ←
-        </button>
+      {pageCount > 1 && (
+        <div className={styles.controls}>
+          <button
+            type="button"
+            className={styles.arrow}
+            onClick={() => goTo(activeIndex - 1)}
+            disabled={activeIndex <= 0}
+            aria-label="Previous review"
+          >
+            ←
+          </button>
 
-        <div className={styles.dots}>
-          {dots.map((index) => (
-            <button
-              key={index}
-              type="button"
-              className={`${styles.dot} ${
-                index === activeIndex ? styles.activeDot : ""
-              }`}
-              onClick={() => goTo(index)}
-              aria-label={`Go to review ${index + 1}`}
-            />
-          ))}
+          <div className={styles.dots}>
+            {dots.map((index) => (
+              <button
+                key={index}
+                type="button"
+                className={`${styles.dot} ${
+                  index === activeIndex ? styles.activeDot : ""
+                }`}
+                onClick={() => goTo(index)}
+                aria-label={`Go to review ${index + 1}`}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className={styles.arrow}
+            onClick={() => goTo(activeIndex + 1)}
+            disabled={activeIndex >= pageCount - 1}
+            aria-label="Next review"
+          >
+            →
+          </button>
         </div>
-
-        <button
-          type="button"
-          className={styles.arrow}
-          onClick={() => goTo(activeIndex + 1)}
-          disabled={activeIndex >= pageCount - 1}
-          aria-label="Next review"
-        >
-          →
-        </button>
-      </div>
+      )}
     </div>
   );
 }
