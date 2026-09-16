@@ -18,6 +18,7 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 .slider::-webkit-scrollbar {
@@ -30,51 +31,74 @@
   width: calc((100% - 36px) / 3);
   min-width: 0;
   min-height: 320px;
+
   display: flex;
   flex-direction: column;
+
   padding: 26px 24px 22px;
+
   overflow: hidden;
   box-sizing: border-box;
+
   border: 1px solid #f0dce4;
   border-radius: 22px;
+
   background: #ffffff;
-  box-shadow: 0 12px 32px rgba(93, 55, 68, 0.07);
+
+  box-shadow:
+    0 12px 32px rgba(93, 55, 68, 0.07);
+
   scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .featured {
   position: absolute;
   top: 17px;
   right: 18px;
+
   padding: 5px 9px;
+
   border-radius: 999px;
+
   background: #fff1f6;
   color: #c4517d;
+
   font-size: 8px;
   font-weight: 850;
   line-height: 1;
   letter-spacing: 0.08em;
+
   text-transform: uppercase;
 }
 
 .reviewTop {
   display: flex;
   align-items: center;
+
   gap: 10px;
+
   min-height: 34px;
+
   margin: 0 0 14px;
 }
 
 .quoteIcon {
   width: 34px;
   height: 34px;
+
   display: grid;
   place-items: center;
+
   flex: 0 0 34px;
+
   margin: 0;
+
   border-radius: 11px;
+
   background: #fff2f6;
   color: #d8578a;
+
   font-size: 22px;
   font-weight: 800;
   line-height: 1;
@@ -82,23 +106,34 @@
 
 .stars {
   width: max-content;
+
   margin: 0;
+
   color: #dc5d8e;
+
   font-size: 14px;
   line-height: 1;
   letter-spacing: 1px;
+
   white-space: nowrap;
 }
 
 .reviewText {
+  width: 100%;
+
   margin: 0;
+
   color: #6f6267;
+
   font-size: 12px;
   font-weight: 450;
   line-height: 1.7;
+
   text-align: left;
+
   word-spacing: normal;
   letter-spacing: normal;
+
   white-space: normal;
   overflow-wrap: break-word;
 }
@@ -106,111 +141,182 @@
 .client {
   display: flex;
   align-items: center;
+
   gap: 11px;
+
   margin-top: auto;
   padding-top: 22px;
+
   border-top: 1px solid #f2e3e9;
 }
 
 .avatar {
   width: 42px;
   height: 42px;
+
   display: grid;
   place-items: center;
+
   flex: 0 0 42px;
+
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd8e6, #f39cbd);
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffd8e6,
+      #f39cbd
+    );
+
   color: #ffffff;
+
   font-size: 12px;
   font-weight: 850;
 }
 
 .clientInfo {
   min-width: 0;
+
   display: flex;
   flex-direction: column;
+
   gap: 3px;
 }
 
 .clientInfo strong {
-  overflow-wrap: anywhere;
   color: #3d3035;
+
   font-size: 11px;
   font-weight: 800;
   line-height: 1.3;
+
+  overflow-wrap: anywhere;
 }
 
 .clientInfo span {
-  overflow-wrap: anywhere;
   color: #9a898f;
+
   font-size: 9px;
   line-height: 1.3;
+
+  overflow-wrap: anywhere;
 }
 
 .product {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 12px;
+
   margin-top: 14px;
   padding: 11px 12px;
+
   border-radius: 12px;
+
   background: #fff8fa;
 }
 
 .product span {
   flex: 0 0 auto;
+
   color: #aa949c;
+
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.08em;
+
   text-transform: uppercase;
 }
 
 .product strong {
   min-width: 0;
+
   color: #c4517d;
+
   font-size: 9px;
   font-weight: 800;
   line-height: 1.3;
+
   text-align: right;
+
   overflow-wrap: anywhere;
 }
 
+/* =========================
+   SLIDER CONTROLS
+   ========================= */
+
 .controls {
+  position: relative;
+  z-index: 5;
+
+  width: 100%;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-top: 18px;
+
+  gap: 13px;
+
+  margin: 20px auto 0;
+  padding: 2px 0;
+
+  box-sizing: border-box;
 }
 
 .arrow {
+  appearance: none;
+  -webkit-appearance: none;
+
   width: 38px;
   height: 38px;
+
   min-width: 38px;
   min-height: 38px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
+  flex: 0 0 38px;
+
+  margin: 0;
   padding: 0;
+
   border: 1px solid #e9bfd0;
   border-radius: 50%;
+
   background: #ffffff;
   color: #b84e77;
+
+  box-shadow:
+    0 5px 14px rgba(93, 55, 68, 0.06);
+
+  font: inherit;
   font-size: 14px;
+  font-weight: 700;
   line-height: 1;
+
   cursor: pointer;
+
   transition:
     transform 160ms ease,
     border-color 160ms ease,
-    background 160ms ease;
+    background 160ms ease,
+    opacity 160ms ease;
 }
 
 .arrow:hover:not(:disabled) {
   transform: translateY(-1px);
+
   border-color: #d8578a;
+
   background: #fff8fb;
+}
+
+.arrow:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .arrow:disabled {
@@ -219,29 +325,63 @@
 }
 
 .dots {
+  min-height: 26px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  padding: 0 3px;
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
-  min-width: 6px;
-  min-height: 6px;
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 7px;
+  height: 7px;
+
+  min-width: 7px;
+  min-height: 7px;
+
+  flex: 0 0 7px;
+
+  margin: 0;
   padding: 0;
+
   border: 0;
   border-radius: 999px;
-  background: #e8c5d3;
+
+  background: #e7bdce;
+
+  box-shadow: none;
+
   cursor: pointer;
-  transition: width 160ms ease, background 160ms ease;
+
+  transition:
+    width 160ms ease,
+    flex-basis 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.dot:hover {
+  background: #dc8eac;
 }
 
 .activeDot {
-  width: 18px;
+  width: 22px;
+  flex-basis: 22px;
+
   background: #d8578a;
 }
+
+/* =========================
+   TABLET
+   ========================= */
 
 @media (max-width: 1024px) {
   .slider {
@@ -249,51 +389,74 @@
   }
 
   .reviewCard {
-    flex-basis: calc((100% - 16px) / 2);
-    width: calc((100% - 16px) / 2);
+    flex-basis:
+      calc((100% - 16px) / 2);
+
+    width:
+      calc((100% - 16px) / 2);
+
     min-height: 310px;
   }
 }
+
+/* =========================
+   MOBILE
+   ========================= */
 
 @media (max-width: 650px) {
   .shell {
     width: 100%;
     max-width: 100%;
+
     margin-top: 22px;
-    overflow: hidden;
+
+    overflow: visible;
   }
 
   .slider {
     width: 100%;
     max-width: 100%;
+
     gap: 12px;
+
     padding: 3px 0 7px;
+
     overflow-x: auto;
     overflow-y: hidden;
+
     scroll-padding: 0;
   }
 
   .reviewCard {
     flex: 0 0 100%;
+
     width: 100%;
     min-width: 100%;
     max-width: 100%;
+
     min-height: 0;
+
     padding: 20px 17px 17px;
+
     border-radius: 18px;
+
     scroll-snap-align: start;
   }
 
   .featured {
     top: 14px;
     right: 14px;
+
     padding: 4px 7px;
+
     font-size: 7px;
   }
 
   .reviewTop {
     min-height: 32px;
+
     gap: 9px;
+
     margin-bottom: 12px;
     padding-right: 64px;
   }
@@ -301,8 +464,11 @@
   .quoteIcon {
     width: 32px;
     height: 32px;
+
     flex-basis: 32px;
+
     border-radius: 10px;
+
     font-size: 20px;
   }
 
@@ -313,18 +479,24 @@
 
   .reviewText {
     width: 100%;
+
     margin: 0;
+
     font-size: 11px;
     line-height: 1.6;
+
     text-align: left;
+
     word-spacing: normal;
     letter-spacing: normal;
+
     white-space: normal;
     overflow-wrap: anywhere;
   }
 
   .client {
     gap: 9px;
+
     margin-top: 18px;
     padding-top: 16px;
   }
@@ -332,6 +504,7 @@
   .avatar {
     width: 38px;
     height: 38px;
+
     flex-basis: 38px;
   }
 
@@ -345,6 +518,7 @@
 
   .product {
     gap: 8px;
+
     margin-top: 11px;
     padding: 9px 10px;
   }
@@ -358,15 +532,47 @@
   }
 
   .controls {
-    gap: 9px;
-    margin-top: 13px;
+    gap: 10px;
+
+    margin-top: 15px;
+    padding-bottom: 2px;
   }
 
   .arrow {
     width: 36px;
     height: 36px;
+
     min-width: 36px;
     min-height: 36px;
+
+    flex-basis: 36px;
+
+    font-size: 13px;
+  }
+
+  .dots {
+    max-width: calc(100% - 92px);
+
+    min-height: 24px;
+
+    gap: 5px;
+
+    overflow: visible;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+
+    min-width: 6px;
+    min-height: 6px;
+
+    flex-basis: 6px;
+  }
+
+  .activeDot {
+    width: 18px;
+    flex-basis: 18px;
   }
 }
 

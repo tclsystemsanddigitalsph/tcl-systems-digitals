@@ -517,6 +517,111 @@ export default async function Home() {
         </section>
 
         {/* =====================================================
+            SELECTED WORK
+        ===================================================== */}
+
+        <section className="section selected-work-section">
+          <div className="container">
+            <div className="section-heading section-heading-row selected-work-heading">
+              <div>
+                <span className="section-kicker">Selected work</span>
+                <h2>Real projects built around real business needs.</h2>
+                <p>
+                  A closer look at custom websites and systems developed by TCL,
+                  with each project shaped around the client&apos;s workflow,
+                  services, and goals.
+                </p>
+              </div>
+
+              <Link className="text-link" href="/portfolio">
+                View Full Portfolio
+                <span>→</span>
+              </Link>
+            </div>
+
+            <article className="selected-project-card">
+              <div className="selected-project-preview" aria-hidden="true">
+                <div className="selected-project-browser">
+                  <div className="selected-project-browser-bar">
+                    <span />
+                    <span />
+                    <span />
+                    <div className="selected-project-browser-address">
+                      pointzrstudio.vercel.app
+                    </div>
+                  </div>
+
+                  <div className="selected-project-screen">
+                    <div className="selected-project-screen-nav">
+                      <strong>POINT ZR STUDIO</strong>
+                      <span>BOOK NOW</span>
+                    </div>
+
+                    <div className="selected-project-screen-copy">
+                      <small>BEAUTY · STUDIO · BOOKINGS</small>
+                      <strong>Book your next appointment online.</strong>
+                      <p>
+                        Services, schedules, availability, and booking management
+                        in one custom-built experience.
+                      </p>
+                      <span className="selected-project-screen-button">
+                        Book Appointment
+                      </span>
+                    </div>
+
+                    <div className="selected-project-screen-cards">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="selected-project-content">
+                <div className="selected-project-meta">
+                  <span>Booking System</span>
+                  <span>Business Website</span>
+                </div>
+
+                <h3>Point ZR Studio</h3>
+
+                <p>
+                  A custom booking website designed to make appointment scheduling
+                  easier for customers while giving the business a structured way
+                  to manage services, variations, availability, and bookings.
+                </p>
+
+                <div className="selected-project-features">
+                  <span>Online Booking</span>
+                  <span>Services &amp; Variations</span>
+                  <span>Availability</span>
+                  <span>Admin Management</span>
+                  <span>Mobile-Friendly</span>
+                </div>
+
+                <div className="selected-project-actions">
+                  <a
+                    className="button button-primary"
+                    href="https://pointzrstudio.vercel.app"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View Live Project
+                    <span>↗</span>
+                  </a>
+
+                  <Link className="text-link" href="/portfolio">
+                    Project Details
+                    <span>→</span>
+                  </Link>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        {/* =====================================================
             HOW IT WORKS
         ===================================================== */}
 
