@@ -8,7 +8,7 @@ import styles from "./faqs.module.css";
 export const metadata: Metadata = {
   title: "FAQs | TCL Systems & Digitals PH",
   description:
-    "Easy-to-understand answers about TCL Systems & Digitals PH products, payments, delivery, support, customization, policies, booking systems, and websites.",
+    "Answers about TCL websites, booking systems, custom development, quotations, payments, maintenance support, domains, delivery, and project policies.",
 };
 
 export default function FAQsPage() {
@@ -22,24 +22,53 @@ export default function FAQsPage() {
           <div className={styles.heroGlowTwo} />
 
           <div className={`container ${styles.heroInner}`}>
-            <span className={styles.eyebrow}>TCL Help Center ♡</span>
+            <span className={styles.eyebrow}>TCL HELP CENTER ♡</span>
+
             <h1>
-              Questions before you buy?
-              <span>Everything is right here.</span>
+              Questions?
+              <span>Start here.</span>
             </h1>
+
             <p>
-              Simple answers about TCL products, payments, delivery, support,
-              customization, policies, booking systems, websites, and more.
+              Clear answers about TCL website packages, custom development,
+              quotations, payments, maintenance support, domains, delivery,
+              project communication, and what happens after your purchase.
             </p>
 
             <div className={styles.heroActions}>
               <Link className="button button-primary" href="/shop">
-                Browse Products
+                Browse Solutions
                 <span>→</span>
               </Link>
-              <Link className="button button-secondary" href="/policies">
-                View Policies
+
+              <Link
+                className="button button-secondary"
+                href="/how-it-works"
+              >
+                How It Works
               </Link>
+            </div>
+
+            <div className={styles.heroQuickLinks}>
+              <a href="#faq-02">
+                <strong>Quotation</strong>
+                <span>Custom project pricing</span>
+              </a>
+
+              <a href="#faq-03">
+                <strong>Communication</strong>
+                <span>Calls & project discussions</span>
+              </a>
+
+              <a href="#faq-04">
+                <strong>Payments</strong>
+                <span>Fees & payment options</span>
+              </a>
+
+              <a href="#faq-09">
+                <strong>Support</strong>
+                <span>Maintenance periods</span>
+              </a>
             </div>
           </div>
         </section>
@@ -49,29 +78,34 @@ export default function FAQsPage() {
         <section className={styles.bottomCta}>
           <div className={`container ${styles.bottomCtaInner}`}>
             <div>
-              <span className={styles.ctaKicker}>Still have a question?</span>
+              <span className={styles.ctaKicker}>NEED SOMETHING CUSTOM?</span>
+
               <h2>
-                Tell me what you need.
-                <span>I&apos;ll help you figure it out.</span>
+                Your project starts
+                <span>with your requirements.</span>
               </h2>
+
               <p>
-                If you are not sure which product fits your business, you can
-                message TCL before buying.
+                For custom websites or systems, submit your requirements through
+                the quotation form. There is no commitment to purchase just for
+                requesting a quote.
               </p>
             </div>
 
             <div className={styles.ctaActions}>
-              <a
+              <Link
                 className="button button-white"
-                href="https://t.me/tclsystemsanddigitalsph"
-                target="_blank"
-                rel="noreferrer"
+                href="/shop/custom-business-website"
               >
-                Contact TCL
+                Request a Quote
                 <span>→</span>
-              </a>
-              <Link className="button button-outline-light" href="/shop">
-                Shop Products
+              </Link>
+
+              <Link
+                className="button button-outline-light"
+                href="/shop"
+              >
+                Browse Solutions
               </Link>
             </div>
           </div>

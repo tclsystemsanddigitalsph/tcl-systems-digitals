@@ -1,451 +1,581 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import styles from "@/app/faqs/faqs.module.css";
 
 const faqGroups = [
   {
     number: "01",
     title: "Before You Buy",
-    description: "Helpful things to know before choosing a TCL product.",
+    description: "Helpful things to know before choosing a TCL solution.",
     items: [
       {
-        question: "What does TCL Systems & Digitals PH sell?",
+        question: "What does TCL Systems & Digitals PH offer?",
         answer:
-          "TCL sells booking systems, websites, digital products, business tools, and custom digital services. Each product page explains what is included so you know exactly what you are buying.",
+          "TCL builds websites, booking systems, online shops, custom web systems, digital products, and other business-focused digital solutions. Some services have fixed published prices, while more advanced or fully customized projects require a quotation.",
       },
       {
-        question: "Are these just Canva templates?",
+        question: "Are TCL websites and systems just templates?",
         answer:
-          "No. Some TCL products may be simple editable digital files, but others are working systems or websites with real features such as booking forms, admin pages, schedules, and customer tools.",
+          "No. TCL develops working websites and web-based systems using modern web technologies. Some ready-made digital products may use reusable structures, but custom projects are built and configured around the agreed business requirements.",
       },
       {
         question: "Do I need to know coding?",
         answer:
-          "No. Products made for business owners are designed to be easy to use. If a system includes an admin area, you should be able to handle normal updates there without touching code.",
+          "No. TCL solutions are made for business owners and users, not developers. If your package includes an admin dashboard, normal management tasks are designed to be handled without editing code.",
       },
       {
-        question: "How do I know which product is right for me?",
+        question: "How do I know which package is right for me?",
         answer:
-          "Start by checking the product description, features, price, and who the product is made for. If you are still unsure, message TCL and tell us what your business needs.",
+          "Start with the published inclusions of each package. Starter Website is intended for a very simple one-page presence, Simple Business Website provides a larger business website, Basic Online Shop adds basic selling and order features, and more advanced requirements should go through Custom Development.",
       },
       {
-        question: "Can I see a demo first?",
+        question: "Can I see a demo or previous work?",
         answer:
-          "Some products have a live demo or preview. If one is available, you will see it on the product page.",
+          "Some products have live demos or previews. You can also visit the Portfolio page to see selected TCL projects and examples of completed work.",
       },
       {
-        question: "Can I ask questions before buying?",
+        question: "Can I ask general questions before purchasing?",
         answer:
-          "Yes. If something is unclear, please ask before paying. It is better to make sure the product fits your needs first.",
+          "Yes. You can ask general questions about TCL, published packages, or how the process works. If your question requires custom pricing or an assessment of your specific project requirements, please submit the Request a Quote form.",
       },
       {
-        question: "Are all TCL products ready to use right away?",
+        question: "Are all TCL products ready to use immediately?",
         answer:
-          "Not always. Some products are ready to download and use, while others may need setup, business details, or customization first. The product page will explain what applies.",
+          "Not always. Downloadable digital products may be available shortly after payment, while websites and systems may require setup, customization, business information, development, or account configuration before delivery.",
       },
       {
-        question: "Can I buy even if my business is not open yet?",
+        question: "Can I purchase even if my business is not open yet?",
         answer:
-          "Yes. Many products can be prepared while you are still setting up your business. Just make sure you already know the basic information you want to use, such as your business name, services, and prices.",
+          "Yes. You can prepare your website or digital setup before launch. Having your business name, branding, services, products, prices, contact information, and other content ready can make the process faster.",
       },
     ],
   },
   {
     number: "02",
-    title: "Payments & Pricing",
-    description: "Easy answers about prices, fees, and payments.",
+    title: "Quotations & Custom Projects",
+    description:
+      "Why custom projects require requirements before TCL can provide pricing.",
     items: [
       {
-        question: "Are TCL products one-time payments?",
+        question: "Why do I need to fill out the Request a Quote form?",
         answer:
-          "Many TCL products are sold with a one-time payment. The exact price and payment setup will always be shown before you pay.",
+          "A project type alone is not enough to determine the actual development work required. The quotation form gives TCL the information needed to understand your requested pages, features, users, workflows, integrations, and other requirements before preparing a price.",
       },
       {
-        question: "Are there monthly fees?",
+        question: 'Can you just tell me how much a "website" costs?',
         answer:
-          "TCL may only charge you once for the product itself, but some services used by a website or system may have their own future costs. For example, a custom domain or certain third-party services may charge separately.",
+          "Fixed-price website packages already have published prices. For custom projects, there is no single website price because two websites can require completely different amounts of development. A simple informational website is very different from a website with customer accounts, dashboards, payments, booking logic, inventory, automation, or other custom features.",
       },
       {
-        question: "Are payment fees included in the price?",
+        question: "Can TCL give me a rough estimate without my requirements?",
         answer:
-          "Your checkout page will show the total amount before you pay. If there is a payment processing fee, it should be shown there.",
+          "For custom development, TCL avoids giving random estimates without enough project information. An estimate given before understanding the requirements can be misleading. Submit the quotation form so the price can be based on what you are actually requesting.",
       },
       {
-        question: "What payment methods can I use?",
+        question: "I am not technical. How am I supposed to explain my requirements?",
         answer:
-          "The payment options available to you will appear during checkout. These may depend on the product and payment provider being used.",
+          "You do not need technical terms. Explain what you want the customer, admin, staff, or other users to be able to do. TCL can translate the business workflow into technical requirements and may ask written follow-up questions when clarification is needed.",
       },
       {
-        question: "Will I get a receipt or confirmation?",
+        question: "Does submitting a quotation request mean I have to purchase?",
         answer:
-          "Yes, successful purchases may come with an order confirmation, payment confirmation, purchase email, or delivery message.",
+          "No. Submitting the Request a Quote form is not a commitment to purchase. It allows TCL to review your requirements and prepare the appropriate scope and pricing for you to consider.",
       },
       {
-        question: "Can prices change?",
+        question: "What happens after I submit the quotation form?",
         answer:
-          "Yes. TCL may update product prices, offers, or packages in the future. The price shown when you place your order is the price that applies to that purchase.",
+          "TCL reviews the information you provided and may ask written follow-up questions if anything needs clarification. Once the requirements are clear enough, a quotation and scope can be prepared for your review.",
       },
       {
-        question: "Can I pay in installments?",
+        question: "Can I review the quotation before accepting?",
         answer:
-          "Only if an installment option is clearly offered for that product or service. If you do not see one, the full amount is due at checkout.",
+          "Yes. You should review the project scope, inclusions, pricing, and applicable terms before accepting. Acceptance should only happen once you understand what is included.",
       },
       {
-        question: "Do custom projects have the same price as ready-made products?",
+        question: "What if my requirements change after I receive the quotation?",
         answer:
-          "No. Custom work may cost more because it is made around your specific business needs. You will normally receive a separate quote.",
+          "The quotation is based on the requirements and scope available when it was prepared. Changes or additional requirements may need another scope review and can affect the project price or timeline.",
+      },
+      {
+        question: "What if I remember another feature after development has started?",
+        answer:
+          "Tell TCL in writing. The request will be checked against the accepted scope. If it is a small reasonable adjustment it may be accommodated, but new functionality or significant changes can require additional pricing and development time.",
+      },
+      {
+        question: "Are third-party expenses included in a custom quotation?",
+        answer:
+          "Only when the quotation specifically says they are included. Domains, paid hosting plans, database upgrades, email services, payment provider charges, APIs, subscriptions, licenses, and other third-party services may have separate costs paid by the client.",
       },
     ],
   },
   {
     number: "03",
-    title: "Delivery & Downloads",
-    description: "What happens after payment and how you receive your purchase.",
+    title: "Communication & Consultations",
+    description:
+      "How TCL handles inquiries, calls, requirements, approvals, and project communication.",
     items: [
       {
-        question: "How will I receive my purchase?",
+        question: "Can we discuss my project through chat?",
         answer:
-          "It depends on the product. Some digital products can be downloaded after payment. Other products may come with setup instructions, account handover, or extra steps.",
+          "Yes. Written communication is the standard for quotation and project-related discussions because requirements, decisions, approvals, revisions, and scope changes need a clear written record.",
       },
       {
-        question: "When will I receive my purchase?",
+        question: "Can we schedule a call?",
         answer:
-          "Products with automatic delivery may be available after your payment is confirmed. Custom work can take longer because it needs to be prepared for you.",
+          "A short introductory call may sometimes be accommodated depending on availability. It is intended for a brief introduction, general questions about TCL, or clients who simply want reassurance that they are communicating with a real person.",
       },
       {
-        question: "What if my download link does not work?",
+        question: "Can we discuss all my project requirements during the call?",
         answer:
-          "Message TCL with your order details so we can check the purchase and help you access your file.",
+          "Project scope, custom pricing, detailed requirements, revisions, approvals, and scope changes should be communicated in writing. A short introductory call is not a substitute for the quotation or project communication process.",
       },
       {
-        question: "Can I open my download link again later?",
+        question: "Can I just explain everything on a call instead of filling out the quotation form?",
         answer:
-          "This depends on the product. Some secure links may have limits for safety. It is best to download your files and keep your own backup copy.",
+          "No. A call does not replace the Request a Quote form. TCL needs written requirements to properly review the project and prepare a quotation based on the requested scope.",
       },
       {
-        question: "What if I lose my files?",
+        question: "Why does TCL prefer written project communication?",
         answer:
-          "Please keep a backup of your purchased files. If you lose them, contact TCL and we will check what help is available based on your order.",
+          "Written communication creates a clear reference for both TCL and the client. It reduces misunderstandings about what was requested, included, changed, approved, or agreed upon during the project.",
       },
       {
-        question: "Can I download on my phone?",
+        question: "What if something important is discussed verbally?",
         answer:
-          "Many digital files can be downloaded on a phone, but some files may be easier to open, edit, or save using a laptop or desktop computer.",
+          "Any verbal information that affects requirements, scope, pricing, revisions, approvals, or other project decisions should be confirmed in writing before it is treated as part of the project.",
       },
       {
-        question: "What if I accidentally close the success page?",
+        question: "Do you offer in-person appointments?",
         answer:
-          "Check your purchase email first. If you still cannot access your order, contact TCL with the email address you used during checkout.",
+          "No. TCL does not currently offer in-person project appointments. The development and communication process is handled online.",
       },
       {
-        question: "Why do download links have security limits?",
+        question: "Can I call whenever I need project support?",
         answer:
-          "Secure links help protect your purchase from being shared publicly or used by people who did not buy the product.",
+          "Project support is primarily handled through written communication. This allows TCL to properly review the issue, keep a record of the request, and respond without losing important technical details.",
       },
     ],
   },
   {
     number: "04",
-    title: "Booking Systems",
-    description: "Questions about booking websites and admin tools.",
+    title: "Payments & Pricing",
+    description: "Answers about prices, payment options, fees, and balances.",
     items: [
       {
-        question: "Can I manage the booking system myself?",
+        question: "Are TCL products one-time payments?",
         answer:
-          "Yes, if the product includes an admin dashboard. The goal is for you to handle normal business updates without needing to contact TCL every time.",
+          "Many TCL products and development services use a one-time purchase or project development fee. Your product page, quotation, or checkout will show the applicable payment arrangement before you proceed.",
       },
       {
-        question: "Can I add or edit my services?",
+        question: "Are there monthly TCL fees?",
         answer:
-          "If your package includes service management, yes. You can usually update details such as service names, prices, duration, and availability from the admin side.",
+          "A one-time TCL development price does not automatically mean every third-party service is free forever. Domains, upgraded hosting, databases, email services, payment providers, APIs, subscriptions, and other external services can have their own charges.",
       },
       {
-        question: "Can customers book from their phone?",
+        question: "Are payment processing fees included?",
         answer:
-          "Yes. TCL booking systems are designed to work on phones as well as larger screens.",
+          "The applicable total is shown before payment. Custom quotations may offer different payment arrangements with different processing fees depending on the payment method and payment plan selected.",
       },
       {
-        question: "Can I block unavailable dates or times?",
+        question: "What payment methods can I use?",
         answer:
-          "If your booking package includes schedule management, you can control when customers are allowed to book.",
+          "Available payment methods are displayed during the applicable checkout or quotation acceptance process. Options can vary depending on the type of purchase.",
       },
       {
-        question: "Will I see customer bookings in an admin page?",
+        question: "Can custom projects use a down payment?",
         answer:
-          "If an admin dashboard is included in your package, you will be able to view and manage customer bookings there.",
+          "When offered on the quotation, you may select the available down-payment arrangement during acceptance. The quotation and checkout will show the applicable amount, processing fee, payments received, and remaining balance.",
       },
       {
-        question: "Can I change a booking status?",
+        question: "Can I pay a custom project in full?",
         answer:
-          "This depends on the system, but admin dashboards may include statuses such as Pending, Confirmed, Cancelled, or Completed.",
+          "Yes, when a full-payment option is offered for your quotation. The available payment arrangements are shown before you accept and proceed to payment.",
       },
       {
-        question: "Can I add online payments to my booking system?",
+        question: "Will I receive payment confirmation?",
         answer:
-          "Payment features depend on your package. Some systems may include payment options, while others can have them added as a separate feature.",
+          "Successful payments are recorded with the order or project. Depending on the transaction, you may also receive an order confirmation, payment receipt, purchase email, or delivery notification.",
       },
       {
-        question: "Can I use the booking system for a salon with several staff members?",
+        question: "Can TCL prices change?",
         answer:
-          "It depends on the product tier. A basic system may be better for a solo business owner, while larger businesses may need a higher tier with staff or team features.",
+          "Published packages and future quotations may change over time. A custom quotation is based on its stated scope and applicable terms. Later additions or scope changes can still affect the total project cost.",
       },
     ],
   },
   {
     number: "05",
-    title: "Websites & Domains",
-    description: "Simple answers about websites, domains, and going live.",
+    title: "Delivery & Downloads",
+    description:
+      "What happens after payment and how digital purchases are delivered.",
     items: [
       {
-        question: "Will my website work on mobile?",
+        question: "How will I receive my purchase?",
         answer:
-          "Yes. TCL websites are designed to adjust for phones, tablets, and desktop screens.",
+          "Delivery depends on the product. Digital products may use secure downloads, while websites and custom systems can include setup, account configuration, project turnover, credentials, instructions, or other delivery steps.",
       },
       {
-        question: "Do I need my own domain name?",
+        question: "When will I receive my purchase?",
         answer:
-          "Not always. A website can sometimes start with a hosted link. If you want a custom address such as yourbusiness.com, you will need to buy a domain.",
+          "Automatically delivered products may become available after successful payment. Products requiring setup or customization are processed according to their stated process and turnaround time.",
       },
       {
-        question: "Is the domain included in the website price?",
+        question: "What if my download link does not work?",
         answer:
-          "Only if the product or quote clearly says it is included. In many cases, domain fees are paid separately to the domain provider.",
+          "Contact TCL with your order details so the purchase can be checked and the appropriate access assistance can be provided.",
       },
       {
-        question: "Can TCL connect my domain for me?",
+        question: "Can I open my download link again later?",
         answer:
-          "Yes, domain setup can be included or offered as part of a website service depending on your package.",
+          "Access rules depend on the product. Secure links may have time or usage limits for security, so you should download your files within the provided access period and keep your own backup.",
       },
       {
-        question: "Can I change my website text and photos later?",
+        question: "What if I lose my downloaded files?",
         answer:
-          "This depends on your website setup. Some updates may be easy for you to manage, while bigger design changes may need TCL's help.",
+          "You are responsible for keeping backup copies after delivery. You may contact TCL to check whether another copy can be provided, but continued storage or recovery is not guaranteed.",
       },
       {
-        question: "Can I use my own logo and brand colors?",
+        question: "Can I download products using my phone?",
         answer:
-          "Yes. Custom website services can be designed around your business branding.",
+          "Many digital files can be downloaded on a phone, although some files, setup instructions, or editing tasks may be easier to manage using a laptop or desktop computer.",
       },
       {
-        question: "Can TCL redesign an existing website?",
+        question: "What if I accidentally close the payment success page?",
         answer:
-          "Yes. You can ask for a custom quote if you already have a website and want it improved or redesigned.",
+          "Check the email address used for your purchase and any available order or access page. If you still cannot access your purchase, contact TCL with your order details.",
       },
       {
-        question: "Can I have more pages added later?",
+        question: "Why are secure download links limited?",
         answer:
-          "Yes. Extra pages can usually be added later. Additional work may have an extra fee depending on what you need.",
+          "Access limits help protect paid digital products and customer-only files from unauthorized sharing or public distribution.",
       },
     ],
   },
   {
     number: "06",
-    title: "Customization",
-    description: "For businesses that need something more personal.",
+    title: "Websites & Domains",
+    description:
+      "Website packages, mobile compatibility, domains, hosting, and future edits.",
     items: [
       {
-        question: "Can I request a custom design?",
+        question: "Will my TCL website work on mobile?",
         answer:
-          "Yes. TCL can create a website or system that matches your business style, colors, content, and needs.",
+          "Yes. TCL websites are designed with responsive layouts so they can adapt to phones, tablets, laptops, and desktop screens.",
       },
       {
-        question: "Is customization already included?",
+        question: "Do I need to purchase a custom domain?",
         answer:
-          "Only the customization listed in your product or package is included. Anything extra may need a separate quote.",
+          "No. Applicable website packages can use a free vercel.app subdomain. A custom domain such as yourbusiness.com is optional unless your project specifically requires one.",
       },
       {
-        question: "Can I ask for new features?",
+        question: "Is a custom domain included in the website price?",
         answer:
-          "Yes. Tell TCL what you want the system to do. We can check if it can be added and whether there will be an extra cost.",
+          "Not unless the product page or quotation specifically states that it is included. Custom domain registration is normally a separate third-party expense.",
       },
       {
-        question: "Can TCL make something that is not in the shop?",
+        question: "Can TCL help connect my custom domain?",
         answer:
-          "Yes. The shop is not the limit. You can ask about a custom website, booking system, digital tool, or another business solution.",
+          "Yes. TCL can assist with connecting a domain to the website when domain setup is part of the agreed service. The domain itself may still need to be purchased separately by the client.",
       },
       {
-        question: "Can you match my business branding?",
+        question: "Does my website expire when maintenance support ends?",
         answer:
-          "Yes. For custom work, we can use your business colors, logo, wording, photos, and overall style.",
+          "No. The included maintenance period is a support period, not the lifetime of the website. Your website does not automatically stop working when included TCL maintenance ends. Future assistance or changes can be handled separately when needed.",
       },
       {
-        question: "Can I change my mind during a custom project?",
+        question: "Can I edit my website myself?",
         answer:
-          "Small changes may be possible, but large changes after work has already started may affect the price or timeline.",
+          "That depends on the package. Websites without an admin dashboard are not designed for the client to directly manage normal content changes. TCL can handle future edits for an additional fee. Custom systems with management features may allow the client to update specific content through an admin area.",
+      },
+      {
+        question: "Can I use my own logo and brand colors?",
+        answer:
+          "Yes. Branding options depend on the selected package and agreed customization. Fully customized projects can be designed more specifically around the client's brand and requirements.",
+      },
+      {
+        question: "Can TCL redesign my existing website?",
+        answer:
+          "Yes. Existing website redesigns can be reviewed as custom development. Submit a Request a Quote form with information about the current website and the changes you want.",
+      },
+      {
+        question: "Can I add more pages or features later?",
+        answer:
+          "Yes, subject to technical feasibility. New pages, features, integrations, redesign work, or other additions are separate from the original delivered scope and may require additional pricing.",
       },
     ],
   },
   {
     number: "07",
-    title: "Support & Updates",
-    description: "What help is available after your purchase.",
+    title: "Booking Systems",
+    description:
+      "Questions about booking websites, customer appointments, and admin tools.",
     items: [
       {
-        question: "Is support included after I buy?",
+        question: "Can I manage the booking system myself?",
         answer:
-          "Support depends on the product. Your product details or handover guide will explain what help is included.",
+          "If your booking package includes an admin dashboard, you can manage the business functions provided by that dashboard without editing the code.",
       },
       {
-        question: "What does bug support mean?",
+        question: "Can I add or edit services?",
         answer:
-          "Bug support means help when a feature that should already work is not working properly. It does not normally include adding brand-new features.",
+          "If service management is included, the admin can manage supported information such as service names, descriptions, prices, duration, variations, availability, or active status depending on the system.",
       },
       {
-        question: "Are future changes free?",
+        question: "Can customers book using their phone?",
         answer:
-          "Not always. Small fixes may be covered depending on your support terms, but new pages, features, redesigns, and major changes may cost extra.",
+          "Yes. TCL booking websites are designed to work across mobile and larger screens.",
       },
       {
-        question: "Can TCL update my system later?",
+        question: "Can I control unavailable dates or times?",
         answer:
-          "Yes. You can contact TCL when you want changes or improvements. We can check the request and give you a quote if needed.",
+          "If availability management is included in the booking system, the admin can control the dates, times, or schedules customers are allowed to book.",
       },
       {
-        question: "What if another service used by my website changes?",
+        question: "Can I manage customer bookings from an admin dashboard?",
         answer:
-          "Websites sometimes use outside services for things like payments, email, hosting, or databases. If one of those services changes, your website may need an update later.",
+          "Yes, when booking management is included in the selected package. The exact admin functions depend on the product or accepted project scope.",
       },
       {
-        question: "Can I get help if I forget how to use the admin page?",
+        question: "Can booking statuses be updated?",
         answer:
-          "Yes. If your purchase includes a user guide or handover manual, check that first. You can also contact TCL if you still need help.",
+          "Booking systems can include status management such as Pending, Confirmed, Cancelled, or Completed when those functions are part of the package.",
       },
       {
-        question: "Do you offer long-term maintenance?",
+        question: "Can online payments be added to a booking system?",
         answer:
-          "Maintenance may be available as a separate service depending on the system and what kind of ongoing help you need.",
+          "Payment functionality depends on the package and requirements. If it is not included in the published booking package, payment integration can be reviewed as an additional or custom feature.",
       },
       {
-        question: "Am I responsible for backing up my files and business records?",
+        question: "Can a booking system support several staff members?",
         answer:
-          "Yes. Once your files, system, records, or account access have been delivered to you, you are responsible for keeping your own backup copies. This includes order records, booking records, customer information, downloaded files, exports, and handover documents.",
-      },
-      {
-        question: "Will TCL keep a backup of my orders, bookings, or customer records for me?",
-        answer:
-          "You should not rely on TCL as your backup storage. After delivery or handover, you are responsible for regularly saving copies of important business records and files in a safe place.",
-      },
-      {
-        question: "What if I accidentally delete orders, bookings, files, or other important data?",
-        answer:
-          "Contact TCL and we can check whether recovery is possible, but deleted or lost information cannot always be restored. Recovery is not guaranteed, and extra recovery work may have an additional fee.",
-      },
-      {
-        question: "What should I regularly back up?",
-        answer:
-          "Keep copies of anything important to your business, such as customer and order records, booking records, downloaded files, product or service information, exports, business documents, login information, and handover files.",
+          "Staff management depends on the system tier and required workflow. If you need separate staff schedules, accounts, assignments, permissions, or other multi-user features, include those requirements in your quotation request.",
       },
     ],
   },
   {
     number: "08",
-    title: "Accounts & Handover",
-    description: "Questions about ownership, logins, and business accounts.",
+    title: "Customization & Scope Changes",
+    description:
+      "Custom design, additional features, revisions, and changes after approval.",
     items: [
       {
-        question: "Will I own my business accounts?",
+        question: "Can I request a fully customized website or system?",
         answer:
-          "For custom client systems, the goal is for important business accounts to belong to the client whenever possible. Your handover will explain which accounts are yours.",
+          "Yes. Fully customized development is available for businesses that need functionality, workflows, integrations, or designs beyond TCL's fixed-price packages. Submit a Request a Quote form so the requirements can be reviewed.",
       },
       {
-        question: "Will TCL keep my passwords?",
+        question: "Is unlimited customization included in fixed-price packages?",
         answer:
-          "You should change important passwords after handover when instructed. Never send passwords or secret keys through public messages.",
+          "No. Fixed-price packages include the features and level of customization stated on their product pages. Requirements beyond those inclusions may need a different package or custom quotation.",
       },
       {
-        question: "What is a handover?",
+        question: "Can I request a feature that is not listed in the shop?",
         answer:
-          "A handover is when TCL gives you the important information, access, instructions, and files you need to manage your finished system or website.",
+          "Yes. TCL can review custom websites, systems, dashboards, booking workflows, business tools, integrations, and other web-based solutions even when they are not listed as a fixed-price shop product.",
       },
       {
-        question: "Will I get instructions on how to use everything?",
+        question: "Can I add new features after accepting the project scope?",
         answer:
-          "For products that need guidance, TCL can provide instructions or a customer manual explaining the main features and how to use them.",
+          "You can request them, but they are not automatically included. TCL will check whether the request is already within the accepted scope, a small reasonable adjustment, or additional development requiring a scope and pricing review.",
       },
       {
-        question: "Can someone else in my business use the admin account?",
+        question: "Can changes affect the project timeline?",
         answer:
-          "That depends on your setup. If several people need access, it is better to ask TCL what the safest option is for your system.",
+          "Yes. New requirements, delayed content, additional revisions, scope changes, third-party dependencies, or other changes can affect the original development schedule.",
       },
       {
-        question: "What should I do after handover?",
+        question: "Can TCL match my branding?",
         answer:
-          "Keep your files safe, change passwords when instructed, save your login details securely, and read the customer guide before making major changes.",
+          "Yes. The amount of branding customization depends on the selected service. Fully customized projects can use your logo, colors, content, imagery, and agreed visual direction.",
+      },
+      {
+        question: "What happens if the project becomes larger after development starts?",
+        answer:
+          "The existing completed work and payments remain part of the project record. Additional approved scope can increase the project total and remaining balance instead of treating the entire project as a new purchase.",
       },
     ],
   },
   {
     number: "09",
-    title: "Refunds & Order Problems",
-    description: "What to do when something goes wrong with an order.",
+    title: "Support, Maintenance & Backups",
+    description:
+      "Included maintenance periods, technical support, future changes, and client responsibilities.",
     items: [
       {
-        question: "Do you offer refunds?",
+        question: "How long is maintenance support included?",
         answer:
-          "Refunds depend on the type of product or service and TCL's current policies. Please read the Policies page before buying.",
+          "Starter Website and Simple Business Website include 1 month of maintenance support. Basic Online Shop and Standard Booking Website/System include 2 months. Fully Customized Website/System projects include 6 months of maintenance support.",
       },
       {
-        question: "What if I bought the wrong product?",
+        question: "What is included in maintenance support?",
         answer:
-          "Contact TCL as soon as possible. What we can do may depend on whether the product has already been downloaded, delivered, or used.",
+          "Included maintenance support covers bugs or technical issues involving features that were part of the delivered and agreed scope, plus reasonable technical assistance related to the delivered project. The exact support available still depends on the issue and project.",
       },
       {
-        question: "What if I entered the wrong email address?",
+        question: "Does maintenance mean unlimited free edits?",
         answer:
-          "Contact TCL with your order details. We may need to confirm that the order belongs to you before changing any information.",
+          "No. Maintenance is not unlimited development or unlimited content editing. New pages, new features, redesigns, major content changes, additional integrations, new workflows, or requests outside the original scope may have an additional fee.",
       },
       {
-        question: "What if I paid but did not receive anything?",
+        question: "When does my included maintenance period start?",
         answer:
-          "First check your email, including spam or junk folders. If nothing arrives, contact TCL with your order details so we can check the payment and delivery.",
+          "The applicable maintenance period begins from the project's completed delivery or turnover unless different terms are specifically stated for your order or quotation.",
       },
       {
-        question: "What if I was charged twice?",
+        question: "What happens when my free maintenance period ends?",
         answer:
-          "Contact TCL and provide the order information for both charges. We will check the records and help you understand what happened.",
+          "Your website or system does not automatically expire when included maintenance ends. You can continue using it. If you later need TCL to troubleshoot, edit, maintain, redesign, or develop something new, the request can be reviewed and priced separately.",
       },
       {
-        question: "What if my payment fails?",
+        question: "What is the difference between a bug fix and a new feature?",
         answer:
-          "You can try again using the available payment options. If the problem continues, contact TCL before making repeated payments.",
+          "A bug is when an agreed feature that should already work is not functioning as intended. A new feature changes or expands what the website or system is designed to do. New functionality is generally outside maintenance support.",
+      },
+      {
+        question: "Are third-party problems covered by TCL maintenance?",
+        answer:
+          "TCL can help investigate issues affecting your project, but third-party fees, service limits, outages, policy changes, discontinued services, account restrictions, required upgrades, or changes made by external providers are outside TCL's control and may require additional work or costs.",
+      },
+      {
+        question: "Can I still hire TCL for updates after maintenance ends?",
+        answer:
+          "Yes. You can request future updates, fixes, improvements, additional pages, features, or other development. TCL will review the request and advise if an additional fee applies.",
+      },
+      {
+        question: "Am I responsible for backing up my files and business records?",
+        answer:
+          "Yes. After delivery or handover, you are responsible for keeping safe backup copies of important business files and records, including downloads, customer information, orders, bookings, exports, documents, and credentials.",
+      },
+      {
+        question: "Will TCL permanently store backups of my business data?",
+        answer:
+          "You should not rely on TCL as permanent backup storage. Clients should regularly export and securely save important records and files related to their business.",
+      },
+      {
+        question: "What if I accidentally delete important data?",
+        answer:
+          "Contact TCL so recovery options can be checked, but deleted or lost information cannot always be restored. Recovery is not guaranteed, and additional recovery work may have a separate fee.",
       },
     ],
   },
   {
     number: "10",
-    title: "Use, Sharing & Resale",
-    description: "Rules about what you can and cannot do with your purchase.",
+    title: "Accounts, Ownership & Handover",
+    description:
+      "What happens to project accounts, access, credentials, and instructions.",
     items: [
       {
-        question: "Can I share my purchased files?",
+        question: "Will the important project accounts belong to me?",
         answer:
-          "Usually, no. Your purchase is for the use allowed by that product. Please do not share paid files, secure links, or customer-only materials unless the product says sharing is allowed.",
+          "For custom client projects, TCL aims to create important project services under client-owned accounts whenever practical. Your project handover will explain the accounts and access that belong to you.",
+      },
+      {
+        question: "Will I own my finished website or custom system?",
+        answer:
+          "Ownership and permitted use depend on the product, quotation, license, and project terms. Custom client projects are handed over according to their agreed scope, while ready-made products or templates may have separate licensing restrictions.",
+      },
+      {
+        question: "What is project handover?",
+        answer:
+          "Handover is the completion stage where TCL provides the applicable project access, credentials, instructions, files, account information, or other materials needed for the delivered website or system.",
+      },
+      {
+        question: "Will I receive instructions?",
+        answer:
+          "Projects that require client management can include appropriate setup, usage, or handover instructions. The exact materials depend on the product and features delivered.",
+      },
+      {
+        question: "Should I change passwords after handover?",
+        answer:
+          "Yes, when instructed. Keep credentials secure and update important passwords after handover when appropriate. Do not publish passwords, secret keys, or private admin information.",
+      },
+      {
+        question: "Can multiple people use the same admin account?",
+        answer:
+          "That depends on the system. Sharing one admin login is not always the safest setup. If several staff members need access, role-based or separate user access may need to be included as a project requirement.",
+      },
+      {
+        question: "What should I do after project handover?",
+        answer:
+          "Store your credentials securely, read the provided instructions, keep backup copies of important files and business records, and avoid changing technical settings you do not understand without checking first.",
+      },
+    ],
+  },
+  {
+    number: "11",
+    title: "Refunds & Order Problems",
+    description:
+      "What to do if there is a payment, order, access, or purchase issue.",
+    items: [
+      {
+        question: "Does TCL offer refunds?",
+        answer:
+          "Refund eligibility depends on the type and status of the product or service and the applicable TCL policies. Please review the Policies page before purchasing or accepting a project.",
+      },
+      {
+        question: "What if I purchase the wrong product?",
+        answer:
+          "Contact TCL as soon as possible. Available options can depend on whether the product has already been downloaded, accessed, customized, processed, or delivered.",
+      },
+      {
+        question: "What if I entered the wrong email address?",
+        answer:
+          "Contact TCL with your order details. TCL may need to verify ownership of the purchase before changing customer or delivery information.",
+      },
+      {
+        question: "What if I paid but did not receive anything?",
+        answer:
+          "Check your email, including spam or junk folders, and any applicable order status or access page. If the purchase is still unavailable, contact TCL with your order information.",
+      },
+      {
+        question: "What if I was charged twice?",
+        answer:
+          "Contact TCL with the relevant order and transaction details so the payment records can be checked.",
+      },
+      {
+        question: "What if my payment fails?",
+        answer:
+          "Check the payment information and available payment options. If the problem continues, contact TCL before repeatedly attempting the same transaction.",
+      },
+    ],
+  },
+  {
+    number: "12",
+    title: "Use, Sharing & Resale",
+    description:
+      "Rules for purchased files, systems, secure links, licenses, and resale.",
+    items: [
+      {
+        question: "Can I share purchased TCL files?",
+        answer:
+          "Not unless the applicable product license allows it. Paid files, secure links, customer-only materials, and other protected digital products should not be distributed to people who did not purchase or receive authorized access.",
       },
       {
         question: "Can I resell a TCL product?",
         answer:
-          "Only if the product clearly says resale rights are included. A normal purchase does not automatically give you permission to resell it.",
+          "Only when the product or a separate agreement specifically grants resale rights. A normal purchase does not automatically include permission to resell TCL products.",
       },
       {
-        question: "Can I copy the system and sell it to my own clients?",
+        question: "Can I copy a TCL system and sell it to other businesses?",
         answer:
-          "Not unless you have a separate agreement or license that allows it. A regular customer purchase is for your own permitted use.",
+          "Not unless your license or a separate written agreement specifically allows redistribution or resale. Purchasing a website or system for your own use does not automatically grant resale rights.",
       },
       {
-        question: "Can I use the product for my own business?",
+        question: "Can I use my purchase for my own business?",
         answer:
-          "Yes, as long as you follow the rules and license that come with the product.",
+          "Yes, according to the permitted use and license that applies to the product or custom project.",
       },
       {
-        question: "Can I give my download link to a friend?",
+        question: "Can I give my secure download link to someone else?",
         answer:
-          "No. Secure download links are connected to a real purchase and should not be shared.",
+          "No. Secure purchase and download links should not be shared with unauthorized users.",
       },
       {
-        question: "Can I post screenshots of my finished website or system?",
+        question: "Can I post my finished website or system online?",
         answer:
-          "Yes, you can normally show your own finished business website or system. Just avoid sharing private admin pages, passwords, customer information, or secure links.",
+          "Yes, you can normally promote or show your own finished business website or system. Do not expose private admin pages, customer information, credentials, secret keys, secure links, or other sensitive information.",
       },
     ],
   },
@@ -497,8 +627,9 @@ export default function FAQSearchClient() {
             <span className={styles.searchKicker}>Search FAQs</span>
             <h2>What can we help you with?</h2>
             <p>
-              Type a word or short phrase like “refund”, “download”, “domain”,
-              “support”, or “monthly fee”.
+              Search words like &ldquo;quotation&rdquo;, &ldquo;call&rdquo;,
+              &ldquo;maintenance&rdquo;, &ldquo;domain&rdquo;,
+              &ldquo;payment&rdquo;, or &ldquo;refund&rdquo;.
             </p>
           </div>
 
@@ -507,6 +638,7 @@ export default function FAQSearchClient() {
               <span className={styles.searchIcon} aria-hidden="true">
                 ⌕
               </span>
+
               <input
                 type="search"
                 value={input}
@@ -515,6 +647,7 @@ export default function FAQSearchClient() {
                 aria-label="Search frequently asked questions"
               />
             </div>
+
             <button type="submit">Search</button>
           </form>
 
@@ -525,6 +658,7 @@ export default function FAQSearchClient() {
                   ? `${resultCount} answer${resultCount === 1 ? "" : "s"} found for “${query}”`
                   : `No answers found for “${query}”`}
               </span>
+
               <button type="button" onClick={handleClear}>
                 Clear search
               </button>
@@ -539,7 +673,10 @@ export default function FAQSearchClient() {
                 <span className={styles.sidebarKicker}>Browse by topic</span>
                 <h2>Find what you need.</h2>
 
-                <nav className={styles.categoryNav} aria-label="FAQ categories">
+                <nav
+                  className={styles.categoryNav}
+                  aria-label="FAQ categories"
+                >
                   {filteredGroups.map((group) => (
                     <a key={group.title} href={`#faq-${group.number}`}>
                       <span>{group.number}</span>
@@ -550,20 +687,17 @@ export default function FAQSearchClient() {
               </div>
 
               <div className={styles.helpCard}>
-                <span>Still unsure?</span>
-                <strong>Ask TCL before purchasing.</strong>
+                <span>Custom project?</span>
+                <strong>Tell TCL what you need.</strong>
                 <p>
-                  Tell us what your business needs and we&apos;ll help point you
-                  toward the right option.
+                  Custom pricing requires your project requirements first.
+                  Submit the quotation form so TCL can review the actual scope.
                 </p>
-                <a
-                  href="https://t.me/tclsystemsanddigitalsph"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Message on Telegram
-                  <span>↗</span>
-                </a>
+
+                <Link href="/shop/custom-business-website">
+                  Request a Quote
+                  <span>→</span>
+                </Link>
               </div>
             </aside>
 
@@ -576,6 +710,7 @@ export default function FAQSearchClient() {
                 >
                   <div className={styles.groupHeading}>
                     <div className={styles.groupNumber}>{group.number}</div>
+
                     <div>
                       <span>FAQ CATEGORY</span>
                       <h2>{group.title}</h2>
@@ -590,6 +725,7 @@ export default function FAQSearchClient() {
                           <span>{faq.question}</span>
                           <i>+</i>
                         </summary>
+
                         <div className={styles.answer}>
                           <p>{faq.answer}</p>
                         </div>
@@ -605,9 +741,10 @@ export default function FAQSearchClient() {
             <div className={styles.noResultsIcon}>⌕</div>
             <h2>No matching FAQs found.</h2>
             <p>
-              Try a simpler keyword, or message TCL if your question is more
-              specific.
+              Try a simpler keyword. For custom project pricing or requirements,
+              submit a quotation request so TCL can review what you need.
             </p>
+
             <button type="button" onClick={handleClear}>
               Show all FAQs
             </button>
