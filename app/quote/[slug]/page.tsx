@@ -26,9 +26,17 @@ function QuotationLayout({
       <main className={styles.page}>
         <section className={styles.hero}>
           <div className={`container ${styles.heroInner}`}>
-            <div>
-              <span className="section-kicker">Request a Quotation</span>
+            <Link href={backHref} className={styles.heroBack}>
+              ← Back to Product
+            </Link>
+
+            <div className={styles.heroContent}>
+              <span className={styles.heroKicker}>
+                Request a Quotation
+              </span>
+
               <h1>Tell us what you want to build.</h1>
+
               <p>
                 Share your project idea, who will use it, how it should work,
                 the features you may need, and the problem you want it to solve.
@@ -36,28 +44,37 @@ function QuotationLayout({
               </p>
             </div>
 
-            <aside className={styles.productCard}>
-              <small>Selected service</small>
-              <strong>{productName}</strong>
-              <span>{category}</span>
-              <b>For Quotation</b>
-            </aside>
+            <div className={styles.serviceBar}>
+              <div className={styles.serviceMain}>
+                <span>Selected service</span>
+                <strong>{productName}</strong>
+              </div>
+
+              <div className={styles.serviceMeta}>
+                <div>
+                  <small>Category</small>
+                  <span>{category}</span>
+                </div>
+
+                <div>
+                  <small>Pricing</small>
+                  <b>For Quotation</b>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.heroNote}>
+              <span>♡</span>
+              <p>
+                For business, personal, educational, organizational, and custom
+                web system projects.
+              </p>
+            </div>
           </div>
         </section>
 
         <section className={styles.formSection}>
           <div className="container">
-            <div className={styles.topline}>
-              <Link href={backHref} className={styles.back}>
-                ← Back to Product
-              </Link>
-
-              <span>
-                For business, personal, educational, organization, and custom
-                web system projects.
-              </span>
-            </div>
-
             <QuoteForm
               productName={productName}
               productSlug={productSlug}
@@ -84,6 +101,7 @@ export default async function QuotePage({
 
     const productName =
       catalogProduct?.name?.trim() || "Custom Business Website";
+
     const productCategory =
       catalogProduct?.category?.trim() || "Custom Development";
 
@@ -115,8 +133,12 @@ export default async function QuotePage({
         <main className={styles.page}>
           <div className="container">
             <section className={styles.notQuote}>
-              <span className="section-kicker">TCL Quotation</span>
+              <span className="section-kicker">
+                TCL Quotation
+              </span>
+
               <h1>This product has a fixed price.</h1>
+
               <p>
                 You can view the product details and continue to checkout from
                 its product page.
