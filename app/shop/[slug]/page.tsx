@@ -1,25 +1,37 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 import { getCatalogProduct } from "@/lib/catalog";
+import { getProductPageDetails } from "@/lib/product-page-details";
 import { formatPrice, productPrice, safeWebUrl } from "@/lib/products";
+import styles from "./product-detail.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductPage({
-  params,
-}: {
+type PageProps = {
   params: Promise<{ slug: string }>;
-}) {
+};
+
+function DetailList({ items }: { items: string[] }) {
+  return (
+    <ul className={styles.list}>
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
+export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
   const product = await getCatalogProduct(slug);
 
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
 
+  const details = getProductPageDetails(product.slug);
   const price = Number(productPrice(product));
+
   const quotationOnly =
     product.product_type === "SERVICE" &&
     Number.isFinite(price) &&
@@ -32,479 +44,436 @@ export default async function ProductPage({
 
   const image = safeWebUrl(product.image_url);
   const demo = safeWebUrl(product.demo_url);
-  const isCustomBusinessWebsite = product.slug === "custom-business-website";
+
+  const primaryHref = quotationOnly
+    ? `/quote/${encodeURIComponent(product.slug)}`
+    : `/checkout?product=${encodeURIComponent(product.slug)}`;
+
+  const primaryLabel = quotationOnly ? "Request a Quote →" : "Buy Now →";
+
+  if (!details) {
+    return (
+      <>
+        <SiteHeader />
+        <main className={styles.page}>
+          <section className={styles.hero}>
+            <div className={styles.container}>
+              <div className={styles.backRow}>
+                <Link className={styles.backLink} href="/shop">
+                  ← Back to Shop
+                </Link>
+              </div>
+
+              <div className={styles.heroGrid}>
+                <div>
+                  <p className={styles.eyebrow}>{product.category}</p>
+                  <h1 className={styles.title}>{product.name}</h1>
+
+                  {product.short_description ? (
+                    <p className={styles.lead}>{product.short_description}</p>
+                  ) : null}
+
+                  {product.description ? (
+                    <p className={styles.lead}>{product.description}</p>
+                  ) : null}
+                </div>
+
+                <aside className={styles.purchaseCard}>
+                  <div>
+                    <p className={styles.priceLabel}>
+                      {quotationOnly ? "Pricing" : "Package price"}
+                    </p>
+
+                    <p className={styles.price}>
+                      {quotationOnly ? "Custom Quote" : formatPrice(price)}
+                    </p>
+                  </div>
+
+                  <div className={styles.actions}>
+                    <Link className={styles.primary} href={primaryHref}>
+                      {primaryLabel}
+                    </Link>
+
+                    {demo ? (
+                      <a
+                        className={styles.secondary}
+                        href={demo}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View Demo ↗
+                      </a>
+                    ) : null}
+                  </div>
+                </aside>
+              </div>
+            </div>
+          </section>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  const adminLabel =
+    product.slug === "standard-booking-system"
+      ? "Admin dashboard included"
+      : product.slug === "custom-business-website"
+        ? "Based on approved scope"
+        : "No admin dashboard";
+
+  const hostingLabel =
+    product.slug === "custom-business-website"
+      ? "Based on project requirements"
+      : "Free vercel.app option";
 
   return (
     <>
       <SiteHeader />
 
-      <main className="shop-page">
-        <section className="shop-hero">
-          <div className="container">
-            <nav
-              aria-label="Back navigation"
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginBottom: 24,
-              }}
-            >
-              <Link
-                href="/shop"
-                className="product-detail-back"
-                style={{
-                  marginBottom: 0,
-                  minHeight: 44,
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
+      <main className={styles.page}>
+        <section className={styles.hero}>
+          <div className={styles.container}>
+            <div className={styles.backRow}>
+              <Link className={styles.backLink} href="/shop">
                 ← Back to Shop
               </Link>
-            </nav>
+            </div>
 
-            <div className="shop-hero-inner">
-              {isCustomBusinessWebsite ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-start",
-                    gap: 8,
-                    marginBottom: 14,
-                  }}
-                >
-                  <span className="shop-category-button">FOR QUOTATION</span>
-                  <span className="section-kicker" style={{ margin: 0 }}>
-                    {product.category}
-                  </span>
+            <div className={styles.heroGrid}>
+              <div>
+                <p className={styles.eyebrow}>{details.eyebrow}</p>
+
+                <h1 className={styles.title}>{product.name}</h1>
+
+                <p className={styles.lead}>
+                  {product.short_description || details.introduction}
+                </p>
+
+                <div className={styles.badges}>
+                  {product.badge ? (
+                    <span className={styles.badge}>{product.badge}</span>
+                  ) : null}
+
+                  <span className={styles.badge}>Done for you</span>
+                  <span className={styles.badge}>Mobile-friendly</span>
                 </div>
-              ) : (
-                <span className="section-kicker">{product.category}</span>
-              )}
 
-              <h1>{product.name}</h1>
+                {image ? (
+                  <img
+                    className={styles.image}
+                    src={image}
+                    alt={product.name}
+                  />
+                ) : null}
+              </div>
 
-              {product.short_description ? (
-                <p>{product.short_description}</p>
-              ) : null}
+              <aside className={styles.purchaseCard}>
+                <div>
+                  <p className={styles.priceLabel}>
+                    {quotationOnly ? "Project pricing" : "Package price"}
+                  </p>
 
-              {!isCustomBusinessWebsite && product.badge ? (
-                <span className="shop-category-button">{product.badge}</span>
-              ) : null}
+                  {quotationOnly ? (
+                    <p className={styles.price}>Custom Quote</p>
+                  ) : hasSale ? (
+                    <p className={styles.price}>
+                      <span className={styles.oldPrice}>
+                        {formatPrice(product.price)}
+                      </span>
+                      {formatPrice(product.sale_price ?? price)}
+                    </p>
+                  ) : (
+                    <p className={styles.price}>{formatPrice(price)}</p>
+                  )}
 
-              {isCustomBusinessWebsite ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 12,
-                    justifyContent: "center",
-                    marginTop: 24,
-                  }}
-                >
-                  <Link
-                    className="button button-primary"
-                    href={`/quote/${encodeURIComponent(product.slug)}`}
-                  >
-                    Request a Quote →
+                  <div className={styles.purchaseMeta}>
+                    <div className={styles.metaRow}>
+                      <span>Maintenance</span>
+                      <strong>{details.maintenance.period}</strong>
+                    </div>
+
+                    <div className={styles.metaRow}>
+                      <span>Management</span>
+                      <strong>{adminLabel}</strong>
+                    </div>
+
+                    <div className={styles.metaRow}>
+                      <span>Hosting</span>
+                      <strong>{hostingLabel}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.actions}>
+                  <Link className={styles.primary} href={primaryHref}>
+                    {primaryLabel}
                   </Link>
-                  <a className="button button-secondary" href="#details">
-                    See What&apos;s Included ↓
-                  </a>
+
+                  {demo ? (
+                    <a
+                      className={styles.secondary}
+                      href={demo}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View Live Demo ↗
+                    </a>
+                  ) : null}
                 </div>
-              ) : null}
+              </aside>
             </div>
           </div>
         </section>
 
-        <section className="shop-content" id="details">
-          <div className="container">
-            {image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                style={{
-                  width: "100%",
-                  maxHeight: 360,
-                  objectFit: "contain",
-                  borderRadius: 16,
-                }}
-                src={image}
-                alt={product.name}
-              />
-            ) : null}
-
-            <div className="product-detail-price-row">
-              <div className="product-detail-price">
-                <small>
-                  {quotationOnly
-                    ? "Pricing"
-                    : hasSale
-                      ? "Sale price"
-                      : "Price"}
-                </small>
-
-                {quotationOnly ? (
-                  <strong>For Quotation</strong>
-                ) : (
-                  <>
-                    {hasSale ? (
-                      <span
-                        style={{
-                          display: "block",
-                          margin: "6px 0",
-                          fontSize: 16,
-                          color: "var(--text-soft)",
-                        }}
-                      >
-                        Regular price: <del>{formatPrice(product.price)}</del>
-                      </span>
-                    ) : null}
-                    <strong>{formatPrice(price)}</strong>
-                  </>
-                )}
-              </div>
+        <section className={styles.quickFacts}>
+          <div className={`${styles.container} ${styles.quickFactsGrid}`}>
+            <div className={styles.fact}>
+              <small>Service</small>
+              <strong>{details.eyebrow}</strong>
             </div>
 
-            {isCustomBusinessWebsite ? (
-              <>
-                <section style={{ margin: "36px 0" }}>
-                  <span className="section-kicker">Made For Your Business</span>
-                  <h2 style={{ marginTop: 10 }}>Not a template. Built around what you need.</h2>
-                  <p style={{ lineHeight: 1.8, maxWidth: 850 }}>
-                    A Custom Business Website is for businesses that need more
-                    than a basic website. Your website can be planned around
-                    your branding, services, customer journey, workflow, and
-                    the features your business actually needs.
-                  </p>
-                  <p style={{ lineHeight: 1.8, maxWidth: 850 }}>
-                    Because every custom project is different, there is no
-                    fixed price. Tell us about your business and the features
-                    you need, and TCL Systems &amp; Digitals PH will review
-                    your project before preparing a quotation.
-                  </p>
-                </section>
+            <div className={styles.fact}>
+              <small>Setup</small>
+              <strong>TCL handles the build</strong>
+            </div>
 
-                <section style={{ margin: "44px 0" }}>
-                  <span className="section-kicker">What We Can Build</span>
-                  <h2 style={{ marginTop: 10 }}>Your website can grow with your idea.</h2>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: 16,
-                      marginTop: 22,
-                    }}
-                  >
-                    {[
-                      ["Business Websites", "Professional multi-page websites customized to your brand and services."],
-                      ["Booking Systems", "Online appointment or reservation flows with business-specific booking features."],
-                      ["Online Shops", "Product storefronts and purchasing experiences based on your business needs."],
-                      ["Service Websites", "Custom service pages, inquiries, quotations, lead forms, and customer journeys."],
-                      ["Portfolios", "Present your work, services, projects, gallery, and business information professionally."],
-                      ["Custom Features", "Need something specific? Tell us the workflow or feature you have in mind."],
-                    ].map(([title, text]) => (
-                      <div
-                        key={title}
-                        style={{
-                          padding: 22,
-                          border: "1px solid var(--border)",
-                          borderRadius: 18,
-                          background: "var(--surface, #fff)",
-                        }}
-                      >
-                        <strong style={{ display: "block", marginBottom: 8 }}>{title}</strong>
-                        <p style={{ margin: 0, lineHeight: 1.65 }}>{text}</p>
-                      </div>
-                    ))}
+            <div className={styles.fact}>
+              <small>Maintenance</small>
+              <strong>{details.maintenance.period}</strong>
+            </div>
+
+            <div className={styles.fact}>
+              <small>Access</small>
+              <strong>{adminLabel}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.eyebrow}>THE PACKAGE</p>
+              <h2 className={styles.sectionTitle}>{details.headline}</h2>
+              <p className={styles.sectionText}>{details.introduction}</p>
+            </div>
+
+            <div className={styles.bestFor}>
+              {details.idealFor.map((item) => (
+                <span className={styles.bestForItem} key={item}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={`${styles.section} ${styles.softSection}`}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.eyebrow}>WHAT&apos;S INCLUDED</p>
+              <h2 className={styles.sectionTitle}>
+                What you&apos;re getting with this package.
+              </h2>
+              <p className={styles.sectionText}>
+                The standard package includes the following features and setup.
+              </p>
+            </div>
+
+            <div className={styles.inclusionGrid}>
+              {details.inclusions.map((item, index) => (
+                <article className={styles.inclusion} key={item.title}>
+                  <span className={styles.number}>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
                   </div>
-                </section>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                <section style={{ margin: "44px 0" }}>
-                  <span className="section-kicker">Customizable</span>
-                  <h2 style={{ marginTop: 10 }}>Designed around your business.</h2>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                      gap: 14,
-                      marginTop: 20,
-                    }}
-                  >
-                    {[
-                      "Brand colors, fonts, logo, and visual direction",
-                      "Pages and website structure",
-                      "Services, products, packages, or business information",
-                      "Contact, inquiry, quotation, or lead forms",
-                      "Booking or appointment workflows when required",
-                      "Customer-facing features and user experience",
-                      "Mobile, tablet, and desktop responsive layout",
-                      "Social media and contact integrations",
-                      "Domain and deployment setup",
-                      "Other project-specific features discussed in your quotation",
-                    ].map((item) => (
-                      <div
-                        key={item}
-                        style={{
-                          padding: "16px 18px",
-                          border: "1px solid var(--border)",
-                          borderRadius: 14,
-                          background: "var(--surface, #fff)",
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        ✓ {item}
-                      </div>
-                    ))}
-                  </div>
-                </section>
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.eyebrow}>PROJECT PREPARATION</p>
+              <h2 className={styles.sectionTitle}>
+                You provide the business details. TCL handles the build.
+              </h2>
+            </div>
 
-                <section style={{ margin: "44px 0" }}>
-                  <span className="section-kicker">How It Works</span>
-                  <h2 style={{ marginTop: 10 }}>From idea to launch.</h2>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                      gap: 14,
-                      marginTop: 20,
-                    }}
-                  >
-                    {[
-                      ["01", "Request a Quote", "Tell us about your business, goals, and the website or system you need."],
-                      ["02", "Project Review", "We review the scope, required features, content, and technical requirements."],
-                      ["03", "Quotation", "You receive a quotation based on the actual scope of your project."],
-                      ["04", "Approval", "Once the quotation and project scope are approved, we can proceed with the project."],
-                      ["05", "Build & Review", "Your website is built, tested, and prepared for your review."],
-                      ["06", "Launch", "After final approval, your completed website is prepared for launch and handover."],
-                    ].map(([number, title, text]) => (
-                      <div
-                        key={number}
-                        style={{
-                          padding: 20,
-                          border: "1px solid var(--border)",
-                          borderRadius: 18,
-                          background: "var(--surface, #fff)",
-                        }}
-                      >
-                        <small style={{ fontWeight: 700 }}>{number}</small>
-                        <strong style={{ display: "block", margin: "8px 0" }}>{title}</strong>
-                        <p style={{ margin: 0, lineHeight: 1.6 }}>{text}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+            <div className={styles.splitGrid}>
+              <article className={styles.splitPanel}>
+                <p className={styles.eyebrow}>FROM YOU</p>
+                <h3>What you&apos;ll prepare</h3>
+                <DetailList items={details.clientProvides} />
+              </article>
 
-                <section
-                  style={{
-                    margin: "44px 0",
-                    padding: "24px",
-                    border: "1px solid var(--border)",
-                    borderRadius: 20,
-                    background: "var(--surface, #fff)",
-                  }}
+              <article
+                className={`${styles.splitPanel} ${styles.splitPanelPink}`}
+              >
+                <p className={styles.eyebrow}>FROM TCL</p>
+                <h3>What TCL handles</h3>
+                <DetailList items={details.tclHandles} />
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section className={`${styles.section} ${styles.softSection}`}>
+          <div className={styles.container}>
+            <div className={styles.infoBand}>
+              <div className={styles.infoBlock}>
+                <p className={styles.eyebrow}>EDITING & MANAGEMENT</p>
+                <h2 className={styles.sectionTitle}>
+                  {details.editingAccess.title}
+                </h2>
+                <p className={styles.sectionText}>
+                  {details.editingAccess.description}
+                </p>
+              </div>
+
+              <div className={styles.infoBlock}>
+                <p className={styles.eyebrow}>DOMAIN & HOSTING</p>
+                <h2 className={styles.sectionTitle}>How your website goes live</h2>
+                <DetailList items={details.domainHosting} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.support}>
+              <span className={styles.supportPeriod}>
+                {details.maintenance.period} MAINTENANCE SUPPORT
+              </span>
+
+              <h2 className={styles.sectionTitle}>
+                Support after your project is delivered.
+              </h2>
+
+              <p className={styles.sectionText}>
+                {details.maintenance.description}
+              </p>
+
+              <div
+                className={styles.splitGrid}
+                style={{ marginTop: "28px" }}
+              >
+                <div>
+                  <h3>Covered during maintenance</h3>
+                  <DetailList items={details.maintenance.covered} />
+                </div>
+
+                <div>
+                  <h3>Not part of maintenance</h3>
+                  <DetailList items={details.maintenance.notCovered} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={`${styles.section} ${styles.softSection}`}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.eyebrow}>SCOPE</p>
+              <h2 className={styles.sectionTitle}>
+                Clear inclusions before you purchase.
+              </h2>
+              <p className={styles.sectionText}>
+                Features outside the standard package can be reviewed as an
+                upgrade or custom quotation.
+              </p>
+            </div>
+
+            <div className={styles.scopeGrid}>
+              <div className={styles.scopeColumn}>
+                <h3>Not included in this package</h3>
+                <DetailList items={details.notIncluded} />
+              </div>
+
+              <div className={styles.scopeColumn}>
+                <h3>Available upgrades & add-ons</h3>
+                <DetailList items={details.upgrades} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.eyebrow}>HOW IT WORKS</p>
+              <h2 className={styles.sectionTitle}>
+                From purchase to project turnover.
+              </h2>
+            </div>
+
+            <div className={styles.process}>
+              {details.process.map((step, index) => (
+                <article
+                  className={styles.processItem}
+                  key={`${step.title}-${index}`}
                 >
-                  <span className="section-kicker">Before Requesting</span>
-                  <h2 style={{ marginTop: 10 }}>What should you prepare?</h2>
-                  <p style={{ lineHeight: 1.75 }}>
-                    You do not need to have everything finalized yet. To help us
-                    understand your project, prepare whatever information you
-                    already have about your business, the type of website you
-                    want, your preferred pages, features, branding, references,
-                    target timeline, and estimated budget.
-                  </p>
-                </section>
+                  <span className={styles.number}>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                <section style={{ margin: "44px 0" }}>
-                  <span className="section-kicker">Pricing &amp; Timeline</span>
-                  <h2 style={{ marginTop: 10 }}>Why is this for quotation?</h2>
-                  <p style={{ lineHeight: 1.8, maxWidth: 850 }}>
-                    Custom projects can vary greatly in size and complexity.
-                    Pricing and turnaround time depend on the number of pages,
-                    required features, integrations, content, design scope,
-                    revisions, and other project requirements. Your quotation
-                    will be based on the scope discussed for your project.
-                  </p>
-                </section>
+        <section className={`${styles.section} ${styles.softSection}`}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.eyebrow}>FAQ</p>
+              <h2 className={styles.sectionTitle}>
+                Questions before getting started.
+              </h2>
+            </div>
 
-                <section style={{ margin: "44px 0" }}>
-                  <span className="section-kicker">Need Something Simpler?</span>
-                  <h2 style={{ marginTop: 10 }}>You may not need a custom project.</h2>
-                  <p style={{ lineHeight: 1.8, maxWidth: 850 }}>
-                    If you only need a clean and professional informational
-                    website for your business without advanced features, our
-                    Simple Business Website may be a better fit.
-                  </p>
-                  <Link
-                    className="button button-secondary"
-                    href="/shop/simple-business-website"
-                  >
-                    View Simple Business Website →
-                  </Link>
-                </section>
+            <div className={styles.faqs}>
+              {details.faqs.map((faq) => (
+                <details className={styles.faq} key={faq.question}>
+                  <summary>{faq.question}</summary>
+                  <p>{faq.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                <section
-                  style={{
-                    margin: "44px 0",
-                    padding: "24px",
-                    border: "1px solid var(--border)",
-                    borderRadius: 20,
-                    background: "var(--surface, #fff)",
-                  }}
-                >
-                  <span className="section-kicker">Possible Additional Costs</span>
-                  <h2 style={{ marginTop: 10 }}>Third-party fees may apply.</h2>
-                  <p style={{ lineHeight: 1.75, maxWidth: 850 }}>
-                    Depending on your project, separate provider costs may apply
-                    for things such as a custom domain, paid email service,
-                    payment processing, premium integrations, subscriptions, or
-                    other third-party services. Any relevant costs can be
-                    discussed during the quotation process.
-                  </p>
-                </section>
+        <section>
+          <div className={styles.container}>
+            <div className={styles.finalCta}>
+              <p className={styles.eyebrow}>
+                {quotationOnly ? "CUSTOM PROJECT" : "READY TO START?"}
+              </p>
 
-                <section style={{ margin: "44px 0" }}>
-                  <span className="section-kicker">Frequently Asked</span>
-                  <h2 style={{ marginTop: 10 }}>Before you request a quote.</h2>
-                  <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
-                    {[
-                      [
-                        "Is requesting a quote a commitment to purchase?",
-                        "No. Your request helps TCL review your project and prepare the appropriate scope and quotation.",
-                      ],
-                      [
-                        "Can I request a feature that is not listed here?",
-                        "Yes. Describe the feature, workflow, or result you need in the quotation form so it can be reviewed.",
-                      ],
-                      [
-                        "Can my project include an admin dashboard?",
-                        "Yes, when an admin or management area is required and included in the approved project scope.",
-                      ],
-                      [
-                        "Can you build booking or online shop features?",
-                        "Yes. Booking, ecommerce, and other customer-facing workflows can be included depending on your requirements.",
-                      ],
-                      [
-                        "What if I request more features later?",
-                        "The approved quotation defines the project scope. Additional work outside that scope may require an additional fee or updated quotation.",
-                      ],
-                    ].map(([question, answer]) => (
-                      <details
-                        key={question}
-                        style={{
-                          padding: "18px 20px",
-                          border: "1px solid var(--border)",
-                          borderRadius: 14,
-                          background: "var(--surface, #fff)",
-                        }}
-                      >
-                        <summary style={{ cursor: "pointer", fontWeight: 700 }}>
-                          {question}
-                        </summary>
-                        <p style={{ margin: "12px 0 0", lineHeight: 1.7 }}>
-                          {answer}
-                        </p>
-                      </details>
-                    ))}
-                  </div>
-                </section>
+              <h2 className={styles.sectionTitle}>
+                {quotationOnly
+                  ? "Tell TCL what your business needs."
+                  : `Ready for your ${product.name}?`}
+              </h2>
 
-                <section
-                  style={{
-                    margin: "48px 0 12px",
-                    padding: "30px 24px",
-                    textAlign: "center",
-                    border: "1px solid var(--border)",
-                    borderRadius: 22,
-                    background: "var(--surface, #fff)",
-                  }}
-                >
-                  <span className="section-kicker">Have Something In Mind?</span>
-                  <h2 style={{ margin: "10px 0" }}>Tell us what you want to build.</h2>
-                  <p
-                    style={{
-                      lineHeight: 1.7,
-                      maxWidth: 650,
-                      margin: "0 auto 20px",
-                    }}
-                  >
-                    Complete our quotation form with your project details. We&apos;ll
-                    review your requirements and use them to prepare the right
-                    scope and quotation for your business.
-                  </p>
-                  <Link
-                    className="button button-primary"
-                    href={`/quote/${encodeURIComponent(product.slug)}`}
-                  >
-                    Request a Quote →
-                  </Link>
-                </section>
-              </>
-            ) : (
-              <>
-                {product.description ? (
-                  <p
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      margin: "24px 0",
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    {product.description}
-                  </p>
-                ) : null}
+              <p>
+                {quotationOnly
+                  ? "Submit your project requirements so the scope, pricing, and next steps can be reviewed properly."
+                  : "Continue to checkout when you're ready. You'll receive the next steps for submitting your business information after payment confirmation."}
+              </p>
 
-                {quotationOnly ? (
-                  <div
-                    style={{
-                      margin: "24px 0",
-                      padding: "18px 20px",
-                      border: "1px solid var(--border)",
-                      borderRadius: 16,
-                      background: "var(--surface, #fff)",
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    <strong style={{ display: "block", marginBottom: 6 }}>
-                      This service is customized to your business.
-                    </strong>
-                    <p style={{ margin: 0 }}>
-                      Final pricing depends on your required features, workflow,
-                      scope, and setup. Complete the quotation form so TCL can
-                      review your requirements before preparing a price.
-                    </p>
-                  </div>
-                ) : null}
-              </>
-            )}
-
-            <div className="product-detail-actions">
-              {quotationOnly ? (
-                <Link
-                  className="button button-primary"
-                  href={`/quote/${encodeURIComponent(product.slug)}`}
-                >
-                  Request a Quote →
-                </Link>
-              ) : (
-                <Link
-                  className="button button-primary"
-                  href={`/checkout?product=${encodeURIComponent(product.slug)}`}
-                >
-                  Buy Now →
-                </Link>
-              )}
-
-              {demo ? (
-                <a
-                  className="button button-secondary"
-                  href={demo}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View demo →
-                </a>
-              ) : null}
+              <Link className={styles.primary} href={primaryHref}>
+                {primaryLabel}
+              </Link>
             </div>
           </div>
         </section>

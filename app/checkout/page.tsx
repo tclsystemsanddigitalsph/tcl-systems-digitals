@@ -6,6 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { getCatalogProduct } from "@/lib/catalog";
 import { formatPrice, productPrice } from "@/lib/products";
 import CheckoutForm from "./CheckoutForm";
+import CheckoutProcessingFeeLabel from "./CheckoutProcessingFeeLabel";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +30,8 @@ const checkoutStyles = `
 .tcl-checkout-topline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 30px;
+  justify-content: flex-end;
+  margin-bottom: 18px;
 }
 
 .tcl-checkout-back,
@@ -42,12 +42,33 @@ const checkoutStyles = `
   text-decoration: none;
 }
 
+.tcl-checkout-topline .tcl-checkout-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #8e6070;
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.tcl-checkout-topline .tcl-checkout-back:hover {
+  background: transparent;
+  color: #6f4655;
+}
+
 .tcl-checkout-secure {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  margin-top: 12px;
   color: #8d7580;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 750;
 }
 
@@ -63,8 +84,8 @@ const checkoutStyles = `
 }
 
 .tcl-checkout-heading {
-  max-width: 650px;
-  margin-bottom: 32px;
+  max-width: 720px;
+  margin-bottom: 26px;
 }
 
 .tcl-checkout-heading h1 {
@@ -627,12 +648,23 @@ const checkoutStyles = `
   }
 
   .tcl-checkout-topline {
-    margin-bottom: 22px;
+    margin-bottom: 14px;
   }
 
   .tcl-checkout-back,
   .tcl-checkout-secure {
     font-size: 0.64rem;
+  }
+
+  .tcl-checkout-topline .tcl-checkout-back {
+    min-height: auto;
+    padding: 0;
+    font-size: 0.68rem;
+  }
+
+  .tcl-checkout-secure {
+    margin-top: 10px;
+    font-size: 0.68rem;
   }
 
   .tcl-checkout-heading {
@@ -908,8 +940,6 @@ export default async function CheckoutPage({
             <Link href={productHref} className="tcl-checkout-back">
               ← Back to Product
             </Link>
-
-            <span className="tcl-checkout-secure">Secure checkout</span>
           </div>
 
           <header className="tcl-checkout-heading">
@@ -919,6 +949,12 @@ export default async function CheckoutPage({
               Enter your details, choose a payment method, and review your
               order.
             </p>
+
+            <span className="tcl-checkout-secure">
+              <span className="tcl-checkout-secure-dot" aria-hidden="true">
+              </span>
+              Secure checkout
+            </span>
           </header>
 
           <div className="tcl-checkout-layout">
@@ -1000,7 +1036,7 @@ export default async function CheckoutPage({
 
                 <div>
                   <dt>
-                    Processing fee <small>{feePercent}%</small>
+                    <CheckoutProcessingFeeLabel />
                   </dt>
                   <dd>{formatPrice(feeInCentavos / 100)}</dd>
                 </div>

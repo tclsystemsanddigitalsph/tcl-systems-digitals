@@ -15,6 +15,7 @@ const helpItems = [
   { label: "How It Works", href: "/how-it-works" },
   { label: "FAQ", href: "/faqs" },
   { label: "Order Status", href: "/order-status" },
+  { label: "Policies", href: "/policies" },
 ];
 
 export default function SiteHeader() {
