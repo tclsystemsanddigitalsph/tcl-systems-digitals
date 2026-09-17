@@ -323,8 +323,8 @@ export default function TCLSupportChat() {
             )}
 
             <div style={{ display: "grid", gap: 9 }}>
-              {displayed.map((message) => (
-                <div key={message.id} style={{
+              {displayed.map((message, index) => (
+                <div key={`${message.id}-${message.from}-${index}`} style={{
                   maxWidth: "88%", justifySelf: message.from === "customer" ? "end" : "start",
                   padding: "10px 12px",
                   border: message.from === "tcl" ? "1px solid rgba(217,86,139,.12)" : "none",
