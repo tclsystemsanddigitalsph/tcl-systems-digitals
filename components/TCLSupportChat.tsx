@@ -123,6 +123,9 @@ export default function TCLSupportChat() {
   const [customerToken, setCustomerToken] = useState<string | null>(null);
   const [supportReference, setSupportReference] = useState<string | null>(null);
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
+  const [presence, setPresence] = useState<"ONLINE" | "AWAY">("AWAY");
+  const [isTyping, setIsTyping] = useState(false);
+  const [conversationExists, setConversationExists] = useState(true);
   const [busy, setBusy] = useState(false);
   const [lastTopic, setLastTopic] = useState<Topic | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -156,13 +159,27 @@ export default function TCLSupportChat() {
         });
         if (!response.ok) return;
         const data = await response.json() as {
-          supportReference?: string;
+          conversationExists?: boolean;
+          supportReference?: string | null;
           status?: string;
+          presence?: "ONLINE" | "AWAY";
+          isTyping?: boolean;
           messages?: LiveApiMessage[];
         };
         if (!active) return;
+
+        const exists = data.conversationExists !== false;
+        setConversationExists(exists);
         setSupportReference(data.supportReference ?? null);
         setLiveStatus(data.status ?? null);
+        setPresence(data.presence === "ONLINE" ? "ONLINE" : "AWAY");
+        setIsTyping(Boolean(data.isTyping));
+
+        if (!exists) {
+          setLiveMessages([]);
+          return;
+        }
+
         setLiveMessages((data.messages ?? []).map((item) => ({
           id: item.id,
           from: item.sender === "CUSTOMER" ? "customer" : "tcl",
@@ -227,6 +244,8 @@ export default function TCLSupportChat() {
         setCustomerToken(data.customerToken);
         setSupportReference(data.supportReference);
         setLiveStatus(data.status);
+        setConversationExists(true);
+        setIsTyping(false);
         setLiveMessages([{ id: `local-${Date.now()}`, from: "customer", text: clean }]);
         localStorage.setItem(SESSION_KEY, JSON.stringify({
           customerToken: data.customerToken,
@@ -260,6 +279,17 @@ export default function TCLSupportChat() {
     }
   }
 
+  function startNewConversation() {
+    localStorage.removeItem(SESSION_KEY);
+    setCustomerToken(null);
+    setSupportReference(null);
+    setLiveStatus(null);
+    setLiveMessages([]);
+    setConversationExists(true);
+    setIsTyping(false);
+    setInput("");
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = input.trim();
@@ -270,6 +300,9 @@ export default function TCLSupportChat() {
 
   const displayed = mode === "live" ? liveMessages : messages;
   const action = mode === "auto" && lastTopic ? topicLinks[lastTopic] : null;
+  const liveClosed = mode === "live" && liveStatus === "CLOSED";
+  const liveExpired = mode === "live" && customerToken !== null && !conversationExists;
+  const liveUnavailable = liveClosed || liveExpired;
 
   return (
     <>
@@ -294,9 +327,21 @@ export default function TCLSupportChat() {
               <strong style={{ display: "block" }}>{mode === "live" ? "Talk to TCL" : "TCL Support"}</strong>
               <span style={{ fontSize: ".75rem", color: "#75656b" }}>
                 {mode === "live"
-                  ? supportReference
-                    ? `${supportReference} • ${liveStatus === "WAITING_FOR_TCL" ? "Waiting for TCL" : "Live support"}`
-                    : "Send a message to start"
+                  ? liveExpired
+                    ? "Previous conversation expired"
+                    : supportReference
+                      ? `${supportReference} • ${
+                          liveClosed
+                            ? "Closed"
+                            : isTyping
+                              ? "TCL is typing…"
+                              : presence === "ONLINE"
+                                ? "● Online"
+                                : "● Away — replies may take a little longer"
+                        }`
+                      : presence === "ONLINE"
+                        ? "● Online • Send a message to start"
+                        : "● Away • Send a message anytime"
                   : "Automated help • English • Tagalog • Taglish"}
               </span>
             </div>
@@ -335,6 +380,32 @@ export default function TCLSupportChat() {
               ))}
             </div>
 
+            {mode === "live" && isTyping && !liveUnavailable && (
+              <div style={{ marginTop: 10, maxWidth: "88%", padding: "9px 12px", borderRadius: "16px 16px 16px 4px", background: "#fff", border: "1px solid rgba(217,86,139,.12)", color: "#75656b", fontSize: ".8rem", fontStyle: "italic" }}>
+                TCL is typing…
+              </div>
+            )}
+
+            {mode === "live" && liveClosed && (
+              <div style={{ marginTop: 12, padding: 13, borderRadius: 15, background: "#fff", border: "1px solid rgba(217,86,139,.14)", fontSize: ".84rem", lineHeight: 1.55 }}>
+                <strong style={{ display: "block", marginBottom: 4 }}>This support conversation has been closed.</strong>
+                It will be retained for 7 days. You can start a new conversation anytime.
+                <button type="button" onClick={startNewConversation} style={{ width: "100%", minHeight: 40, marginTop: 10, border: 0, borderRadius: 11, background: "var(--accent, #d9568b)", color: "#fff", cursor: "pointer", font: "inherit", fontSize: ".8rem", fontWeight: 750 }}>
+                  Start New Conversation
+                </button>
+              </div>
+            )}
+
+            {mode === "live" && liveExpired && (
+              <div style={{ marginTop: 12, padding: 13, borderRadius: 15, background: "#fff", border: "1px solid rgba(217,86,139,.14)", fontSize: ".84rem", lineHeight: 1.55 }}>
+                <strong style={{ display: "block", marginBottom: 4 }}>Your previous support conversation is no longer available.</strong>
+                Start a new conversation if you still need help.
+                <button type="button" onClick={startNewConversation} style={{ width: "100%", minHeight: 40, marginTop: 10, border: 0, borderRadius: 11, background: "var(--accent, #d9568b)", color: "#fff", cursor: "pointer", font: "inherit", fontSize: ".8rem", fontWeight: 750 }}>
+                  Start New Conversation
+                </button>
+              </div>
+            )}
+
             {action && (
               <Link href={action.href} onClick={() => setOpen(false)} style={{
                 width: "100%", minHeight: 42, marginTop: 12, padding: "9px 13px",
@@ -362,13 +433,21 @@ export default function TCLSupportChat() {
 
           <form onSubmit={submit} style={{ padding: 11, display: "flex", gap: 8, borderTop: "1px solid rgba(49,37,41,.08)", background: "#fff" }}>
             <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={500}
-              placeholder={mode === "live" ? "Message TCL..." : "Ask a question... / Magtanong..."}
-              disabled={busy}
+              placeholder={
+                liveClosed
+                  ? "Conversation closed"
+                  : liveExpired
+                    ? "Start a new conversation"
+                    : mode === "live"
+                      ? "Message TCL..."
+                      : "Ask a question... / Magtanong..."
+              }
+              disabled={busy || liveUnavailable}
               style={{ flex: 1, minWidth: 0, height: 44, padding: "0 12px", border: "1px solid rgba(49,37,41,.14)", borderRadius: 14, outline: "none", font: "inherit", fontSize: ".85rem" }} />
-            <button type="submit" disabled={busy || !input.trim()} aria-label="Send message" style={{
+            <button type="submit" disabled={busy || liveUnavailable || !input.trim()} aria-label="Send message" style={{
               width: 44, height: 44, border: 0, borderRadius: 14, background: "var(--accent, #d9568b)",
-              color: "#fff", cursor: busy || !input.trim() ? "not-allowed" : "pointer",
-              opacity: busy || !input.trim() ? .5 : 1, fontSize: 18, fontWeight: 800
+              color: "#fff", cursor: busy || liveUnavailable || !input.trim() ? "not-allowed" : "pointer",
+              opacity: busy || liveUnavailable || !input.trim() ? .5 : 1, fontSize: 18, fontWeight: 800
             }}>{busy ? "…" : "↑"}</button>
           </form>
         </section>
