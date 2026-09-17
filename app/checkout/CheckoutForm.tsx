@@ -116,6 +116,73 @@ export default function CheckoutForm({
     setPolicyAccepted(false);
   }
 
+  function openPaymentWindow() {
+    const width = Math.min(520, window.screen.availWidth);
+    const height = Math.min(760, window.screen.availHeight);
+    const left = Math.max(
+      0,
+      Math.round((window.screen.availWidth - width) / 2),
+    );
+    const top = Math.max(
+      0,
+      Math.round((window.screen.availHeight - height) / 2),
+    );
+
+    return window.open(
+      "",
+      "tcl-secure-payment",
+      [
+        "popup=yes",
+        `width=${width}`,
+        `height=${height}`,
+        `left=${left}`,
+        `top=${top}`,
+        "resizable=yes",
+        "scrollbars=yes",
+      ].join(","),
+    );
+  }
+
+  function watchPaymentWindow(paymentWindow: Window) {
+    const timer = window.setInterval(() => {
+      if (paymentWindow.closed) {
+        window.clearInterval(timer);
+        setSubmitting(false);
+        return;
+      }
+
+      try {
+        const currentUrl = paymentWindow.location.href;
+
+        if (!currentUrl.startsWith(window.location.origin)) {
+          return;
+        }
+
+        const returnedUrl = new URL(currentUrl);
+
+        if (returnedUrl.pathname === "/checkout/success") {
+          window.clearInterval(timer);
+          paymentWindow.close();
+          window.location.assign(returnedUrl.toString());
+          return;
+        }
+
+        if (
+          returnedUrl.pathname === "/checkout" &&
+          (returnedUrl.searchParams.get("payment_error") === "1" ||
+            returnedUrl.searchParams.get("payment_cancelled") === "1" ||
+            returnedUrl.searchParams.get("cancelled") === "1")
+        ) {
+          window.clearInterval(timer);
+          paymentWindow.close();
+          window.location.assign(returnedUrl.toString());
+        }
+      } catch {
+        // The payment provider is on another origin while checkout is active.
+      }
+    }, 500);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -135,6 +202,19 @@ export default function CheckoutForm({
       setPolicyOpen(true);
       return;
     }
+
+    const paymentWindow = openPaymentWindow();
+
+    if (!paymentWindow) {
+      setError(
+        "Your browser blocked the secure payment window. Please allow pop-ups for this site and try again.",
+      );
+      return;
+    }
+
+    paymentWindow.document.title = "Opening secure payment...";
+    paymentWindow.document.body.innerHTML =
+      '<div style="font-family:Arial,sans-serif;padding:32px;text-align:center;color:#6f5963;">Opening secure payment...</div>';
 
     setSubmitting(true);
 
@@ -171,7 +251,8 @@ export default function CheckoutForm({
           throw new Error(data.error || "Unable to start PayPal checkout.");
         }
 
-        window.location.assign(data.approvalUrl);
+        paymentWindow.location.href = data.approvalUrl;
+        watchPaymentWindow(paymentWindow);
         return;
       }
 
@@ -200,8 +281,10 @@ export default function CheckoutForm({
         throw new Error(data.error || "Unable to start PayMongo checkout.");
       }
 
-      window.location.assign(data.checkoutUrl);
+      paymentWindow.location.href = data.checkoutUrl;
+      watchPaymentWindow(paymentWindow);
     } catch (checkoutError) {
+      paymentWindow.close();
       setSubmitting(false);
       setError(
         checkoutError instanceof Error

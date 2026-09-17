@@ -17,15 +17,32 @@ type Props = {
   params: Promise<{ token: string }>;
 };
 
-function displayProjectTier(
-  productSlug: string | null,
-  productTier: string | null,
-) {
-  if (productSlug === "simple-business-website") {
+const CUSTOM_PRODUCT_SLUG = "custom-business-website";
+
+function displayPackage(productSlug: string | null, productName: string) {
+  const slug = productSlug?.trim().toLowerCase();
+
+  if (slug === "starter-website") {
     return "Starter Website";
   }
 
-  return productTier || "Custom";
+  if (slug === "simple-business-website") {
+    return "Simple Business Website";
+  }
+
+  if (slug === "basic-online-shop") {
+    return "Basic Online Shop";
+  }
+
+  if (slug === "standard-booking-system") {
+    return "Standard Booking Website/System";
+  }
+
+  if (slug === CUSTOM_PRODUCT_SLUG) {
+    return "Custom Business Website/System";
+  }
+
+  return productName || "Custom Project";
 }
 
 export default async function ProjectRequirementsPage({ params }: Props) {
@@ -52,7 +69,9 @@ export default async function ProjectRequirementsPage({ params }: Props) {
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("id,payment_status,order_status")
+    .select(
+      "id,payment_status,payment_terms,amount_paid,order_status",
+    )
     .eq("id", request.order_id)
     .maybeSingle();
 
@@ -63,11 +82,27 @@ export default async function ProjectRequirementsPage({ params }: Props) {
     );
   }
 
-  if (
-    !order ||
-    order.payment_status !== "COMPLETED" ||
-    order.order_status === "CANCELLED"
-  ) {
+  if (!order || order.order_status === "CANCELLED") {
+    notFound();
+  }
+
+  const isCustomQuotation =
+    request.product_slug?.trim().toLowerCase() === CUSTOM_PRODUCT_SLUG;
+
+  const amountPaid = Number(order.amount_paid ?? 0);
+
+  const eligibleForRequirements = isCustomQuotation
+    ? order.payment_terms === "DEPOSIT_50"
+      ? Number.isFinite(amountPaid) &&
+        amountPaid > 0 &&
+        (order.payment_status === "PARTIALLY_PAID" ||
+          order.payment_status === "COMPLETED")
+      : order.payment_terms === "FULL"
+        ? order.payment_status === "COMPLETED"
+        : false
+    : order.payment_status === "COMPLETED";
+
+  if (!eligibleForRequirements) {
     notFound();
   }
 
@@ -88,9 +123,9 @@ export default async function ProjectRequirementsPage({ params }: Props) {
     request.requirements_status === "NEED_MORE_INFO" &&
     Boolean(request.customer_update_note?.trim());
 
-  const shownTier = displayProjectTier(
+  const shownPackage = displayPackage(
     request.product_slug,
-    request.product_tier,
+    request.product_name,
   );
 
   return (
@@ -120,8 +155,8 @@ export default async function ProjectRequirementsPage({ params }: Props) {
               </div>
 
               <div>
-                <span>Tier</span>
-                <strong>{shownTier}</strong>
+                <span>Package</span>
+                <strong>{shownPackage}</strong>
               </div>
 
               <div>
@@ -157,7 +192,7 @@ export default async function ProjectRequirementsPage({ params }: Props) {
             productSlug={request.product_slug}
             productName={request.product_name}
             productCategory={request.product_category}
-            productTier={shownTier}
+            productTier={shownPackage}
             customerName={request.customer_name}
             customerEmail={request.customer_email}
             existingRequirements={

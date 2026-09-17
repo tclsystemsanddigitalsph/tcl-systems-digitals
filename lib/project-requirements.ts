@@ -41,73 +41,18 @@ type ProductRow = {
 
 const CUSTOM_PRODUCT_SLUG = "custom-business-website";
 
-const KNOWN_TIERS = [
-  "Enterprise",
-  "Starter",
-  "Basic",
-  "Solo",
-  "Pro",
-  "Business",
-] as const;
+const PRODUCT_PACKAGE_LABELS: Record<string, string> = {
+  "starter-website": "Starter Website",
+  "simple-business-website": "Simple Business Website",
+  "basic-online-shop": "Basic Online Shop",
+  "standard-booking-system": "Standard Booking Website/System",
+  "custom-business-website": "Custom Business Website/System",
+};
 
-function normalizeTier(value: string | null | undefined) {
-  const normalized = value?.trim().toLowerCase();
+function getPackageLabel(product: ProductRow) {
+  const slug = product.slug.trim().toLowerCase();
 
-  if (!normalized) return null;
-
-  const match = KNOWN_TIERS.find(
-    (tier) => tier.toLowerCase() === normalized,
-  );
-
-  return match ?? null;
-}
-
-function inferTier(
-  slug: string,
-  productName: string,
-  badge: string | null,
-) {
-  const normalizedSlug = slug.trim().toLowerCase();
-
-  const slugTierMap: Array<[string, string]> = [
-    ["-enterprise", "Enterprise"],
-    ["-starter", "Starter"],
-    ["-basic", "Basic"],
-    ["-solo", "Solo"],
-    ["-pro", "Pro"],
-    ["-business", "Business"],
-  ];
-
-  for (const [suffix, tier] of slugTierMap) {
-    if (normalizedSlug.endsWith(suffix)) {
-      return tier;
-    }
-  }
-
-  const badgeTier = normalizeTier(badge);
-
-  if (badgeTier) {
-    return badgeTier;
-  }
-
-  const normalizedName = productName.trim().toLowerCase();
-
-  const namePatterns: Array<[RegExp, string]> = [
-    [/\benterprise\b/, "Enterprise"],
-    [/\bstarter\b/, "Starter"],
-    [/\bbasic\b/, "Basic"],
-    [/\bsolo\b/, "Solo"],
-    [/\bpro\b/, "Pro"],
-    [/\bbusiness\b/, "Business"],
-  ];
-
-  for (const [pattern, tier] of namePatterns) {
-    if (pattern.test(normalizedName)) {
-      return tier;
-    }
-  }
-
-  return null;
+  return PRODUCT_PACKAGE_LABELS[slug] ?? product.name.trim() ?? null;
 }
 
 function effectivePrice(product: ProductRow) {
@@ -248,15 +193,12 @@ export async function ensureProjectRequirementsForPaidOrder(
     return null;
   }
 
-  // Custom Business Website is quotation-based, not a fixed storefront tier.
-  // Do not infer "Business" from the words in its product name.
-  const productTier = isCustomQuotation
-    ? null
-    : inferTier(
-        productData.slug,
-        productData.name,
-        productData.badge,
-      );
+  /*
+   * product_tier is retained for database compatibility, but it now stores
+   * the current storefront package label instead of the retired
+   * Solo / Pro / Business / Enterprise tier structure.
+   */
+  const productPackage = getPackageLabel(productData);
 
   const { data: createdData, error: createError } = await supabase
     .from("project_requirements")
@@ -269,7 +211,7 @@ export async function ensureProjectRequirementsForPaidOrder(
       product_slug: productData.slug,
       product_name: productData.name,
       product_category: productData.category,
-      product_tier: productTier,
+      product_tier: productPackage,
       requirements_status: "NOT_STARTED",
       project_status: "WAITING_REQUIREMENTS",
     })

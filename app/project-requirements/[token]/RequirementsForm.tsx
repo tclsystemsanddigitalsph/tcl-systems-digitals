@@ -102,8 +102,24 @@ function inferFamily(productCategory: string | null, productName: string) {
   return "custom_website";
 }
 
+type CurrentProduct =
+  | "starter"
+  | "simple"
+  | "shop"
+  | "booking"
+  | "custom";
+
+function currentProduct(productSlug: string): CurrentProduct {
+  const slug = productSlug.trim().toLowerCase();
+  if (slug === "starter-website") return "starter";
+  if (slug === "simple-business-website") return "simple";
+  if (slug === "basic-online-shop") return "shop";
+  if (slug === "standard-booking-system") return "booking";
+  return "custom";
+}
+
 function isSimpleBusinessWebsite(productSlug: string) {
-  return productSlug.trim().toLowerCase() === "simple-business-website";
+  return currentProduct(productSlug) === "simple";
 }
 
 function displayTier(tier: string) {
@@ -649,6 +665,22 @@ function buildQuestions(
 ): Question[] {
   const source = `${productCategory ?? ""} ${productName}`.toLowerCase();
 
+  if (currentProduct(productSlug) === "starter") {
+    return [
+      { key: "business_name", label: "Business / brand name", required: true },
+      { key: "business_type", label: "Business type / industry", required: true },
+      { key: "about_business", label: "Short About / business description", type: "textarea", required: true },
+      { key: "business_location", label: "Business location / service area" },
+      { key: "logo_status", label: "Do you already have a logo?", type: "select", options: ["Yes", "No", "Still working on it"] },
+      { key: "brand_colors", label: "Preferred colors" },
+      { key: "brand_style", label: "Preferred design style" },
+      { key: "services", label: "Services / products to display", type: "textarea", required: true, placeholder: "List the names, short descriptions, and prices if you want prices shown." },
+      { key: "contact_details", label: "Contact details to display", type: "textarea", required: true, placeholder: "Phone, email, address, Messenger, Instagram, or other contact details." },
+      { key: "social_links", label: "Social media / contact links", type: "textarea" },
+      { key: "content_status", label: "Logo / photos / content status", type: "select", options: ["Everything is ready", "I have some files ready", "I still need to prepare my files"] },
+    ];
+  }
+
   if (isSimpleBusinessWebsite(productSlug)) {
     return [
       {
@@ -772,6 +804,47 @@ function buildQuestions(
           "I still need to prepare my files",
         ],
       },
+    ];
+  }
+
+  if (currentProduct(productSlug) === "shop") {
+    return [
+      { key: "business_name", label: "Business / brand name", required: true },
+      { key: "business_type", label: "Business type / industry", required: true },
+      { key: "about_business", label: "Short About / shop description", type: "textarea", required: true },
+      { key: "business_location", label: "Business location / service area" },
+      { key: "logo_status", label: "Do you already have a logo?", type: "select", options: ["Yes", "No", "Still working on it"] },
+      { key: "brand_colors", label: "Preferred colors" },
+      { key: "brand_style", label: "Preferred design style" },
+      { key: "products", label: "Initial products — up to 10", type: "textarea", required: true, placeholder: "For each product: name, price, description, and variants/options if applicable. Put product images in your Google Drive folder." },
+      { key: "product_categories", label: "Basic product categories / collections", type: "textarea" },
+      { key: "manual_payment", label: "Manual payment instructions", type: "textarea", required: true, placeholder: "GCash, QR Ph, bank transfer, account details, and customer instructions." },
+      { key: "order_details", label: "Customer details needed when ordering", type: "checkboxes", options: ["Full name", "Email", "Mobile number", "Complete address", "Order notes", "Other"], required: true },
+      { key: "delivery_details", label: "Delivery / pickup information", type: "textarea" },
+      { key: "shop_policies", label: "Shop / order policies", type: "textarea", required: true },
+      { key: "contact_details", label: "Business contact details", type: "textarea", required: true },
+      { key: "social_links", label: "Social media / contact links", type: "textarea" },
+      { key: "domain_status", label: "Domain status", type: "select", options: ["I already own a domain", "I need help getting a domain", "I will use the included vercel.app address for now"] },
+    ];
+  }
+
+  if (currentProduct(productSlug) === "booking") {
+    return [
+      { key: "business_name", label: "Business / brand name", required: true },
+      { key: "business_type", label: "Business type / industry", required: true },
+      { key: "about_business", label: "Short About / business description", type: "textarea", required: true },
+      { key: "business_location", label: "Business location / service area", required: true },
+      { key: "logo_status", label: "Do you already have a logo?", type: "select", options: ["Yes", "No", "Still working on it"] },
+      { key: "brand_colors", label: "Preferred colors" },
+      { key: "brand_style", label: "Preferred design style" },
+      { key: "services", label: "Services, prices, durations, variations & add-ons", type: "textarea", required: true, placeholder: "Example: Gel manicure — ₱500 — 60 mins. Nail art add-on — ₱150 — +20 mins." },
+      { key: "working_schedule", label: "Working days, hours, breaks & availability", type: "textarea", required: true },
+      { key: "booking_rules", label: "Booking rules", type: "textarea", placeholder: "Lead time, advance-booking window, blocked dates, intervals, and customer instructions." },
+      { key: "booking_customer_fields", label: "Customer information to collect", type: "checkboxes", options: ["Full name", "Email", "Mobile number", "Address/location", "Customer notes", "Reference photo", "Other"], required: true },
+      { key: "cancellation_policy", label: "Cancellation / rescheduling / no-show policy", type: "textarea", required: true },
+      { key: "contact_details", label: "Business contact / location details", type: "textarea", required: true },
+      { key: "social_links", label: "Social media / contact links", type: "textarea" },
+      { key: "domain_status", label: "Domain status", type: "select", options: ["I already own a domain", "I need help getting a domain", "I will use the included vercel.app address for now"] },
     ];
   }
 
@@ -1006,7 +1079,18 @@ function buildFeatures(
   productSlug: string,
 ): Feature[] {
   const source = `${productCategory ?? ""} ${productName}`.toLowerCase();
-  const tier = inferTier(productTier, productSlug, productName);
+  const tier =
+    currentProduct(productSlug) === "booking"
+      ? "basic"
+      : inferTier(productTier, productSlug, productName);
+
+  if (
+    currentProduct(productSlug) === "starter" ||
+    currentProduct(productSlug) === "simple" ||
+    currentProduct(productSlug) === "shop"
+  ) {
+    return [];
+  }
 
   if (isSimpleBusinessWebsite(productSlug)) {
     return [];
@@ -1982,7 +2066,7 @@ export default function RequirementsForm({
           {simpleBusinessWebsite ? (
             <ul>
               <li>Set the folder to <strong>Anyone with the link — Viewer</strong>.</li>
-              <li>Include your logo, Home/About photos, and service images if available.</li>
+              <li>Include your logo, Home/About photos, service or product images, and any content documents that apply to your purchased package.</li>
               <li>Use clear names such as <strong>LOGO.png</strong>, <strong>HOME - Hero.jpg</strong>, <strong>ABOUT - Owner.jpg</strong>, and <strong>SERVICE - Name.jpg</strong>.</li>
             </ul>
           ) : (
