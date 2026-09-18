@@ -566,7 +566,6 @@ export default async function EditProductPage({
 
                 <form
                   action={uploadProductFile}
-                  encType="multipart/form-data"
                   className={styles.uploadForm}
                 >
                   <input type="hidden" name="product_id" value={product.id} />
