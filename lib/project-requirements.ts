@@ -46,6 +46,7 @@ const PRODUCT_PACKAGE_LABELS: Record<string, string> = {
   "simple-business-website": "Simple Business Website",
   "basic-online-shop": "Basic Online Shop",
   "standard-booking-system": "Standard Booking Website/System",
+  "online-shop-with-admin": "Online Shop + Admin",
   "custom-business-website": "Custom Business Website/System",
 };
 

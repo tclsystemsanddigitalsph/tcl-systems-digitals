@@ -38,6 +38,10 @@ function displayPackage(productSlug: string | null, productName: string) {
     return "Standard Booking Website/System";
   }
 
+  if (slug === "online-shop-with-admin") {
+    return "Online Shop + Admin";
+  }
+
   if (slug === CUSTOM_PRODUCT_SLUG) {
     return "Custom Business Website/System";
   }

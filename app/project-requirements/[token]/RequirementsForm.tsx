@@ -106,6 +106,7 @@ type CurrentProduct =
   | "starter"
   | "simple"
   | "shop"
+  | "shop_admin"
   | "booking"
   | "custom";
 
@@ -114,6 +115,7 @@ function currentProduct(productSlug: string): CurrentProduct {
   if (slug === "starter-website") return "starter";
   if (slug === "simple-business-website") return "simple";
   if (slug === "basic-online-shop") return "shop";
+  if (slug === "online-shop-with-admin") return "shop_admin";
   if (slug === "standard-booking-system") return "booking";
   return "custom";
 }
@@ -200,6 +202,52 @@ function questionScope(
   }
 
   if (key in common) return common[key];
+
+  if (family === "online_shop_admin") {
+    const map: Record<string, ScopeCopy> = {
+      products: {
+        included: ["Product names, prices, descriptions, images, categories, and standard variations/options used by the included shop."],
+        excluded: ["Advanced inventory automation, supplier systems, complex product configurators, memberships, subscriptions, or marketplace functionality."],
+      },
+      product_categories: {
+        included: ["Basic categories or collections used to organize products in the included storefront."],
+        excluded: ["Advanced dynamic collections, recommendation engines, complex merchandising, or marketplace category systems."],
+      },
+      manual_payment: {
+        included: ["Manual GCash, QR Ph, or bank transfer instructions used by customers during the included checkout flow."],
+        excluded: ["Automated payment gateways, card processing, automatic payment capture, subscriptions, or unsupported payment integrations."],
+      },
+      payment_proof: {
+        included: ["Instructions for customers to submit supported payment proof for manual admin review."],
+        excluded: ["Automatic bank reconciliation, automatic payment verification, accounting integrations, or automated refunds."],
+      },
+      order_details: {
+        included: ["Standard customer and order information collected during checkout."],
+        excluded: ["Customer account portals, memberships, CRM systems, or complex conditional checkout workflows."],
+      },
+      delivery_details: {
+        included: ["Standard shipping, delivery, pickup, or fulfillment instructions used by the shop."],
+        excluded: ["Live courier APIs, route optimization, fulfillment-center integrations, or complex shipping automation."],
+      },
+      shop_policies: {
+        included: ["Your shop, payment, cancellation, return, exchange, and fulfillment policy wording."],
+        excluded: ["Legal drafting, compliance certification, or automated refund/returns systems."],
+      },
+      contact_details: {
+        included: ["Business contact information displayed or used by the included storefront."],
+        excluded: ["CRM syncing, omnichannel inboxes, chat automation, or unsupported messaging integrations."],
+      },
+      domain_status: {
+        included: ["Your domain preference, existing domain information, or use of the included vercel.app option."],
+        excluded: ["Custom domain registration/renewal fees, premium domains, or unrelated third-party subscription costs."],
+      },
+      admin_setup: {
+        included: ["Basic business/store information needed to configure the included admin dashboard and standard store settings."],
+        excluded: ["Custom admin roles, advanced analytics, additional dashboard modules, or custom business workflows."],
+      },
+    };
+    if (map[key]) return map[key];
+  }
 
   if (family === "booking") {
     const map: Record<string, ScopeCopy> = {
@@ -334,6 +382,44 @@ function featureScope(
   tier: string,
 ): ScopeCopy {
   const key = feature.key;
+
+  if (family === "online_shop_admin") {
+    const map: Record<string, ScopeCopy> = {
+      catalog: {
+        included: ["Standard product catalog, product pages, categories, and supported variations/options included in this package."],
+        excluded: ["Marketplace/multi-vendor features, advanced merchandising, recommendation engines, or custom product builders."],
+      },
+      cart_checkout: {
+        included: ["Shopping cart, standard checkout fields, customer details, and order submission included in the package."],
+        excluded: ["Customer accounts, subscriptions, financing, complex tax engines, or custom checkout workflows."],
+      },
+      manual_payments: {
+        included: ["Manual GCash, QR Ph, or bank transfer instructions plus supported payment-proof submission."],
+        excluded: ["Automated payment gateways, automatic payment capture, card processing, or unsupported payment integrations."],
+      },
+      product_management: {
+        included: ["Add/edit products, update supported details and prices, and activate/deactivate products through the included admin dashboard."],
+        excluded: ["Advanced inventory automation, supplier workflows, bulk ERP tools, or custom product-management modules."],
+      },
+      order_management: {
+        included: ["View submitted orders and manage standard order information through the included admin dashboard."],
+        excluded: ["ERP, accounting, procurement, warehouse management, CRM pipelines, or complex fulfillment systems."],
+      },
+      payment_verification: {
+        included: ["Review supported payment proof and manually verify or reject payments through the included workflow."],
+        excluded: ["Automatic bank reconciliation, automated payment verification, accounting integrations, or automated refunds."],
+      },
+      order_statuses: {
+        included: ["Standard order stages such as Pending, Confirmed, Processing, Ready, and Completed."],
+        excluded: ["Complex workflow engines, multi-department approvals, automated task assignment, or custom fulfillment pipelines."],
+      },
+      store_settings: {
+        included: ["Basic business/store information supported by the included admin settings."],
+        excluded: ["Custom admin roles/permissions, advanced analytics, additional dashboard modules, or unrelated business systems."],
+      },
+    };
+    if (map[key]) return map[key];
+  }
 
   if (family === "booking") {
     const map: Record<string, ScopeCopy> = {
@@ -828,6 +914,29 @@ function buildQuestions(
     ];
   }
 
+  if (currentProduct(productSlug) === "shop_admin") {
+    return [
+      { key: "business_name", label: "Business / shop name", required: true },
+      { key: "business_type", label: "Business type / industry", required: true },
+      { key: "about_business", label: "Short About / shop description", type: "textarea", required: true },
+      { key: "business_location", label: "Business location / service area" },
+      { key: "logo_status", label: "Do you already have a logo?", type: "select", options: ["Yes", "No", "Still working on it"] },
+      { key: "brand_colors", label: "Preferred colors" },
+      { key: "brand_style", label: "Preferred design style" },
+      { key: "products", label: "Products to set up", type: "textarea", required: true, placeholder: "For each product: name, price, description, category, and variants/options if applicable. Put product images in your Google Drive folder." },
+      { key: "product_categories", label: "Product categories / collections", type: "textarea" },
+      { key: "manual_payment", label: "Manual payment instructions", type: "textarea", required: true, placeholder: "GCash, QR Ph, bank transfer, account details, and customer payment instructions." },
+      { key: "payment_proof", label: "Payment proof instructions", type: "textarea", required: true, placeholder: "Tell customers what proof they should submit and any details you want included for manual verification." },
+      { key: "order_details", label: "Customer details needed during checkout", type: "checkboxes", options: ["Full name", "Email", "Mobile number", "Complete address", "Order notes", "Other"], required: true },
+      { key: "delivery_details", label: "Shipping / delivery / pickup information", type: "textarea", required: true },
+      { key: "shop_policies", label: "Shop / payment / cancellation / return / exchange policies", type: "textarea", required: true },
+      { key: "contact_details", label: "Business contact details", type: "textarea", required: true },
+      { key: "social_links", label: "Social media / contact links", type: "textarea" },
+      { key: "domain_status", label: "Domain status", type: "select", options: ["I already own a domain", "I need help getting a domain", "I will use the included vercel.app address for now"] },
+      { key: "admin_setup", label: "Admin / business setup information", type: "textarea", placeholder: "Business details or preferences TCL should use when preparing the included admin dashboard and basic store settings." },
+    ];
+  }
+
   if (currentProduct(productSlug) === "booking") {
     return [
       { key: "business_name", label: "Business / brand name", required: true },
@@ -1094,6 +1203,59 @@ function buildFeatures(
 
   if (isSimpleBusinessWebsite(productSlug)) {
     return [];
+  }
+
+  if (currentProduct(productSlug) === "shop_admin") {
+    return [
+      {
+        key: "catalog",
+        label: "Product catalog & product pages",
+        helper: "Tell us how you want the included products, categories, variations, and product information organized.",
+        prompts: ["Product categories", "Product variations/options", "Product information to display", "Featured products if applicable"],
+      },
+      {
+        key: "cart_checkout",
+        label: "Cart & customer checkout",
+        helper: "Tell us what customer information should be collected and how the standard order submission should work.",
+        prompts: ["Required customer fields", "Delivery or pickup details", "Order notes", "Checkout instructions"],
+      },
+      {
+        key: "manual_payments",
+        label: "Manual payments & proof submission",
+        helper: "Provide the manual payment and proof-submission instructions for the included payment workflow.",
+        prompts: ["GCash / QR Ph / bank details", "Payment instructions", "Proof requirements", "Verification notes"],
+      },
+      {
+        key: "product_management",
+        label: "Product management",
+        helper: "Tell us how you want the included admin product-management tools prepared.",
+        prompts: ["Product details to manage", "Prices", "Variations/options", "Active/inactive products"],
+      },
+      {
+        key: "order_management",
+        label: "Order management",
+        helper: "Tell us what order information is most important for you to see and manage in admin.",
+        prompts: ["Order details", "Customer details", "Payment information", "Order notes"],
+      },
+      {
+        key: "payment_verification",
+        label: "Manual payment verification",
+        helper: "Tell us how you want to review submitted payment proof and manually verify or reject payments.",
+        prompts: ["Information to review", "Verification notes", "Rejected payment handling"],
+      },
+      {
+        key: "order_statuses",
+        label: "Order statuses",
+        helper: "Describe how orders should move through the included standard order stages.",
+        prompts: ["Pending", "Confirmed", "Processing", "Ready", "Completed"],
+      },
+      {
+        key: "store_settings",
+        label: "Basic store settings",
+        helper: "Tell us which included business/store information should be prepared in the admin settings.",
+        prompts: ["Business information", "Contact details", "Store instructions", "Basic display information"],
+      },
+    ];
   }
 
   if (source.includes("booking")) {
@@ -1624,15 +1786,19 @@ export default function RequirementsForm({
     () =>
       simpleBusinessWebsite
         ? "simple_business_website"
-        : inferFamily(productCategory, productName),
-    [productCategory, productName, simpleBusinessWebsite],
+        : currentProduct(productSlug) === "shop_admin"
+          ? "online_shop_admin"
+          : inferFamily(productCategory, productName),
+    [productCategory, productName, productSlug, simpleBusinessWebsite],
   );
 
   const tier = useMemo(
     () =>
       simpleBusinessWebsite
         ? "starter"
-        : inferTier(productTier, productSlug, productName),
+        : currentProduct(productSlug) === "shop_admin"
+          ? "online shop + admin"
+          : inferTier(productTier, productSlug, productName),
     [productName, productSlug, productTier, simpleBusinessWebsite],
   );
 

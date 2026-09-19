@@ -524,3 +524,251 @@
     padding: 30px 0 0;
   }
 }
+
+/* =========================================================
+   PACKAGE COMPARISON
+   Used on:
+   - Basic Booking / Standard Booking
+   - Basic Online Shop / Online Shop + Admin
+   ========================================================= */
+
+.comparisonSection {
+  background:
+    radial-gradient(circle at 90% 10%, rgba(217, 87, 136, 0.08), transparent 22rem),
+    #ffffff;
+}
+
+.comparisonTable {
+  overflow: hidden;
+  border: 1px solid #eadde1;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 55px rgba(91, 56, 69, 0.06);
+}
+
+.comparisonRow {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.72fr) repeat(2, minmax(0, 1fr));
+}
+
+.comparisonRow + .comparisonRow {
+  border-top: 1px solid #eee1e5;
+}
+
+.comparisonHead {
+  background: #fff7fa;
+}
+
+.comparisonFeature,
+.comparisonValue,
+.comparisonPlan {
+  min-width: 0;
+  padding: 20px 22px;
+}
+
+.comparisonFeature {
+  display: flex;
+  align-items: center;
+  color: #4d3d43;
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.5;
+}
+
+.comparisonValue,
+.comparisonPlan {
+  border-left: 1px solid #eee1e5;
+}
+
+.comparisonValue {
+  color: #6f5e65;
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.comparisonPlan {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+.comparisonPlan strong {
+  color: #352a2e;
+  font-size: 1rem;
+}
+
+.comparisonPlan > span {
+  color: #d95788;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.comparisonPlan small {
+  width: fit-content;
+  margin-top: 5px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #34292d;
+  color: #fff;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.currentPlan {
+  background: rgba(217, 87, 136, 0.055);
+}
+
+.choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.choiceCard {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  padding: 28px;
+  border: 1px solid #eadde1;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.choiceCardCurrent {
+  border-color: #e6b7c9;
+  background: #fff5f8;
+}
+
+.choiceLabel {
+  margin: 0 0 10px;
+  color: #d95788;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.choiceCard h3 {
+  margin: 0 0 10px;
+  color: #352a2e;
+  font-size: 1.22rem;
+}
+
+.choiceCard > p:not(.choiceLabel) {
+  margin: 0 0 20px;
+  color: #716067;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.compareLink,
+.viewingBadge {
+  width: fit-content;
+  margin-top: auto;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.compareLink {
+  color: #b83f6d;
+  text-decoration: none;
+}
+
+.compareLink:hover {
+  text-decoration: underline;
+}
+
+.viewingBadge {
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: #34292d;
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .comparisonTable {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .comparisonHead {
+    display: none;
+  }
+
+  .comparisonRow {
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+    margin-bottom: 12px;
+    border: 1px solid #eadde1;
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .comparisonRow + .comparisonRow {
+    border-top: 1px solid #eadde1;
+  }
+
+  .comparisonFeature {
+    grid-column: 1 / -1;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee1e5;
+    background: #fff7fa;
+    color: #4d3d43;
+    font-size: 0.76rem;
+  }
+
+  .comparisonValue {
+    padding: 15px;
+    border-left: 0;
+    color: #6f5e65;
+    font-size: 0.78rem;
+  }
+
+  .comparisonValue + .comparisonValue {
+    border-left: 1px solid #eee1e5;
+  }
+
+  .comparisonValue::before {
+    display: block;
+    margin-bottom: 6px;
+    color: #d95788;
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+  }
+
+  .comparisonRow .comparisonValue:nth-child(2)::before {
+    content: "BASIC";
+  }
+
+  .comparisonRow .comparisonValue:nth-child(3)::before {
+    content: "HIGHER TIER";
+  }
+
+  .choiceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .choiceCard {
+    min-height: 0;
+    padding: 22px;
+  }
+}
+
+@media (max-width: 420px) {
+  .comparisonValue {
+    padding: 13px 12px;
+    font-size: 0.74rem;
+  }
+}
+/* Mobile comparison labels: use the actual product name */
+@media (max-width: 760px) {
+  .comparisonValue::before {
+    content: attr(data-plan-name) !important;
+  }
+}

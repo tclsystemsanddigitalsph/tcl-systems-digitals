@@ -23,6 +23,146 @@ function DetailList({ items }: { items: string[] }) {
   );
 }
 
+type Comparison = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  left: { name: string; price: string; slug: string };
+  right: { name: string; price: string; slug: string };
+  rows: { label: string; left: string; right: string }[];
+  leftBest: string;
+  rightBest: string;
+};
+
+function getComparison(slug: string): Comparison | null {
+  if (slug === "basic-booking-system" || slug === "standard-booking-system") {
+    return {
+      eyebrow: "COMPARE BOOKING PACKAGES",
+      title: "Basic or Standard Booking?",
+      description:
+        "Both packages let customers book online and include an admin dashboard. The main difference is how much scheduling control and booking structure your business needs.",
+      left: {
+        name: "Basic Booking",
+        price: "₱5,999",
+        slug: "basic-booking-system",
+      },
+      right: {
+        name: "Standard Booking",
+        price: "₱7,999",
+        slug: "standard-booking-system",
+      },
+      rows: [
+        {
+          label: "Booking experience",
+          left: "Simple, straightforward dropdown booking form",
+          right: "More structured and guided booking experience",
+        },
+        {
+          label: "Admin dashboard",
+          left: "Included — essential booking management",
+          right: "Included — more developed booking controls",
+        },
+        {
+          label: "Services, variations & add-ons",
+          left: "Included",
+          right: "Included",
+        },
+        {
+          label: "Availability setup",
+          left: "General business-wide working days and hours",
+          right: "More detailed availability controls, including service-specific setup",
+        },
+        {
+          label: "Booking capacity",
+          left: "Per-service maximum per time slot, with optional daily limit",
+          right: "Designed for businesses needing more detailed scheduling controls",
+        },
+        {
+          label: "Best suited for",
+          left: "Small businesses with a simple appointment workflow",
+          right: "Businesses with more detailed scheduling and booking requirements",
+        },
+      ],
+      leftBest:
+        "Choose Basic if you mainly need customers to book online and want an easy admin area without advanced scheduling complexity.",
+      rightBest:
+        "Choose Standard if your booking process needs a more guided customer flow and more detailed control over availability and scheduling.",
+    };
+  }
+
+  if (slug === "basic-online-shop" || slug === "online-shop-with-admin") {
+    return {
+      eyebrow: "COMPARE ONLINE SHOP PACKAGES",
+      title: "Basic Shop or Shop + Admin?",
+      description:
+        "Both give customers a proper online storefront. The biggest difference is management: Basic does not include an admin dashboard, while Shop + Admin lets you manage the store yourself.",
+      left: {
+        name: "Basic Online Shop",
+        price: "₱5,999",
+        slug: "basic-online-shop",
+      },
+      right: {
+        name: "Online Shop + Admin",
+        price: "₱8,999",
+        slug: "online-shop-with-admin",
+      },
+      rows: [
+        {
+          label: "Customer storefront",
+          left: "Included",
+          right: "Included",
+        },
+        {
+          label: "Product pages, cart & checkout",
+          left: "Included",
+          right: "Included",
+        },
+        {
+          label: "Manual payment flow",
+          left: "Included",
+          right: "Included",
+        },
+        {
+          label: "Admin dashboard",
+          left: "Not included",
+          right: "Included",
+        },
+        {
+          label: "Manage products yourself",
+          left: "No admin product manager — updates require TCL assistance and with a fee.",
+          right: "Yes — add, edit, price, activate or deactivate supported products",
+        },
+        {
+          label: "Order management",
+          left: "No order-management dashboard; order notifications are sent by email",
+          right: "View and manage submitted orders from the admin dashboard",
+        },
+        {
+          label: "Payment verification",
+          left: "Handled outside an admin dashboard",
+          right: "Review and verify supported payment proof from the admin workflow",
+        },
+        {
+          label: "Order status updates",
+          left: "No admin status-management tools",
+          right: "Update supported order statuses from the admin dashboard",
+        },
+        {
+          label: "Best suited for",
+          left: "Businesses that want a simple online storefront and rarely change products",
+          right: "Businesses that want direct control over products, orders and store operations",
+        },
+      ],
+      leftBest:
+        "Choose Basic if you want customers to order from your own website but do not need to manage the shop through a dashboard.",
+      rightBest:
+        "Choose Shop + Admin if you want to manage products, incoming orders, payment verification and order progress yourself.",
+    };
+  }
+
+  return null;
+}
+
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
   const product = await getCatalogProduct(slug);
@@ -116,7 +256,9 @@ export default async function ProductPage({ params }: PageProps) {
   }
 
   const adminLabel =
-    product.slug === "standard-booking-system"
+    product.slug === "standard-booking-system" ||
+    product.slug === "basic-booking-system" ||
+    product.slug === "online-shop-with-admin"
       ? "Admin dashboard included"
       : product.slug === "custom-business-website"
         ? "Based on approved scope"
@@ -126,6 +268,8 @@ export default async function ProductPage({ params }: PageProps) {
     product.slug === "custom-business-website"
       ? "Based on project requirements"
       : "Free vercel.app option";
+
+  const comparison = getComparison(product.slug);
 
   return (
     <>
@@ -267,6 +411,81 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
           </div>
         </section>
+
+        {comparison ? (
+          <section className={`${styles.section} ${styles.comparisonSection}`}>
+            <div className={styles.container}>
+              <div className={styles.sectionHeader}>
+                <p className={styles.eyebrow}>{comparison.eyebrow}</p>
+                <h2 className={styles.sectionTitle}>{comparison.title}</h2>
+                <p className={styles.sectionText}>{comparison.description}</p>
+              </div>
+
+              <div className={styles.comparisonTable}>
+                <div className={`${styles.comparisonRow} ${styles.comparisonHead}`}>
+                  <div className={styles.comparisonFeature}>Feature</div>
+
+                  {[comparison.left, comparison.right].map((plan) => (
+                    <div
+                      className={`${styles.comparisonPlan} ${
+                        product.slug === plan.slug ? styles.currentPlan : ""
+                      }`}
+                      key={plan.slug}
+                    >
+                      <strong>{plan.name}</strong>
+                      <span>{plan.price}</span>
+                      {product.slug === plan.slug ? <small>YOU&apos;RE VIEWING</small> : null}
+                    </div>
+                  ))}
+                </div>
+
+                {comparison.rows.map((row) => (
+                  <div className={styles.comparisonRow} key={row.label}>
+                    <div className={styles.comparisonFeature}>{row.label}</div>
+                    <div className={styles.comparisonValue} data-plan-name={comparison.left.name}>{row.left}</div>
+                    <div className={styles.comparisonValue} data-plan-name={comparison.right.name}>{row.right}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.choiceGrid}>
+                <article
+                  className={`${styles.choiceCard} ${
+                    product.slug === comparison.left.slug ? styles.choiceCardCurrent : ""
+                  }`}
+                >
+                  <p className={styles.choiceLabel}>CHOOSE {comparison.left.name.toUpperCase()} IF...</p>
+                  <h3>{comparison.left.name}</h3>
+                  <p>{comparison.leftBest}</p>
+                  {product.slug !== comparison.left.slug ? (
+                    <Link className={styles.compareLink} href={`/shop/${comparison.left.slug}`}>
+                      View {comparison.left.name} →
+                    </Link>
+                  ) : (
+                    <span className={styles.viewingBadge}>Current package</span>
+                  )}
+                </article>
+
+                <article
+                  className={`${styles.choiceCard} ${
+                    product.slug === comparison.right.slug ? styles.choiceCardCurrent : ""
+                  }`}
+                >
+                  <p className={styles.choiceLabel}>CHOOSE {comparison.right.name.toUpperCase()} IF...</p>
+                  <h3>{comparison.right.name}</h3>
+                  <p>{comparison.rightBest}</p>
+                  {product.slug !== comparison.right.slug ? (
+                    <Link className={styles.compareLink} href={`/shop/${comparison.right.slug}`}>
+                      View {comparison.right.name} →
+                    </Link>
+                  ) : (
+                    <span className={styles.viewingBadge}>Current package</span>
+                  )}
+                </article>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section className={`${styles.section} ${styles.softSection}`}>
           <div className={styles.container}>

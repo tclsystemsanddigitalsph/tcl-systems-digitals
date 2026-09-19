@@ -688,6 +688,290 @@ export const productPageDetails: Record<string, ProductPageDetails> = {
     ],
   },
 
+  "basic-booking-system": {
+    eyebrow: "BASIC BOOKING SYSTEM",
+
+    headline: "A simple booking system with the essentials to manage appointments.",
+
+    introduction:
+      "The Basic Booking System is designed for small appointment-based businesses that need customers to book online and need a simple admin dashboard to manage bookings, services, availability, and basic business settings without advanced scheduling complexity.",
+
+    idealFor: [
+      "Small appointment-based businesses",
+      "Beauty and wellness service providers",
+      "Nail, lash, brow, and beauty studios",
+      "Freelancers and independent professionals",
+      "Consultation-based services",
+      "Businesses moving from manual booking through chat or social media",
+      "Businesses that need simple booking management without advanced staff scheduling",
+    ],
+
+    inclusions: [
+      {
+        title: "Customer-Facing Website",
+        description:
+          "A responsive business website with Home, Services, About, Contact, Book Now, and booking confirmation pages.",
+      },
+      {
+        title: "Simple Online Booking Form",
+        description:
+          "Customers can complete a straightforward booking form without a multi-step booking wizard.",
+      },
+      {
+        title: "Service Selection",
+        description:
+          "Customers can choose from the active services configured for the business.",
+      },
+      {
+        title: "Service Variations & Add-ons",
+        description:
+          "Supported services can include basic variations and optional add-ons that customers can select when booking.",
+      },
+      {
+        title: "Date & Time Selection",
+        description:
+          "Customers can select a booking date and choose from available time slots based on the configured business availability.",
+      },
+      {
+        title: "Customer Information",
+        description:
+          "The booking form collects essential customer details such as name, contact information, email, and optional notes.",
+      },
+      {
+        title: "Booking Confirmation / Reference",
+        description:
+          "After submission, customers receive an on-screen booking confirmation or reference through the included booking flow.",
+      },
+      {
+        title: "Booking Statuses",
+        description:
+          "Bookings can be managed using Pending, Confirmed, Canceled, and Completed statuses.",
+      },
+      {
+        title: "Basic Admin Dashboard",
+        description:
+          "A protected admin area provides access to the booking, service, availability, and settings tools included in the package.",
+      },
+      {
+        title: "Booking Management",
+        description:
+          "View submitted bookings, create supported manual bookings, and update booking statuses from the admin area.",
+      },
+      {
+        title: "Service Management",
+        description:
+          "Add and edit supported services, prices, durations, variations, add-ons, and active or inactive status.",
+      },
+      {
+        title: "Service Booking Capacity",
+        description:
+          "Set how many bookings a service can accept per time slot and optionally set a maximum number of bookings for that service per day.",
+      },
+      {
+        title: "General Availability",
+        description:
+          "Configure business-wide working days and hours used by the booking system.",
+      },
+      {
+        title: "Unavailable Dates",
+        description:
+          "Block dates when the business is unavailable for bookings.",
+      },
+      {
+        title: "Basic Business Settings",
+        description:
+          "Manage the supported business information and basic settings used by the booking website.",
+      },
+      {
+        title: "Responsive Design",
+        description:
+          "The customer-facing website and supported admin interfaces are designed for mobile, tablet, laptop, and desktop screens.",
+      },
+      {
+        title: "Deployment & Setup",
+        description:
+          "TCL handles the initial deployment and technical setup included in the package.",
+      },
+    ],
+
+    clientProvides: [
+      "Business name and business type / industry",
+      "Logo, if available",
+      "Short About / business description",
+      "Services with prices and durations",
+      "Service variations and add-ons, when applicable",
+      "Maximum bookings per time slot and optional daily service limits, when applicable",
+      "Working days and business hours",
+      "Dates the business should be unavailable for booking",
+      "Customer information you need collected during booking",
+      "Cancellation, rescheduling, and no-show policies",
+      "Contact information and business location, when applicable",
+      "Social media or messaging links",
+      "Brand colors, preferred design style, or visual references",
+      "Website and service images",
+      "Domain preference or existing domain details, when applicable",
+    ],
+
+    tclHandles: [
+      "Customer-facing booking website",
+      "Simple booking form implementation",
+      "Basic admin dashboard setup",
+      "Booking management setup",
+      "Service, variation, and add-on management setup",
+      "Per-service booking capacity setup",
+      "General availability and unavailable-date setup",
+      "Basic business settings",
+      "Responsive implementation",
+      "Database and application setup required by the package",
+      "Initial deployment",
+    ],
+
+    editingAccess: {
+      title: "Basic Admin Dashboard Included",
+      description:
+        "The Basic Booking System includes an admin dashboard for the booking, service, availability, capacity, and basic business-management features included in the package. Advanced scheduling, staff management, and custom business workflows are not automatically included.",
+    },
+
+    domainHosting: [
+      "A free vercel.app subdomain can be used.",
+      "A custom domain can be connected when compatible.",
+      "Custom domain registration and renewal costs are separate.",
+      "The setup may use third-party hosting and database services.",
+      "Free service tiers may have usage limits.",
+      "If the business exceeds a provider's free limits, any required provider upgrade is the client's responsibility.",
+    ],
+
+    maintenance: {
+      period: "2 Months",
+      description:
+        "The Basic Booking System includes 2 months of maintenance support beginning from completed delivery or turnover, unless otherwise stated.",
+      covered: [
+        "Bugs affecting originally delivered booking functionality",
+        "Errors affecting included admin features",
+        "Errors affecting the included service-capacity rules",
+        "Reasonable technical assistance related to the delivered system",
+        "Issues within the approved Basic Booking System package scope",
+      ],
+      notCovered: [
+        "New booking workflows",
+        "New dashboard modules",
+        "New integrations",
+        "Major redesigns",
+        "Ongoing data entry",
+        "Unlimited service or content changes performed by TCL",
+        "Third-party outages, limits, policy changes, or provider upgrades",
+      ],
+    },
+
+    notIncluded: [
+      "Multi-step booking wizard",
+      "Service-specific working schedules or availability calendars",
+      "Staff-specific scheduling",
+      "Resource or room scheduling",
+      "Advanced capacity or resource allocation rules",
+      "Multiple branches or locations",
+      "Customer accounts or member portal",
+      "Automated online payment gateway",
+      "Subscriptions",
+      "Loyalty or rewards system",
+      "Advanced admin roles and permissions",
+      "Advanced analytics and reporting",
+      "Automated SMS services",
+      "Complex third-party integrations",
+      "Custom workflows outside the basic booking structure",
+      "Custom domain fees",
+    ],
+
+    upgrades: [
+      "Multi-step booking experience",
+      "Service-specific availability",
+      "Staff-specific scheduling",
+      "Resource or room scheduling",
+      "Multiple locations or branches",
+      "Online payment gateway",
+      "Customer accounts or member portal",
+      "Advanced admin roles and permissions",
+      "Advanced reports and analytics",
+      "Automated email or messaging workflows",
+      "SMS integration",
+      "Loyalty or rewards",
+      "Advanced booking rules",
+      "Other business-specific booking features",
+    ],
+
+    process: [
+      {
+        title: "Purchase",
+        description:
+          "Purchase the Basic Booking System through the TCL storefront.",
+      },
+      {
+        title: "Prepare Requirements",
+        description:
+          "Prepare your services, prices, durations, variations, add-ons, capacity limits, availability, policies, branding, and business information.",
+      },
+      {
+        title: "Submit Details",
+        description:
+          "Provide the required booking and business information through TCL's post-purchase process.",
+      },
+      {
+        title: "System Setup",
+        description:
+          "TCL configures and customizes the Basic Booking System within the included package scope.",
+      },
+      {
+        title: "Review & Testing",
+        description:
+          "The customer booking flow, capacity rules, and included admin functions are tested and prepared for review.",
+      },
+      {
+        title: "Launch & Handover",
+        description:
+          "The completed booking system is deployed and the included maintenance period begins.",
+      },
+    ],
+
+    faqs: [
+      {
+        question: "Does the Basic Booking System include an admin dashboard?",
+        answer:
+          "Yes. It includes a basic admin dashboard for managing bookings, services, variations, add-ons, general availability, unavailable dates, service capacity, and supported business settings.",
+      },
+      {
+        question: "How does the booking capacity work?",
+        answer:
+          "Each service can have a maximum number of bookings allowed per time slot and an optional maximum number of bookings per day. Canceled bookings do not continue using that capacity.",
+      },
+      {
+        question: "Can different services have completely different schedules?",
+        answer:
+          "The Basic Booking System uses general business-wide availability. Service-specific working schedules or separate service calendars require an upgrade or custom scope.",
+      },
+      {
+        question: "Can multiple staff members have their own schedules?",
+        answer:
+          "No. Staff-specific scheduling is not included in the Basic Booking System. Businesses that need individual staff calendars require additional scope.",
+      },
+      {
+        question: "Can customers pay when they book?",
+        answer:
+          "Automated online payment processing is not included in the standard Basic Booking System package. Payment gateway integration requires additional scope or a custom quotation.",
+      },
+      {
+        question: "What is the difference between Basic and Standard Booking?",
+        answer:
+          "Basic is intended for straightforward booking with a simple form, basic admin management, general availability, and simple per-service capacity. Standard is for businesses that need a more developed booking experience and additional booking controls beyond the Basic package.",
+      },
+      {
+        question: "Can I request more booking features later?",
+        answer:
+          "Yes. Features outside the Basic Booking System package can be reviewed as an upgrade or custom quotation.",
+      },
+    ],
+  },
+
+
   "standard-booking-system": {
     eyebrow: "STANDARD BOOKING WEBSITE / SYSTEM",
 
@@ -944,6 +1228,279 @@ export const productPageDetails: Record<string, ProductPageDetails> = {
         question: "Can I request additional booking features?",
         answer:
           "Yes. Features outside the standard package can be reviewed and quoted separately.",
+      },
+    ],
+  },
+
+
+  "online-shop-with-admin": {
+    eyebrow: "ONLINE SHOP + ADMIN",
+
+    headline: "Sell online and manage your shop from your own admin dashboard.",
+
+    introduction:
+      "The Online Shop + Admin package is designed for product-based businesses that need more control than the Basic Online Shop. Customers can browse products, add items to their cart, submit orders, and follow manual payment instructions, while you can manage products, review orders, verify payments, and update order statuses through a dedicated admin dashboard.",
+
+    idealFor: [
+      "Small and growing product-based businesses",
+      "Online sellers that want their own branded storefront",
+      "Businesses that regularly update products, prices, or product details",
+      "Businesses that want to manage orders from an admin dashboard",
+      "Businesses using manual GCash, QR Ph, or bank transfer payments",
+      "Businesses that need manual payment verification",
+      "Businesses that have outgrown a storefront without self-management tools",
+    ],
+
+    inclusions: [
+      {
+        title: "Professional Online Storefront",
+        description:
+          "A responsive customer-facing online shop where visitors can browse and view your products.",
+      },
+      {
+        title: "Product Catalog & Product Pages",
+        description:
+          "Products can be organized and displayed with information such as names, prices, descriptions, images, and supported options.",
+      },
+      {
+        title: "Product Variations",
+        description:
+          "Supported products can include standard variations or options where applicable to the agreed store setup.",
+      },
+      {
+        title: "Shopping Cart",
+        description:
+          "Customers can add supported products and quantities to a cart before proceeding to checkout.",
+      },
+      {
+        title: "Customer Checkout & Order Submission",
+        description:
+          "Customers can provide the required order, contact, and delivery information and submit their order through the storefront.",
+      },
+      {
+        title: "Manual Payment Options",
+        description:
+          "The shop can provide approved manual payment instructions such as GCash, QR Ph, or bank transfer.",
+      },
+      {
+        title: "Payment Proof Submission",
+        description:
+          "Customers can submit supported payment proof for manual review as part of the agreed order workflow.",
+      },
+      {
+        title: "Order Confirmation / Reference",
+        description:
+          "Submitted orders can receive an on-screen confirmation or reference through the included order flow.",
+      },
+      {
+        title: "Admin Dashboard",
+        description:
+          "A protected admin area provides access to the standard shop-management tools included in the package.",
+      },
+      {
+        title: "Product Management",
+        description:
+          "Add and edit products, update supported product details and prices, and activate or deactivate products from the admin area.",
+      },
+      {
+        title: "Order Management",
+        description:
+          "View submitted orders and manage their progress through the included order-management workflow.",
+      },
+      {
+        title: "Manual Payment Verification",
+        description:
+          "Review submitted payment information or proof and manually verify or reject payments from the admin workflow.",
+      },
+      {
+        title: "Order Status Management",
+        description:
+          "Manage the standard order progression, such as Pending, Confirmed, Processing, Ready, and Completed, as supported by the store setup.",
+      },
+      {
+        title: "Basic Store Settings",
+        description:
+          "Manage supported basic business or store information used by the online shop.",
+      },
+      {
+        title: "Responsive Storefront & Admin",
+        description:
+          "The customer storefront and supported admin interfaces are designed for modern mobile, tablet, laptop, and desktop screen sizes.",
+      },
+      {
+        title: "Deployment & Setup",
+        description:
+          "TCL handles the initial deployment and technical setup included in the package.",
+      },
+    ],
+
+    clientProvides: [
+      "Business or shop name and business type / industry",
+      "Logo, if available",
+      "Business information and contact details",
+      "Product names, descriptions, prices, and images",
+      "Product variations or options, when applicable",
+      "Product categories or collections, when applicable",
+      "GCash, QR Ph, or bank payment instructions",
+      "Customer information you need collected during checkout",
+      "Shipping, pickup, delivery, or order information",
+      "Shop, payment, cancellation, return, or exchange policies that apply to your business",
+      "Social media or messaging links, when applicable",
+      "Brand colors, preferred design style, or visual references",
+      "Domain preference or existing domain details, when applicable",
+      "Admin / business setup information required for the included management features",
+    ],
+
+    tclHandles: [
+      "Customer-facing online storefront",
+      "Product catalog and product-page setup",
+      "Shopping cart implementation",
+      "Customer checkout and order-submission flow",
+      "Manual payment instruction and payment-proof workflow",
+      "Admin dashboard setup",
+      "Product management setup",
+      "Order management setup",
+      "Manual payment verification workflow",
+      "Basic store settings",
+      "Responsive implementation",
+      "Database and application setup required by the standard package",
+      "Initial deployment",
+    ],
+
+    editingAccess: {
+      title: "Admin Dashboard Included",
+      description:
+        "Unlike the Basic Online Shop, this package includes an admin dashboard for the standard product, order, payment-verification, and store-management features included in the package. Advanced ecommerce management features are not automatically included.",
+    },
+
+    domainHosting: [
+      "A free vercel.app subdomain can be used.",
+      "A custom domain can be connected when compatible.",
+      "Custom domain registration and renewal costs are separate.",
+      "The standard setup may use third-party hosting, database, storage, or other services.",
+      "Free service tiers may have usage limits.",
+      "If the business exceeds a provider's free limits, any required provider upgrade is the client's responsibility.",
+    ],
+
+    maintenance: {
+      period: "2 Months",
+      description:
+        "The Online Shop + Admin package includes 2 months of maintenance support beginning from completed delivery or turnover, unless otherwise stated.",
+      covered: [
+        "Bugs affecting the originally delivered storefront",
+        "Errors affecting the included cart, checkout, or order flow",
+        "Errors affecting included admin features",
+        "Issues affecting the included manual payment-verification workflow",
+        "Reasonable technical assistance related to the delivered system",
+        "Issues within the approved standard package scope",
+      ],
+      notCovered: [
+        "Ongoing product or data entry performed by TCL",
+        "New ecommerce functionality",
+        "New dashboard modules",
+        "New integrations",
+        "Major redesigns",
+        "Custom business workflows outside the package",
+        "Third-party outages, policy changes, usage limits, or paid upgrades",
+      ],
+    },
+
+    notIncluded: [
+      "Automated payment gateways",
+      "Customer account system",
+      "Memberships or member pricing",
+      "Loyalty points or rewards systems",
+      "Subscriptions",
+      "Referral systems",
+      "Advanced inventory automation",
+      "Complex shipping or courier integrations",
+      "Advanced analytics",
+      "Custom admin roles and permissions",
+      "Multi-vendor functionality",
+      "Custom business workflows outside the standard shop structure",
+      "Custom domain fees",
+    ],
+
+    upgrades: [
+      "Automated payment gateway",
+      "Customer accounts",
+      "Membership or member pricing",
+      "Loyalty points and rewards",
+      "Subscriptions",
+      "Referral features",
+      "Advanced inventory automation",
+      "Custom shipping or courier integrations",
+      "Advanced analytics and reporting",
+      "Additional admin roles or permissions",
+      "Custom order or business workflows",
+      "Other advanced ecommerce functionality",
+    ],
+
+    process: [
+      {
+        title: "Purchase",
+        description:
+          "Purchase the Online Shop + Admin package through the TCL storefront.",
+      },
+      {
+        title: "Prepare Requirements",
+        description:
+          "Prepare your business information, products, images, prices, variations, payment details, delivery information, policies, and branding.",
+      },
+      {
+        title: "Submit Details",
+        description:
+          "Provide the required store and admin setup information through TCL's post-purchase process.",
+      },
+      {
+        title: "Store & Admin Setup",
+        description:
+          "TCL builds and configures the customer storefront and standard admin dashboard within the package scope.",
+      },
+      {
+        title: "Review & Testing",
+        description:
+          "The storefront, cart, order flow, manual payment workflow, and included admin functions are tested and prepared for review.",
+      },
+      {
+        title: "Launch & Handover",
+        description:
+          "The completed online shop and admin system are deployed and the included maintenance period begins.",
+      },
+    ],
+
+    faqs: [
+      {
+        question:
+          "What is the difference between this and the ₱5,999 Basic Online Shop?",
+        answer:
+          "The Basic Online Shop does not include an admin dashboard. The Online Shop + Admin package includes standard tools for managing products, orders, manual payment verification, order statuses, and supported store settings.",
+      },
+      {
+        question: "Can I add and edit products myself?",
+        answer:
+          "Yes. The included admin dashboard provides the standard product-management features supported by this package, including adding and editing products and updating supported product details and prices.",
+      },
+      {
+        question: "Does it automatically process GCash, Maya, or card payments?",
+        answer:
+          "No. The standard package uses manual payment methods such as GCash, QR Ph, or bank transfer with manual verification. Automated payment gateway integration requires additional scope or a custom quotation.",
+      },
+      {
+        question: "Can customers upload payment proof?",
+        answer:
+          "Yes. Payment proof submission can be included as part of the standard manual payment workflow for admin review.",
+      },
+      {
+        question: "Does it include inventory automation?",
+        answer:
+          "Advanced inventory automation is not included in the standard package. If your business requires automated stock rules, inventory integrations, or more complex inventory workflows, TCL can review them as a custom requirement.",
+      },
+      {
+        question:
+          "Can I add memberships, rewards, referrals, or customer accounts?",
+        answer:
+          "Those features are outside the standard Online Shop + Admin package and require additional scope and pricing review.",
       },
     ],
   },

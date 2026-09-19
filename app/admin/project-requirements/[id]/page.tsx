@@ -63,6 +63,10 @@ function displayProjectTier(
     return "Starter Website";
   }
 
+  if (productSlug === "online-shop-with-admin") {
+    return "Online Shop + Admin";
+  }
+
   return productTier || "Custom";
 }
 
