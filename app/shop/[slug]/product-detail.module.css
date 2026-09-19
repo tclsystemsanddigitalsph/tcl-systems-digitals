@@ -772,3 +772,70 @@
     content: attr(data-plan-name) !important;
   }
 }
+
+/* =========================================================
+   THREE-WAY WEBSITE PACKAGE COMPARISON
+   Starter / Simple Business / Custom Business
+   ========================================================= */
+
+.websiteComparisonRow {
+  grid-template-columns: minmax(170px, 0.62fr) repeat(3, minmax(0, 1fr));
+}
+
+.websiteChoiceGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) and (min-width: 761px) {
+  .websiteComparisonTable {
+    overflow-x: auto;
+  }
+
+  .websiteComparisonRow {
+    min-width: 900px;
+  }
+
+  .websiteChoiceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .websiteChoiceGrid .choiceCard {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .websiteComparisonRow {
+    grid-template-columns: 1fr;
+  }
+
+  .websiteComparisonRow .comparisonFeature {
+    grid-column: 1;
+  }
+
+  .websiteComparisonRow .comparisonValue {
+    position: relative;
+    padding: 14px 15px 14px 15px;
+    border-left: 0;
+    border-top: 1px solid #eee1e5;
+  }
+
+  .websiteComparisonRow .comparisonValue + .comparisonValue {
+    border-left: 0;
+  }
+
+  .websiteComparisonRow .comparisonValue::before {
+    content: attr(data-plan-name) !important;
+    display: block;
+    margin-bottom: 6px;
+    color: #d95788;
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .websiteChoiceGrid {
+    grid-template-columns: 1fr;
+  }
+}

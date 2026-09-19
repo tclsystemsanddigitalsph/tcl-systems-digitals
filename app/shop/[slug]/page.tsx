@@ -34,6 +34,63 @@ type Comparison = {
   rightBest: string;
 };
 
+type WebsiteComparison = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  plans: { name: string; price: string; slug: string; best: string }[];
+  rows: { label: string; values: string[] }[];
+};
+
+function getWebsiteComparison(slug: string): WebsiteComparison | null {
+  const websiteSlugs = [
+    "starter-website",
+    "simple-business-website",
+    "custom-business-website",
+  ];
+
+  if (!websiteSlugs.includes(slug)) return null;
+
+  return {
+    eyebrow: "COMPARE WEBSITE PACKAGES",
+    title: "Which website package fits your business?",
+    description:
+      "Starter is a one-page website, Simple Business gives you four separate pages, and Custom Business is planned around requirements that go beyond the fixed packages.",
+    plans: [
+      {
+        name: "Starter Website",
+        price: "₱999",
+        slug: "starter-website",
+        best: "Choose Starter if you need an affordable, professional online presence with all essential business information presented on one page.",
+      },
+      {
+        name: "Simple Business Website",
+        price: "₱2,999",
+        slug: "simple-business-website",
+        best: "Choose Simple Business if you want a more complete website with separate Home, Services, About, and Contact pages.",
+      },
+      {
+        name: "Custom Business Website",
+        price: "For Quotation",
+        slug: "custom-business-website",
+        best: "Choose Custom Business if the fixed packages do not cover your needs and you require specific pages, functionality, admin features, integrations, or workflows.",
+      },
+    ],
+    rows: [
+      { label: "Website structure", values: ["One-page website", "4 separate pages", "Based on approved scope"] },
+      { label: "Home", values: ["Section on the one-page site", "Separate page", "Based on approved scope"] },
+      { label: "Services", values: ["Section on the one-page site", "Separate page", "Based on approved scope"] },
+      { label: "About", values: ["Section on the one-page site", "Separate page", "Based on approved scope"] },
+      { label: "Contact", values: ["Section on the one-page site", "Separate page", "Based on approved scope"] },
+      { label: "Customized branding", values: ["Included", "Included", "Included based on approved scope"] },
+      { label: "Admin dashboard", values: ["Not included", "Not included", "Can be included if required and quoted"] },
+      { label: "Advanced features", values: ["Not included", "Not included", "Can be requested and quoted"] },
+      { label: "Integrations", values: ["Not included", "Not included", "Based on approved requirements"] },
+      { label: "Best suited for", values: ["A simple and affordable online presence", "A more complete multi-page business website", "Businesses needing custom functionality beyond the fixed packages"] },
+    ],
+  };
+}
+
 function getComparison(slug: string): Comparison | null {
   if (slug === "basic-booking-system" || slug === "standard-booking-system") {
     return {
@@ -270,6 +327,7 @@ export default async function ProductPage({ params }: PageProps) {
       : "Free vercel.app option";
 
   const comparison = getComparison(product.slug);
+  const websiteComparison = getWebsiteComparison(product.slug);
 
   return (
     <>
@@ -411,6 +469,73 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
           </div>
         </section>
+
+        {websiteComparison ? (
+          <section className={`${styles.section} ${styles.comparisonSection}`}>
+            <div className={styles.container}>
+              <div className={styles.sectionHeader}>
+                <p className={styles.eyebrow}>{websiteComparison.eyebrow}</p>
+                <h2 className={styles.sectionTitle}>{websiteComparison.title}</h2>
+                <p className={styles.sectionText}>{websiteComparison.description}</p>
+              </div>
+
+              <div className={`${styles.comparisonTable} ${styles.websiteComparisonTable}`}>
+                <div className={`${styles.comparisonRow} ${styles.comparisonHead} ${styles.websiteComparisonRow}`}>
+                  <div className={styles.comparisonFeature}>Feature</div>
+                  {websiteComparison.plans.map((plan) => (
+                    <div
+                      className={`${styles.comparisonPlan} ${
+                        product.slug === plan.slug ? styles.currentPlan : ""
+                      }`}
+                      key={plan.slug}
+                    >
+                      <strong>{plan.name}</strong>
+                      <span>{plan.price}</span>
+                      {product.slug === plan.slug ? <small>YOU&apos;RE VIEWING</small> : null}
+                    </div>
+                  ))}
+                </div>
+
+                {websiteComparison.rows.map((row) => (
+                  <div className={`${styles.comparisonRow} ${styles.websiteComparisonRow}`} key={row.label}>
+                    <div className={styles.comparisonFeature}>{row.label}</div>
+                    {row.values.map((value, index) => (
+                      <div
+                        className={styles.comparisonValue}
+                        data-plan-name={websiteComparison.plans[index].name}
+                        key={websiteComparison.plans[index].slug}
+                      >
+                        {value}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              <div className={`${styles.choiceGrid} ${styles.websiteChoiceGrid}`}>
+                {websiteComparison.plans.map((plan) => (
+                  <article
+                    className={`${styles.choiceCard} ${
+                      product.slug === plan.slug ? styles.choiceCardCurrent : ""
+                    }`}
+                    key={plan.slug}
+                  >
+                    <p className={styles.choiceLabel}>CHOOSE {plan.name.toUpperCase()} IF...</p>
+                    <h3>{plan.name}</h3>
+                    <p>{plan.best}</p>
+                    {product.slug !== plan.slug ? (
+                      <Link className={styles.compareLink} href={`/shop/${plan.slug}`}>
+                        View {plan.name} →
+                      </Link>
+                    ) : (
+                      <span className={styles.viewingBadge}>Current package</span>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {comparison ? (
           <section className={`${styles.section} ${styles.comparisonSection}`}>
