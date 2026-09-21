@@ -147,12 +147,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const resendEmailId =
-      sent.data &&
-      typeof sent.data === "object" &&
-      "id" in sent.data
-        ? String(sent.data.id || "")
-        : "";
+    const resendEmailId = sent.id ? String(sent.id) : "";
 
     let history = null;
 

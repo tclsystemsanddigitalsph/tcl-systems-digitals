@@ -104,7 +104,7 @@ export async function createReviewInvitation(formData: FormData) {
 
       const reviewUrl = `${siteUrl}/review/${invitation.token}`;
 
-      const message = tclEmailShell({
+      const html = tclEmailShell({
         eyebrow: "CLIENT REVIEW",
         title: "We’d Love Your Feedback",
         message: `Hi ${customerName},
@@ -135,11 +135,25 @@ You can leave your review using the private link below.`,
         note: "This is an automated notification email. For questions, please contact TCL Systems & Digitals PH through Telegram: @tclsystemsanddigitalsph.",
       });
 
+      const text = [
+        "We’d Love Your Feedback",
+        "",
+        `Hi ${customerName},`,
+        "",
+        `Thank you for choosing TCL Systems & Digitals PH${productName ? ` for your ${productName}` : ""}.`,
+        "",
+        "We’d love to hear about your experience. Your feedback helps us improve our services and also helps future clients learn more about working with TCL.",
+        "",
+        `Leave a Review: ${reviewUrl}`,
+        "",
+        "This is an automated notification email. For questions, please contact TCL Systems & Digitals PH through Telegram: @tclsystemsanddigitalsph.",
+      ].join("\n");
+
       await sendTclEmail({
         to: customerEmail,
         subject: "TCL Systems & Digitals PH - We’d Love Your Feedback",
-        html: message.html,
-        text: message.text,
+        html,
+        text,
       });
     } catch (emailError) {
       console.error("Review invitation customer email error:", emailError);

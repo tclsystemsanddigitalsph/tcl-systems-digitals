@@ -1047,7 +1047,7 @@ export async function POST(request: Request) {
 
       const quotationUrl = `${siteUrl}/quotation/${savedRequest.secure_token}`;
 
-      const acknowledgement = tclEmailShell({
+      const acknowledgementHtml = tclEmailShell({
         eyebrow: "QUOTATION REQUEST",
         title: "We Received Your Quotation Request",
         message: `Hi ${fullName},
@@ -1072,8 +1072,25 @@ Once your quotation is prepared, we'll send you another email with your private 
       await sendTclEmail({
         to: email,
         subject: "TCL Systems & Digitals PH - We Received Your Quotation Request",
-        html: acknowledgement.html,
-        text: acknowledgement.text,
+        html: acknowledgementHtml,
+        text: [
+          "We Received Your Quotation Request",
+          "",
+          `Hi ${fullName},`,
+          "",
+          "We received your quotation request and it is now ready for review.",
+          "We’ll review the requirements, requested features, budget, and timeline you provided. Once your quotation is prepared, we’ll send you another email.",
+          "",
+          `Request ID: ${savedRequest.id}`,
+          `Service: ${product.name}`,
+          `Project / Business: ${projectName || "Not provided"}`,
+          "Status: Received — Pending Review",
+          `Preferred Contact: ${preferredContact || "Not specified"}`,
+          "",
+          `View Request Status: ${quotationUrl}`,
+          "",
+          "This is an automated notification email. For questions, contact TCL Systems & Digitals PH through Telegram: @tclsystemsanddigitalsph.",
+        ].join("\n"),
       });
     } catch (emailError) {
       console.error(
