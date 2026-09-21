@@ -975,14 +975,20 @@ export default function ProductCatalog({
           .shop-tech-hero-copy h1 {
             width: 100%;
             max-width: 100%;
-            font-size: clamp(40px, 12.2vw, 55px);
+            font-size: clamp(38px, 11.2vw, 50px);
             line-height: .8;
             letter-spacing: -.075em;
           }
 
+          .shop-tech-hero-copy h1 > span,
           .shop-tech-hero-copy h1 > em {
-            font-size: .92em;
-            letter-spacing: -.085em;
+            max-width: 100%;
+            white-space: nowrap;
+          }
+
+          .shop-tech-hero-copy h1 > em {
+            font-size: .78em;
+            letter-spacing: -.09em;
           }
 
           .shop-product-card,
