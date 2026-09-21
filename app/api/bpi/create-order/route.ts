@@ -1,6 +1,11 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { sendTclEmail } from "@/lib/resend";
+import {
+  buildRegularOrderReceivedEmail,
+  buildTclNewOrderNotification,
+} from "@/lib/order-created-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -130,8 +135,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Direct BPI uses the regular product price only.
-    // No payment processing fee is added.
     const processingFeePercent = 0;
     const processingFee = 0;
     const totalAmount = basePrice;
@@ -189,7 +192,6 @@ export async function POST(request: Request) {
     if (paymentError || !payment) {
       console.error("Unable to create BPI payment request:", paymentError);
 
-      // Do not leave an unusable pending order if its payment row failed.
       const { error: cleanupError } = await supabase
         .from("orders")
         .delete()
@@ -205,6 +207,83 @@ export async function POST(request: Request) {
       );
     }
 
+    const siteUrl = (
+      process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+      new URL(request.url).origin
+    ).replace(/\/$/, "");
+
+    const checkoutPath = `/checkout/bpi/${encodeURIComponent(order.receipt_token)}`;
+    const checkoutUrl = `${siteUrl}${checkoutPath}`;
+
+    try {
+      const customerEmailContent = buildRegularOrderReceivedEmail({
+        customerName,
+        customerEmail,
+        orderNumber: order.order_number,
+        productName: product.name,
+        totalAmount,
+        currency: "PHP",
+        paymentMethod: "Direct BPI Bank Transfer",
+        checkoutUrl,
+        selectedDesignName,
+      });
+
+      const customerResult = await sendTclEmail({
+        to: customerEmail,
+        subject: customerEmailContent.subject,
+        html: customerEmailContent.html,
+        text: customerEmailContent.text,
+      });
+
+      if (!customerResult.ok) {
+        console.error(
+          "BPI order created but customer notification was not sent:",
+          customerResult,
+        );
+      }
+
+      const tclContactEmail = process.env.TCL_CONTACT_EMAIL?.trim();
+
+      if (tclContactEmail) {
+        const adminEmailContent = buildTclNewOrderNotification({
+          customerName,
+          customerEmail,
+          orderNumber: order.order_number,
+          productName: product.name,
+          totalAmount,
+          currency: "PHP",
+          paymentMethod: "Direct BPI Bank Transfer",
+          checkoutUrl,
+          selectedDesignName,
+        });
+
+        const adminResult = await sendTclEmail({
+          to: tclContactEmail,
+          subject: adminEmailContent.subject,
+          html: adminEmailContent.html,
+          text: adminEmailContent.text,
+          replyTo: customerEmail,
+        });
+
+        if (!adminResult.ok) {
+          console.error(
+            "BPI order created but TCL notification was not sent:",
+            adminResult,
+          );
+        }
+      } else {
+        console.error(
+          "BPI order created but TCL_CONTACT_EMAIL is not configured.",
+        );
+      }
+    } catch (emailError) {
+      // Never fail a valid checkout because email delivery failed.
+      console.error(
+        "BPI order created but email notification processing failed:",
+        emailError,
+      );
+    }
+
     return NextResponse.json({
       ok: true,
       orderId: order.id,
@@ -214,7 +293,7 @@ export async function POST(request: Request) {
       amount: totalAmount,
       processingFee: 0,
       processingFeePercent: 0,
-      checkoutUrl: `/checkout/bpi/${encodeURIComponent(order.receipt_token)}`,
+      checkoutUrl: checkoutPath,
     });
   } catch (error) {
     console.error("BPI order creation failed:", error);
