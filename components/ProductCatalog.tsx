@@ -998,6 +998,31 @@ export default function ProductCatalog({
           .shop-product-body > p { font-size: 7px !important; }
         }
 
+        /* Final mobile hero safeguard: keep READY TO WORK fully inside viewport. */
+        @media (max-width: 760px) {
+          .shop-tech-hero-copy {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow: visible !important;
+          }
+
+          .shop-tech-hero-copy h1 {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: visible !important;
+          }
+
+          .shop-tech-hero-copy h1 > em {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            font-size: 8.8vw !important;
+            line-height: .95 !important;
+            letter-spacing: -.075em !important;
+            white-space: nowrap !important;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .shop-tech-orbit { animation: none !important; }
           .shop-product-card { transition: none !important; }
