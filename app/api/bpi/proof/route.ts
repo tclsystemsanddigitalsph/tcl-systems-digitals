@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { sendTclEmail } from "@/lib/resend";
+import {
+  buildBpiProofReceivedEmail,
+  buildTclBpiProofNotification,
+} from "@/lib/bpi-proof-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -76,7 +81,7 @@ export async function POST(request: Request) {
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .select(
-        "id,receipt_token,payment_provider,payment_status,payment_terms,processing_fee_percent,total_amount",
+        "id,order_number,customer_name,customer_email,product_name,receipt_token,payment_provider,payment_status,payment_terms,processing_fee_percent,total_amount,currency,selected_design_name",
       )
       .eq("receipt_token", token)
       .maybeSingle();
@@ -206,6 +211,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const submittedAt = new Date().toISOString();
+
     const proofRow: Record<string, unknown> = {
       order_id: orderData.id,
       payment_id: paymentId,
@@ -214,7 +221,7 @@ export async function POST(request: Request) {
       mime_type: proof.type,
       file_size: proof.size,
       status: "PENDING",
-      submitted_at: new Date().toISOString(),
+      submitted_at: submittedAt,
     };
 
     if (referenceNumber) {
@@ -239,6 +246,95 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Unable to save the proof of payment." },
         { status: 500 },
+      );
+    }
+
+    try {
+      const siteUrl = (
+        process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+        new URL(request.url).origin
+      ).replace(/\/$/, "");
+
+      const statusUrl = `${siteUrl}/order-status?token=${encodeURIComponent(
+        orderData.receipt_token,
+      )}`;
+
+      const submittedDate = new Intl.DateTimeFormat("en-PH", {
+        dateStyle: "long",
+        timeStyle: "short",
+        timeZone: "Asia/Manila",
+      }).format(new Date(submittedAt));
+
+      const customerEmail = String(orderData.customer_email ?? "").trim();
+
+      if (customerEmail) {
+        const customerMessage = buildBpiProofReceivedEmail({
+          customerName: String(orderData.customer_name ?? ""),
+          customerEmail,
+          orderNumber: String(orderData.order_number ?? ""),
+          productName: String(orderData.product_name ?? "TCL Order"),
+          amount: Number(paymentData.amount ?? orderData.total_amount ?? 0),
+          currency: String(paymentData.currency ?? orderData.currency ?? "PHP"),
+          referenceNumber,
+          submittedDate,
+          statusUrl,
+          selectedDesignName: orderData.selected_design_name
+            ? String(orderData.selected_design_name)
+            : null,
+        });
+
+        const customerResult = await sendTclEmail({
+          to: customerEmail,
+          subject: customerMessage.subject,
+          html: customerMessage.html,
+          text: customerMessage.text,
+        });
+
+        if (!customerResult.ok) {
+          console.error(
+            "BPI proof saved but customer confirmation email was not sent:",
+            customerResult,
+          );
+        }
+      }
+
+      const tclContactEmail = process.env.TCL_CONTACT_EMAIL?.trim();
+
+      if (tclContactEmail) {
+        const adminMessage = buildTclBpiProofNotification({
+          customerName: String(orderData.customer_name ?? ""),
+          customerEmail,
+          orderNumber: String(orderData.order_number ?? ""),
+          productName: String(orderData.product_name ?? "TCL Order"),
+          amount: Number(paymentData.amount ?? orderData.total_amount ?? 0),
+          currency: String(paymentData.currency ?? orderData.currency ?? "PHP"),
+          referenceNumber,
+          submittedDate,
+          statusUrl,
+          selectedDesignName: orderData.selected_design_name
+            ? String(orderData.selected_design_name)
+            : null,
+        });
+
+        const adminResult = await sendTclEmail({
+          to: tclContactEmail,
+          subject: adminMessage.subject,
+          html: adminMessage.html,
+          text: adminMessage.text,
+          ...(customerEmail ? { replyTo: customerEmail } : {}),
+        });
+
+        if (!adminResult.ok) {
+          console.error(
+            "BPI proof saved but TCL proof notification was not sent:",
+            adminResult,
+          );
+        }
+      }
+    } catch (emailError) {
+      console.error(
+        "BPI proof saved but email notification processing failed:",
+        emailError,
       );
     }
 

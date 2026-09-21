@@ -26,6 +26,7 @@ const links = [
   },
   { href: "/admin/customers", label: "Customers", icon: "♡", key: "customers" },
   { href: "/admin/reviews", label: "Reviews", icon: "☆", key: "reviews" },
+  { href: "/admin/email", label: "Email", icon: "✉", key: "email" },
   { href: "/admin/settings", label: "Settings", icon: "⚙", key: "settings" },
 ];
 

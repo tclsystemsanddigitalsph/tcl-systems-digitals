@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import { sendTclEmail } from "@/lib/resend";
+import { tclEmailShell } from "@/lib/tcl-email-template";
 
 type QuotePayload = {
   productSlug?: unknown;
@@ -1027,6 +1029,56 @@ export async function POST(request: Request) {
       console.error(
         "Telegram quotation notification error:",
         telegramError,
+      );
+    }
+
+    /*
+     * Customer acknowledgement:
+     * Send only after the quotation request has been saved successfully.
+     * Email delivery is non-blocking — a Resend failure must never turn a
+     * successfully saved quotation request into a failed form submission.
+     */
+    try {
+      const siteUrl = (
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        process.env.SITE_URL ||
+        "http://localhost:3000"
+      ).replace(/\/+$/, "");
+
+      const quotationUrl = `${siteUrl}/quotation/${savedRequest.secure_token}`;
+
+      const acknowledgement = tclEmailShell({
+        eyebrow: "QUOTATION REQUEST",
+        title: "We Received Your Quotation Request",
+        message: `Hi ${fullName},
+
+Thank you for submitting your quotation request to TCL Systems & Digitals PH.
+
+Your request has been received successfully and is now ready for our review. We'll review the information you provided, including your project requirements, selected features, budget, and timeline.
+
+Once your quotation is prepared, we'll send you another email with your private quotation link so you can review the scope, pricing, and available payment options.`,
+        details: [
+          { label: "Request ID", value: requestId },
+          { label: "Service", value: String(product.name ?? productSlug) },
+          { label: "Project / Business", value: projectName },
+          { label: "Status", value: "Received — Pending Review" },
+          { label: "Preferred Contact", value: preferredContact || "Not specified" },
+        ],
+        buttonLabel: "View Request Status",
+        buttonUrl: quotationUrl,
+        note: "This is an automated notification email. For questions or updates, please contact TCL Systems & Digitals PH through Telegram: @tclsystemsanddigitalsph.",
+      });
+
+      await sendTclEmail({
+        to: email,
+        subject: "TCL Systems & Digitals PH - We Received Your Quotation Request",
+        html: acknowledgement.html,
+        text: acknowledgement.text,
+      });
+    } catch (emailError) {
+      console.error(
+        "Quotation request customer acknowledgement email error:",
+        emailError,
       );
     }
 

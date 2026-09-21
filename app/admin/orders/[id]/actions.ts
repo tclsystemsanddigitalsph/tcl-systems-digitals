@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { completeCustomOrderPayment } from "@/lib/custom-order-payments";
+import { sendTclEmail } from "@/lib/resend";
+import { tclEmailShell } from "@/lib/tcl-email-template";
 
 async function requireAdmin() {
   const supabase = await createServerSupabaseClient();
@@ -190,7 +192,9 @@ export async function updateOrderStatus(formData: FormData) {
 
   const { data: order, error: orderError } = await admin
     .from("orders")
-    .select("id,order_number,order_status")
+    .select(
+      "id,order_number,customer_name,customer_email,product_name,order_status,payment_status",
+    )
     .eq("id", orderId)
     .maybeSingle();
 
@@ -247,6 +251,116 @@ export async function updateOrderStatus(formData: FormData) {
     },
   ]);
 
+  /*
+   * Customer notifications are intentionally limited to meaningful progress
+   * states. Moving an order back to PENDING remains an internal/admin change.
+   * Email failure must never undo a successfully saved order-status update.
+   */
+  const emailContent: Record<
+    string,
+    { subject: string; heading: string; message: string }
+  > = {
+    IN_PROGRESS: {
+      subject: "TCL Systems & Digitals PH - Project In Progress",
+      heading: "Project In Progress",
+      message:
+        "Your project is now in progress. Work has started and we’ll continue moving through the agreed scope and requirements.\n\nWe’ll send another update when your project reaches its next meaningful stage.",
+    },
+    READY_FOR_DELIVERY: {
+      subject: "TCL Systems & Digitals PH - Project Ready for Delivery",
+      heading: "Project Ready for Delivery",
+      message:
+        "Your project has reached the ready-for-delivery stage.\n\nPlease check your order status for the latest project information. Any applicable turnover, access, or delivery details will be provided through the appropriate TCL channel.",
+    },
+    COMPLETED: {
+      subject: "TCL Systems & Digitals PH - Project Completed",
+      heading: "Project Completed",
+      message:
+        "Your project has been marked as completed.\n\nThank you for choosing TCL Systems & Digitals PH. You can still use the order-status page to review the latest status of your order.",
+    },
+  };
+
+  const notification = emailContent[nextStatus];
+
+  if (notification && order.customer_email) {
+    try {
+      const siteUrl = (
+        process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.tclsystemsph.com"
+      ).replace(/\/$/, "");
+
+      const orderStatusUrl = `${siteUrl}/order-status`;
+      const customerName = String(order.customer_name ?? "").trim();
+      const firstName = customerName.split(/\s+/)[0] || "there";
+
+      const message = [
+        `Hi ${firstName},`,
+        "",
+        notification.message,
+      ].join("\n");
+
+      const html = tclEmailShell({
+        eyebrow: "TCL PROJECT UPDATE",
+        title: notification.heading,
+        message,
+        details: [
+          { label: "Order Number", value: order.order_number },
+          { label: "Package", value: order.product_name || "TCL Service" },
+          { label: "Order Status", value: statusLabel(nextStatus) },
+          {
+            label: "Payment Status",
+            value:
+              String(order.payment_status ?? "").toUpperCase() === "COMPLETED"
+                ? "Paid"
+                : statusLabel(String(order.payment_status || "PENDING")),
+          },
+        ],
+        buttonLabel: "Check Order Status",
+        buttonUrl: orderStatusUrl,
+        note:
+          "This is a notification-only email. Please do not reply to this message. For questions or concerns, contact TCL Systems & Digitals PH on Telegram: @tclsystemsanddigitalsph.",
+      });
+
+      const text = [
+        notification.heading,
+        "",
+        message,
+        "",
+        `Order Number: ${order.order_number}`,
+        `Package: ${order.product_name || "TCL Service"}`,
+        `Order Status: ${statusLabel(nextStatus)}`,
+        `Payment Status: ${
+          String(order.payment_status ?? "").toUpperCase() === "COMPLETED"
+            ? "Paid"
+            : statusLabel(String(order.payment_status || "PENDING"))
+        }`,
+        "",
+        `Check Order Status: ${orderStatusUrl}`,
+        "",
+        "This is a notification-only email. Please do not reply.",
+        "Questions or concerns: Telegram @tclsystemsanddigitalsph",
+      ].join("\n");
+
+      const emailResult = await sendTclEmail({
+        to: order.customer_email,
+        subject: notification.subject,
+        html,
+        text,
+      });
+
+      if (!emailResult.ok) {
+        console.error(
+          `Order status changed to ${nextStatus}, but the customer notification was not sent:`,
+          emailResult,
+        );
+      }
+    } catch (emailError) {
+      console.error(
+        `Order status changed to ${nextStatus}, but customer email processing failed:`,
+        emailError,
+      );
+    }
+  }
+
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
   revalidatePath("/admin");
@@ -255,7 +369,6 @@ export async function updateOrderStatus(formData: FormData) {
 
   redirect(`/admin/orders/${orderId}?order_status_updated=1`);
 }
-
 
 export async function cancelOrder(formData: FormData) {
   const user = await requireAdmin();
@@ -1627,7 +1740,7 @@ export async function verifyBpiTransferProof(formData: FormData) {
   const { data: order, error: orderError } = await admin
     .from("orders")
     .select(
-      "id,order_number,total_amount,currency,payment_terms,payment_provider,payment_status",
+      "id,order_number,customer_name,customer_email,product_name,total_amount,currency,payment_terms,payment_provider,payment_status",
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -1778,6 +1891,102 @@ export async function verifyBpiTransferProof(formData: FormData) {
     `BPI transfer manually verified by Admin${proof.reference_number ? ` · Ref: ${proof.reference_number}` : ""}.`,
     user.email ?? user.id,
   );
+
+  /*
+   * Send the regular-storefront BPI confirmation here only after the payment
+   * and proof have both been successfully verified.
+   *
+   * Quotation-linked/custom orders keep their existing
+   * completeCustomOrderPayment() notification flow untouched.
+   */
+  if (!isCustomQuotationOrder && order.customer_email) {
+    try {
+      const siteUrl = (
+        process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.tclsystemsph.com"
+      ).replace(/\/$/, "");
+
+      const orderStatusUrl = `${siteUrl}/order-status`;
+      const customerName = String(order.customer_name ?? "").trim();
+      const firstName = customerName.split(/\s+/)[0] || "there";
+      const currency =
+        String(order.currency ?? "PHP").trim().toUpperCase() || "PHP";
+      const totalAmount = moneyNumber(order.total_amount);
+      const formattedAmount = new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency,
+      }).format(totalAmount);
+
+      const message = [
+        `Hi ${firstName},`,
+        "",
+        "Your BPI payment has been verified and confirmed successfully.",
+        "",
+        "Your order is now marked as paid. We will continue processing your order and send you another update when there is meaningful progress.",
+      ].join("\n");
+
+      const html = tclEmailShell({
+        eyebrow: "TCL PAYMENT NOTIFICATION",
+        title: "Payment Confirmed",
+        message,
+        details: [
+          { label: "Order Number", value: order.order_number },
+          { label: "Package", value: order.product_name || "TCL Service" },
+          { label: "Amount Paid", value: formattedAmount },
+          { label: "Payment Method", value: "Direct BPI Bank Transfer" },
+          {
+            label: "Reference Number",
+            value: proof.reference_number || "Not provided",
+          },
+          { label: "Payment Status", value: "Confirmed / Paid" },
+        ],
+        buttonLabel: "Check Order Status",
+        buttonUrl: orderStatusUrl,
+        note:
+          "This is a notification-only email. Please do not reply to this message. For questions or concerns, contact TCL Systems & Digitals PH on Telegram: @tclsystemsanddigitalsph.",
+      });
+
+      const text = [
+        "Payment Confirmed",
+        "",
+        message,
+        "",
+        `Order Number: ${order.order_number}`,
+        `Package: ${order.product_name || "TCL Service"}`,
+        `Amount Paid: ${formattedAmount}`,
+        "Payment Method: Direct BPI Bank Transfer",
+        `Reference Number: ${proof.reference_number || "Not provided"}`,
+        "Payment Status: Confirmed / Paid",
+        "",
+        `Check Order Status: ${orderStatusUrl}`,
+        "",
+        "This is a notification-only email. Please do not reply.",
+        "Questions or concerns: Telegram @tclsystemsanddigitalsph",
+      ].join("\n");
+
+      const emailResult = await sendTclEmail({
+        to: order.customer_email,
+        subject: "TCL Systems & Digitals PH - Payment Confirmed",
+        html,
+        text,
+      });
+
+      if (!emailResult.ok) {
+        console.error(
+          "BPI payment was verified but the customer confirmation email was not sent:",
+          emailResult,
+        );
+      }
+    } catch (emailError) {
+      /*
+       * Email delivery must never undo or invalidate a successfully verified
+       * payment. Keep the payment/proof state authoritative.
+       */
+      console.error(
+        "BPI payment was verified but customer email processing failed:",
+        emailError,
+      );
+    }
+  }
 
   revalidatePath(`/admin/orders/${orderId}`);
   redirect(`/admin/orders/${orderId}?bpi_verified=1`);

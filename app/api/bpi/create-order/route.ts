@@ -2,10 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { sendTclEmail } from "@/lib/resend";
-import {
-  buildRegularOrderReceivedEmail,
-  buildTclNewOrderNotification,
-} from "@/lib/order-created-email";
+import { buildTclNewOrderNotification } from "@/lib/order-created-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,13 +35,8 @@ function money(value: number) {
 }
 
 function makeOrderNumber() {
-  const stamp = new Date()
-    .toISOString()
-    .replace(/[-:TZ.]/g, "")
-    .slice(0, 14);
-
+  const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
   const suffix = randomUUID().replace(/-/g, "").slice(0, 6).toUpperCase();
-
   return `TCL-${stamp}-${suffix}`;
 }
 
@@ -53,15 +45,10 @@ export async function POST(request: Request) {
     const body = (await request.json()) as CreateBpiOrderBody;
 
     const productSlug =
-      body.productSlug?.trim() ||
-      body.product?.trim() ||
-      body.slug?.trim() ||
-      "";
+      body.productSlug?.trim() || body.product?.trim() || body.slug?.trim() || "";
 
     const customerName =
-      body.customerName?.trim() ||
-      body.name?.trim() ||
-      "";
+      body.customerName?.trim() || body.name?.trim() || "";
 
     const customerEmail =
       body.customerEmail?.trim().toLowerCase() ||
@@ -138,7 +125,6 @@ export async function POST(request: Request) {
     const processingFeePercent = 0;
     const processingFee = 0;
     const totalAmount = basePrice;
-
     const orderNumber = makeOrderNumber();
     const receiptToken = randomUUID();
 
@@ -216,32 +202,7 @@ export async function POST(request: Request) {
     const checkoutUrl = `${siteUrl}${checkoutPath}`;
 
     try {
-      const customerEmailContent = buildRegularOrderReceivedEmail({
-        customerName,
-        customerEmail,
-        orderNumber: order.order_number,
-        productName: product.name,
-        totalAmount,
-        currency: "PHP",
-        paymentMethod: "Direct BPI Bank Transfer",
-        checkoutUrl,
-        selectedDesignName,
-      });
-
-      const customerResult = await sendTclEmail({
-        to: customerEmail,
-        subject: customerEmailContent.subject,
-        html: customerEmailContent.html,
-        text: customerEmailContent.text,
-      });
-
-      if (!customerResult.ok) {
-        console.error(
-          "BPI order created but customer notification was not sent:",
-          customerResult,
-        );
-      }
-
+      // BPI payment has not been submitted yet, so notify TCL only.
       const tclContactEmail = process.env.TCL_CONTACT_EMAIL?.trim();
 
       if (tclContactEmail) {
@@ -262,7 +223,6 @@ export async function POST(request: Request) {
           subject: adminEmailContent.subject,
           html: adminEmailContent.html,
           text: adminEmailContent.text,
-          replyTo: customerEmail,
         });
 
         if (!adminResult.ok) {
@@ -279,7 +239,7 @@ export async function POST(request: Request) {
     } catch (emailError) {
       // Never fail a valid checkout because email delivery failed.
       console.error(
-        "BPI order created but email notification processing failed:",
+        "BPI order created but admin email notification processing failed:",
         emailError,
       );
     }
@@ -297,6 +257,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("BPI order creation failed:", error);
+
     return NextResponse.json(
       { error: "Unable to start BPI checkout." },
       { status: 500 },

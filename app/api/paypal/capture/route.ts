@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { capturePayPalOrder } from "@/lib/paypal";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { sendTclEmail } from "@/lib/resend";
+import { buildRegularOrderReceiptEmail } from "@/lib/order-confirmation-email";
 
 export const dynamic = "force-dynamic";
 
@@ -35,9 +37,14 @@ type LocalOrder = {
   order_number: string;
   product_id: string | null;
   product_name: string;
+  customer_name: string | null;
+  customer_email: string | null;
+  base_price: number;
+  processing_fee: number;
   total_amount: number;
   currency: string;
   payment_status: string;
+  order_status: string;
   receipt_token: string;
 };
 
@@ -91,7 +98,7 @@ export async function GET(request: Request) {
       await supabase
         .from("orders")
         .select(
-          "id,order_number,product_id,product_name,total_amount,currency,payment_status,receipt_token",
+          "id,order_number,product_id,product_name,customer_name,customer_email,base_price,processing_fee,total_amount,currency,payment_status,order_status,receipt_token",
         )
         .eq("paypal_order_id", paypalOrderId)
         .maybeSingle();
@@ -116,9 +123,12 @@ export async function GET(request: Request) {
 
     const localOrder = {
       ...localOrderData,
+      base_price: Number(localOrderData.base_price ?? 0),
+      processing_fee: Number(localOrderData.processing_fee ?? 0),
       total_amount: Number(localOrderData.total_amount),
     } as LocalOrder;
 
+    // Already completed: redirect only. Do not send another receipt.
     if (
       localOrder.payment_status === "COMPLETED" &&
       localOrder.receipt_token
@@ -226,20 +236,117 @@ export async function GET(request: Request) {
       }
     }
 
+    const paidAt = new Date().toISOString();
+
+    // Conditional update ensures this request is the one that actually
+    // changes the payment from PENDING -> COMPLETED.
     const { data: completedOrder, error: updateError } =
       await supabase
         .from("orders")
         .update({
           payment_status: "COMPLETED",
           paypal_capture_id: capture?.id ?? null,
-          paid_at: new Date().toISOString(),
+          paid_at: paidAt,
+          updated_at: paidAt,
         })
         .eq("id", localOrder.id)
-        .select("receipt_token")
-        .single();
+        .eq("payment_status", "PENDING")
+        .select("receipt_token,paid_at,paypal_capture_id")
+        .maybeSingle();
 
     if (updateError) {
       throw updateError;
+    }
+
+    if (!completedOrder) {
+      const { data: currentOrder } = await supabase
+        .from("orders")
+        .select("payment_status,receipt_token")
+        .eq("id", localOrder.id)
+        .maybeSingle();
+
+      if (
+        currentOrder?.payment_status === "COMPLETED" &&
+        currentOrder.receipt_token
+      ) {
+        return NextResponse.redirect(
+          successUrl(
+            url.origin,
+            currentOrder.receipt_token,
+          ),
+        );
+      }
+
+      throw new Error("PayPal order could not be completed.");
+    }
+
+    // Send the customer receipt only after this request successfully
+    // completes the local payment. Email failure must never undo payment.
+    try {
+      const customerEmail = String(
+        localOrder.customer_email ?? "",
+      ).trim();
+
+      if (customerEmail) {
+        const siteUrl = (
+          process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+          "https://www.tclsystemsph.com"
+        ).replace(/\/$/, "");
+
+        const statusUrl = `${siteUrl}/order-status`;
+
+        const paymentReference =
+          capture?.id ??
+          completedOrder.paypal_capture_id ??
+          paypalOrderId;
+
+        const receipt = buildRegularOrderReceiptEmail({
+          customerName: localOrder.customer_name,
+          customerEmail,
+          orderNumber: localOrder.order_number,
+          orderDate: new Intl.DateTimeFormat("en-PH", {
+            dateStyle: "long",
+            timeStyle: "short",
+            timeZone: "Asia/Manila",
+          }).format(new Date(completedOrder.paid_at ?? paidAt)),
+          productName:
+            localOrder.product_name || "TCL Order",
+          paymentMethod: "PayPal",
+          paymentReference,
+          subtotal: localOrder.base_price,
+          processingFee: localOrder.processing_fee,
+          totalPaid: localOrder.total_amount,
+          currency: localOrder.currency || "PHP",
+          orderStatus:
+            localOrder.order_status || "PENDING",
+          statusUrl,
+          accessReady: false,
+        });
+
+        const emailResult = await sendTclEmail({
+          to: customerEmail,
+          subject: receipt.subject,
+          html: receipt.html,
+          text: receipt.text,
+        });
+
+        if (!emailResult.ok) {
+          console.error(
+            "Regular PayPal order completed but receipt email was not sent:",
+            emailResult,
+          );
+        }
+      } else {
+        console.error(
+          "Regular PayPal order completed without a customer email:",
+          localOrder.id,
+        );
+      }
+    } catch (emailError) {
+      console.error(
+        "Regular PayPal receipt email failed after payment completion:",
+        emailError,
+      );
     }
 
     return NextResponse.redirect(
