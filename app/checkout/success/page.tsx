@@ -3,6 +3,7 @@ import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CopyReceiptLinkButton from "@/components/CopyReceiptLinkButton";
+import CopyOrderNumberButton from "@/components/CopyOrderNumberButton";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { getSiteSettings } from "@/lib/site-settings";
 import { ensureProjectRequirementsForPaidOrder } from "@/lib/project-requirements";
@@ -75,7 +76,6 @@ export default async function CheckoutSuccessPage({
         "id,order_number,customer_name,product_id,product_name,total_amount,currency,payment_status,payment_terms,order_status,paypal_order_id,paid_at,created_at,download_access_expires_at",
       )
       .eq("receipt_token", receiptToken)
-      .eq("payment_status", "COMPLETED")
       .maybeSingle();
 
     if (error) {
@@ -88,6 +88,7 @@ export default async function CheckoutSuccessPage({
         total_amount: Number(orderData.total_amount),
       };
 
+      if (orderData.payment_status === "COMPLETED") {
       try {
         projectRequirements =
           await ensureProjectRequirementsForPaidOrder(orderData.id);
@@ -196,11 +197,15 @@ export default async function CheckoutSuccessPage({
           count: countMap.get(file.id) ?? 0,
         }));
       }
+      }
     }
   }
 
   const validReceipt =
     Boolean(order) && order?.payment_status === "COMPLETED";
+
+  const pendingVerification =
+    Boolean(order) && order?.payment_status === "PENDING";
 
   const accessActive =
     Boolean(accessExpiresAt) &&
@@ -255,7 +260,160 @@ export default async function CheckoutSuccessPage({
             </Link>
           </nav>
 
-          {!validReceipt ? (
+          {pendingVerification ? (
+            <section
+              style={{
+                width: "100%",
+                maxWidth: 760,
+                margin: "0 auto",
+                padding: "clamp(34px,6vw,58px)",
+                background: "#fff",
+                border: "1px solid var(--border)",
+                borderRadius: 24,
+                boxShadow: "0 18px 50px rgba(49,37,41,.08)",
+                textAlign: "center",
+              }}
+            >
+              <div
+                aria-hidden="true"
+                style={{
+                  width: 68,
+                  height: 68,
+                  margin: "0 auto 22px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "50%",
+                  background: "rgba(217,86,139,.10)",
+                  fontSize: 28,
+                }}
+              >
+                ⏳
+              </div>
+
+              <span className="section-kicker">Proof submitted</span>
+
+              <h1
+                style={{
+                  margin: "14px 0 10px",
+                  fontSize: "clamp(2rem,5vw,2.8rem)",
+                }}
+              >
+                Payment pending verification
+              </h1>
+
+              <p
+                style={{
+                  maxWidth: 610,
+                  margin: "0 auto",
+                  color: "var(--text-soft)",
+                  lineHeight: 1.75,
+                }}
+              >
+                Your proof of payment was submitted successfully and is waiting
+                for verification. Your project requirements will become
+                available here after your payment has been verified.
+              </p>
+
+              <div
+                style={{
+                  margin: "28px auto 0",
+                  maxWidth: 520,
+                  padding: "18px 20px",
+                  border: "1px solid var(--border)",
+                  borderRadius: 16,
+                  background: "rgba(217,86,139,.045)",
+                  textAlign: "left",
+                }}
+              >
+                <small
+                  style={{
+                    display: "block",
+                    marginBottom: 7,
+                    color: "var(--text-soft)",
+                    fontWeight: 800,
+                    letterSpacing: ".08em",
+                  }}
+                >
+                  ORDER ID
+                </small>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 10,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <strong style={{ fontSize: "1rem" }}>
+                    {order.order_number}
+                  </strong>
+
+                  <CopyOrderNumberButton orderNumber={order.order_number} />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  maxWidth: 610,
+                  margin: "20px auto 0",
+                  padding: "16px 18px",
+                  borderRadius: 14,
+                  background: "#fff8fa",
+                  border: "1px solid rgba(217,86,139,.18)",
+                  color: "var(--text-soft)",
+                  fontSize: ".9rem",
+                  lineHeight: 1.7,
+                  textAlign: "left",
+                }}
+              >
+                <strong style={{ color: "var(--text)" }}>Please keep your Order ID.</strong>{" "}
+                TCL will not send a separate payment-verification notice. If you
+                close this page, use the Order Status page to check your payment
+                verification from time to time. Once verified, your payment will
+                show as completed and you can proceed with your project
+                requirements.
+              </div>
+
+              <div
+                style={{
+                  marginTop: 22,
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 10,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Link
+                  href="/order-status"
+                  className="button button-primary"
+                  style={footerButtonStyle}
+                >
+                  Check Order Status
+                </Link>
+
+                <Link
+                  href="/"
+                  className="button"
+                  style={{
+                    ...footerButtonStyle,
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  Return Home
+                </Link>
+              </div>
+
+              <script
+                dangerouslySetInnerHTML={{
+                  __html:
+                    'setTimeout(function(){window.location.reload();},15000);',
+                }}
+              />
+            </section>
+          ) : !validReceipt ? (
             <section
               style={{
                 maxWidth: 720,

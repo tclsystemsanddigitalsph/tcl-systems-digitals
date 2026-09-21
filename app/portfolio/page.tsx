@@ -32,6 +32,26 @@ const recentWorks = [
   },
   {
     number: "02",
+    name: "MasteryHub Review",
+    type: "Custom Reviewer System",
+    urlLabel: "masteryhubreview.vercel.app",
+    description:
+      "A web-based reviewer and quiz system built for organized learning, question management, and student access.",
+    features: [
+      "Student Access",
+      "Subject Reviewers",
+      "Question Banks",
+      "Quiz Attempts",
+      "Results & Review",
+      "Admin Dashboard",
+      "Mobile-Friendly",
+    ],
+    technologies: ["Next.js", "Supabase", "Vercel"],
+    href: "https://masteryhubreview.vercel.app/",
+    preview: "reviewer",
+  },
+  {
+    number: "03",
     name: "TheClawLabMNL",
     type: "Business Website",
     urlLabel: "theclawlabmnl.vercel.app",
@@ -187,6 +207,71 @@ export default function PortfolioPage() {
                           </div>
                         </div>
                       </div>
+                    ) : project.preview === "reviewer" ? (
+                      <div className={styles.reviewerPreview}>
+                        <div className={styles.reviewerNav}>
+                          <div className={styles.reviewerBrand}>
+                            <div className={styles.reviewerLogo}>M</div>
+                            <div>
+                              <strong>MasteryHub</strong>
+                              <span>REVIEW</span>
+                            </div>
+                          </div>
+
+                          <div className={styles.reviewerNavLinks}>
+                            <span />
+                            <span />
+                            <span />
+                          </div>
+                        </div>
+
+                        <div className={styles.reviewerHero}>
+                          <div className={styles.reviewerCopy}>
+                            <span className={styles.reviewerEyebrow}>
+                              MASTER YOUR REVIEW
+                            </span>
+
+                            <div className={styles.reviewerHeading}>
+                              <span />
+                              <span />
+                            </div>
+
+                            <div className={styles.reviewerText}>
+                              <span />
+                              <span />
+                            </div>
+
+                            <div className={styles.reviewerButton} />
+                          </div>
+
+                          <div className={styles.reviewerDashboard}>
+                            <div className={styles.reviewerDashboardTop}>
+                              <span />
+                              <strong />
+                            </div>
+
+                            <div className={styles.reviewerSubject}>
+                              <div className={styles.reviewerSubjectIcon}>✓</div>
+                              <div>
+                                <span />
+                                <span />
+                              </div>
+                            </div>
+
+                            <div className={styles.reviewerSubject}>
+                              <div className={styles.reviewerSubjectIcon}>✓</div>
+                              <div>
+                                <span />
+                                <span />
+                              </div>
+                            </div>
+
+                            <div className={styles.reviewerProgress}>
+                              <span />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       <div className={styles.businessPreview}>
                         <div className={styles.previewNav}>
@@ -272,7 +357,7 @@ export default function PortfolioPage() {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        View Live Project <span>↗</span>
+                        View Live Project <span aria-hidden="true">→</span>
                       </a>
                     </div>
                   </div>

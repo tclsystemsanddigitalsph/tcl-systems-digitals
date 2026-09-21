@@ -246,7 +246,7 @@ export default async function ProductPage({ params }: PageProps) {
     ? `/quote/${encodeURIComponent(product.slug)}`
     : `/checkout?product=${encodeURIComponent(product.slug)}`;
 
-  const primaryLabel = quotationOnly ? "Request a Quote →" : "Buy Now →";
+  const primaryLabel = quotationOnly ? "Request a Quote" : "Buy Now";
 
   if (!details) {
     return (
@@ -298,7 +298,7 @@ export default async function ProductPage({ params }: PageProps) {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        View Demo ↗
+                        View Demo
                       </a>
                     ) : null}
                   </div>
@@ -419,7 +419,7 @@ export default async function ProductPage({ params }: PageProps) {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      View Live Demo ↗
+                      View Live Demo
                     </a>
                   ) : null}
                 </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
 type QuotePayload = {
   productSlug?: unknown;
@@ -709,6 +710,11 @@ export async function POST(request: Request) {
       body.selectedFeatures,
     );
 
+    // Each quotation request gets a private, persistent client link.
+    // This lets the customer return later and see the quotation after TCL
+    // updates its status, scope, pricing, or payment terms.
+    const secureToken = randomUUID();
+
     const preferredContact = cleanString(
       body.preferredContact,
       100,
@@ -870,6 +876,7 @@ export async function POST(request: Request) {
           product_slug: product.slug,
           product_name: product.name,
           category: product.category,
+          secure_token: secureToken,
 
           full_name: fullName,
           business_name: projectName,
@@ -925,7 +932,7 @@ export async function POST(request: Request) {
           notes,
           status: "NEW",
         })
-        .select("id")
+        .select("id,secure_token")
         .single();
 
     if (insertError) {
@@ -1026,6 +1033,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       requestId,
+      secureToken: savedRequest.secure_token,
     });
   } catch (error) {
     console.error(

@@ -9,7 +9,7 @@ export default function SiteFooter() {
           <Link className="brand" href="/">
             <span className="brand-logo-shell">
               <Image
-                src="/tcl-logo.jpg"
+                src="/tcl-monogram.png"
                 alt="TCL Systems & Digitals PH"
                 width={64}
                 height={64}
@@ -42,6 +42,7 @@ export default function SiteFooter() {
             <Link href="/#reviews">Reviews</Link>
             <Link href="/how-it-works">How It Works</Link>
             <Link href="/faqs">FAQ</Link>
+            <Link href="/admin">Admin Sign In</Link>
           </div>
 
           <div className="footer-column">
@@ -94,6 +95,27 @@ export default function SiteFooter() {
       <style>{`
         .site-footer .footer-links-grid {
           display: contents;
+        }
+
+        .site-footer .brand-logo-shell {
+          background: transparent !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          overflow: visible !important;
+        }
+
+        .site-footer .brand-logo-image {
+          object-fit: contain !important;
+          background: transparent !important;
+          filter:
+            grayscale(1)
+            saturate(0)
+            brightness(2.15)
+            contrast(.88)
+            drop-shadow(0 4px 7px rgba(0, 0, 0, .16))
+            drop-shadow(0 0 10px rgba(229, 169, 191, .13));
+          transform: translateY(-2px) scale(1.08);
         }
 
         @media (max-width: 640px) {

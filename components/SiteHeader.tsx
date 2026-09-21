@@ -30,27 +30,41 @@ export default function SiteHeader() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container nav-shell">
-          <Link className="brand" href="/" onClick={closeMenu}>
-            <span className="brand-logo-shell">
+      <header className={`site-header ${styles.header}`}>
+        <div className={`container nav-shell ${styles.navShell}`}>
+          <Link className={`brand ${styles.brand}`} href="/" onClick={closeMenu}>
+            <span
+              className={`brand-logo-shell ${styles.logoShell}`}
+              style={{
+                background: "transparent",
+                border: "0",
+                boxShadow: "none",
+              }}
+            >
               <Image
-                src="/tcl-logo.jpg"
+                src="/tcl-monogram.png"
                 alt="TCL Systems & Digitals PH"
-                width={64}
-                height={64}
-                className="brand-logo-image"
+                width={120}
+                height={120}
+                className={`brand-logo-image ${styles.logo}`}
                 priority
+                style={{
+                  objectFit: "contain",
+                  background: "transparent",
+                  filter:
+                    "grayscale(1) saturate(0) brightness(2.15) contrast(0.88) drop-shadow(0 2px 2px rgba(0,0,0,.34)) drop-shadow(0 5px 8px rgba(0,0,0,.22))",
+                  transform: "translateY(-2px) scale(1.08)",
+                }}
               />
             </span>
 
-            <span className="brand-copy">
+            <span className={`brand-copy ${styles.brandCopy}`}>
               <strong>TCL Systems</strong>
               <small>& Digitals PH</small>
             </span>
           </Link>
 
-          <nav className="desktop-nav" aria-label="Main navigation">
+          <nav className={`desktop-nav ${styles.desktopNav}`} aria-label="Main navigation">
             {mainNavItems.map((item) => (
               <Link href={item.href} key={item.href}>
                 {item.label}
@@ -103,6 +117,7 @@ export default function SiteHeader() {
               className={`${styles.actionButton} ${styles.contactButton}`}
             >
               Contact TCL
+              <span className={styles.buttonArrow} aria-hidden="true" />
             </a>
           </div>
 
@@ -132,8 +147,8 @@ export default function SiteHeader() {
           <aside className={styles.mobileDrawer}>
             <div className={styles.drawerTop}>
               <div>
-                <span className={styles.drawerEyebrow}>TCL STOREFRONT</span>
-                <h2>Menu</h2>
+                <span className={styles.drawerEyebrow}>TCL / NAVIGATION</span>
+                <h2>Explore.</h2>
               </div>
 
               <button
@@ -146,14 +161,12 @@ export default function SiteHeader() {
               </button>
             </div>
 
-            <nav
-              className={styles.mobileNavigation}
-              aria-label="Mobile navigation"
-            >
-              {mainNavItems.map((item) => (
+            <nav className={styles.mobileNavigation} aria-label="Mobile navigation">
+              {mainNavItems.map((item, index) => (
                 <Link href={item.href} key={item.href} onClick={closeMenu}>
+                  <small>0{index + 1}</small>
                   <span>{item.label}</span>
-                  <span aria-hidden="true">›</span>
+                  <i className={styles.navArrow} aria-hidden="true" />
                 </Link>
               ))}
 
@@ -163,15 +176,14 @@ export default function SiteHeader() {
                 aria-expanded={mobileHelpOpen}
                 onClick={() => setMobileHelpOpen((current) => !current)}
               >
+                <small>04</small>
                 <span>Help</span>
-                <span
-                  className={`${styles.mobileHelpChevron} ${
+                <i
+                  className={`${styles.navArrow} ${styles.mobileHelpChevron} ${
                     mobileHelpOpen ? styles.mobileHelpChevronOpen : ""
                   }`}
                   aria-hidden="true"
-                >
-                  ›
-                </span>
+                />
               </button>
 
               {mobileHelpOpen && (
@@ -179,7 +191,7 @@ export default function SiteHeader() {
                   {helpItems.map((item) => (
                     <Link href={item.href} key={item.href} onClick={closeMenu}>
                       <span>{item.label}</span>
-                      <span aria-hidden="true">›</span>
+                      <i className={styles.navArrow} aria-hidden="true" />
                     </Link>
                   ))}
                 </div>
@@ -195,17 +207,17 @@ export default function SiteHeader() {
                 onClick={closeMenu}
               >
                 <span>
-                  <small>NEED HELP?</small>
+                  <small>START A CONVERSATION</small>
                   <strong>Contact TCL</strong>
                 </span>
-
-                <span aria-hidden="true">↗</span>
+                <i className={styles.contactArrow} aria-hidden="true" />
               </a>
             </div>
 
-            <p className={styles.drawerFooter}>
-              TCL Systems & Digitals PH
-            </p>
+            <div className={styles.drawerFooter}>
+              <span>TCL SYSTEMS & DIGITALS PH</span>
+              <span>WEB / COMMERCE / BOOKING / SYSTEMS</span>
+            </div>
           </aside>
         </>
       )}

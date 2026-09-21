@@ -214,7 +214,7 @@
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 150px 165px auto auto;
+  grid-template-columns: minmax(240px, 1fr) 145px 150px 155px auto auto;
   gap: 8px;
   align-items: center;
   padding: 12px 13px;
@@ -309,7 +309,7 @@
 
 .ordersTable {
   width: 100%;
-  min-width: 1110px;
+  min-width: 1240px;
   border-collapse: collapse;
 }
 
@@ -434,6 +434,12 @@
   color: #8d6c38;
 }
 
+.progressActive {
+  border: 1px solid #d8d4ea;
+  background: #f7f6fc;
+  color: #686184;
+}
+
 .failed {
   border: 1px solid #e6cfd2;
   background: #fff5f5;
@@ -553,7 +559,7 @@
   }
 
   .filters {
-    grid-template-columns: minmax(220px, 1fr) 1fr 1fr;
+    grid-template-columns: minmax(220px, 1fr) 1fr 1fr 1fr;
   }
 
   .filters button,
@@ -672,14 +678,15 @@
 
   .ordersTable td:nth-child(3),
   .ordersTable td:nth-child(4),
-  .ordersTable td:nth-child(8),
-  .ordersTable td:nth-child(9) {
+  .ordersTable td:nth-child(9),
+  .ordersTable td:nth-child(10) {
     grid-column: 1 / -1;
   }
 
   .ordersTable td:nth-child(5),
   .ordersTable td:nth-child(6),
-  .ordersTable td:nth-child(7) {
+  .ordersTable td:nth-child(7),
+  .ordersTable td:nth-child(8) {
     align-self: end;
   }
 

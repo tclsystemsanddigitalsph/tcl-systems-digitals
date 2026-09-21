@@ -342,7 +342,7 @@ export async function updateQuotationRequest(formData: FormData) {
   if (previousRequest.order_id && quotedAmount !== null) {
     const { data: order, error: orderLoadError } = await supabase
       .from("orders")
-      .select("id,total_amount,amount_paid,balance_due")
+      .select("id,base_price,processing_fee_percent,processing_fee,total_amount,amount_paid,balance_due")
       .eq("id", previousRequest.order_id)
       .maybeSingle();
 
@@ -355,16 +355,77 @@ export async function updateQuotationRequest(formData: FormData) {
     if (order) {
       oldOrderTotal = toMoneyNumber(order.total_amount);
       oldBalance = toMoneyNumber(order.balance_due);
-      amountPaid = toMoneyNumber(order.amount_paid);
 
-      newOrderTotal = quotedAmount;
-      newBalance = Math.max(newOrderTotal - amountPaid, 0);
+      /*
+       * Completed payment rows are the accounting source of truth.
+       * This also includes emergency/manual payments recorded from Admin.
+       * Do not trust a stale orders.amount_paid value when recalculating
+       * an accepted quotation after its price changes.
+       */
+      const { data: completedPayments, error: completedPaymentsError } =
+        await supabase
+          .from("order_payments")
+          .select("amount")
+          .eq("order_id", order.id)
+          .eq("status", "COMPLETED");
+
+      if (completedPaymentsError) {
+        throw new Error(
+          `Quotation was updated, but completed payments could not be recalculated: ${completedPaymentsError.message}`,
+        );
+      }
+
+      amountPaid = (completedPayments ?? []).reduce(
+        (sum, payment) => sum + toMoneyNumber(payment.amount),
+        0,
+      );
+
+      /*
+       * The quotation amount is the project subtotal/base price.
+       * Preserve the processing-fee percentage already locked on the order.
+       */
+      const processingFeePercent = toMoneyNumber(
+        order.processing_fee_percent,
+      );
+      const baseCentavos = Math.round(
+        (toMoneyNumber(quotedAmount) + Number.EPSILON) * 100,
+      );
+      const feeCentavos = Math.round(
+        (baseCentavos * processingFeePercent) / 100,
+      );
+
+      const newBasePrice = baseCentavos / 100;
+      const newProcessingFee = feeCentavos / 100;
+      newOrderTotal = (baseCentavos + feeCentavos) / 100;
+
+      /*
+       * Completed order_payments stay authoritative. Never let an edited
+       * quotation reduce the new total below money already received.
+       */
+      if (newOrderTotal < amountPaid - 0.005) {
+        throw new Error(
+          `Quotation total cannot be changed below completed payments (${money(amountPaid)}).`,
+        );
+      }
+
+      newBalance = Math.max(
+        Number((newOrderTotal - amountPaid).toFixed(2)),
+        0,
+      );
+
+      const paymentStatus =
+        newOrderTotal > 0 && newBalance <= 0.005 ? "COMPLETED" : "PENDING";
 
       const { error: orderUpdateError } = await supabase
         .from("orders")
         .update({
+          base_price: newBasePrice,
+          processing_fee: newProcessingFee,
           total_amount: newOrderTotal,
+          amount_paid: amountPaid,
           balance_due: newBalance,
+          payment_status: paymentStatus,
+          paid_at: paymentStatus === "COMPLETED" ? now : null,
           updated_at: now,
         })
         .eq("id", order.id);

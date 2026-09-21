@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 
-type PaymentMethod = "PAYPAL" | "PAYMONGO";
+type PaymentMethod = "PAYPAL" | "PAYMONGO" | "BPI";
 
 const POLICY_VERSION = "September 2026";
 
@@ -33,6 +33,23 @@ export default function CheckoutForm({
   const [policyOpen, setPolicyOpen] = useState(false);
   const [policyAccepted, setPolicyAccepted] = useState(false);
   const [policyBottomReached, setPolicyBottomReached] = useState(false);
+  const [bpiModal, setBpiModal] = useState<{
+    token: string;
+    paymentId: string;
+    orderNumber: string;
+    amount: number;
+  } | null>(null);
+  const [bpiProofStatus, setBpiProofStatus] = useState<
+    "IDLE" | "UPLOADING" | "PENDING"
+  >("IDLE");
+  const [bpiMessage, setBpiMessage] = useState("");
+  const [bpiCopied, setBpiCopied] = useState(false);
+  const [bpiOrderStatus, setBpiOrderStatus] = useState<{
+    token: string;
+    orderNumber: string;
+    amount: number;
+    status: "PENDING" | "VERIFIED" | "REJECTED";
+  } | null>(null);
   const policyBodyRef = useRef<HTMLDivElement>(null);
 
   function choosePaymentMethod(method: PaymentMethod) {
@@ -44,9 +61,30 @@ export default function CheckoutForm({
 
     if (feeLabel) {
       feeLabel.textContent =
-        method === "PAYPAL"
-          ? "PayPal Processing Fee"
-          : "PayMongo Processing Fee";
+        method === "BPI"
+          ? "BPI Processing Fee"
+          : "Payment Processing Fee";
+    }
+
+    const feeAmount = document.getElementById(
+      "tcl-checkout-processing-fee-amount",
+    );
+    const totalAmount = document.getElementById(
+      "tcl-checkout-total-amount",
+    );
+
+    if (feeAmount) {
+      feeAmount.textContent =
+        method === "BPI"
+          ? feeAmount.dataset.bpiAmount ?? feeAmount.textContent
+          : feeAmount.dataset.providerAmount ?? feeAmount.textContent;
+    }
+
+    if (totalAmount) {
+      totalAmount.textContent =
+        method === "BPI"
+          ? totalAmount.dataset.bpiAmount ?? totalAmount.textContent
+          : totalAmount.dataset.providerAmount ?? totalAmount.textContent;
     }
   }
 
@@ -79,6 +117,51 @@ export default function CheckoutForm({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [policyOpen]);
+
+  useEffect(() => {
+    const currentUrl = new URL(window.location.href);
+    const token = currentUrl.searchParams.get("bpi_order");
+    if (!token) return;
+
+    let cancelled = false;
+    let timer: number | null = null;
+
+    const checkStatus = async () => {
+      try {
+        const response = await fetch(
+          `/api/bpi/status?token=${encodeURIComponent(token)}`,
+          { cache: "no-store" },
+        );
+        const data = (await response.json().catch(() => null)) as
+          | {
+              ok?: boolean;
+              orderNumber?: string;
+              amount?: number;
+              status?: "PENDING" | "VERIFIED" | "REJECTED";
+            }
+          | null;
+
+        if (!cancelled && response.ok && data?.ok && data.orderNumber && typeof data.amount === "number" && data.status) {
+          setBpiOrderStatus({
+            token,
+            orderNumber: data.orderNumber,
+            amount: data.amount,
+            status: data.status,
+          });
+        }
+      } catch {
+        // Keep the current status visible and try again on the next check.
+      }
+    };
+
+    void checkStatus();
+    timer = window.setInterval(checkStatus, 15000);
+
+    return () => {
+      cancelled = true;
+      if (timer !== null) window.clearInterval(timer);
+    };
+  }, []);
 
   function openPolicy(event?: MouseEvent) {
     event?.preventDefault();
@@ -162,7 +245,7 @@ export default function CheckoutForm({
 
         if (returnedUrl.pathname === "/checkout/success") {
           window.clearInterval(timer);
-          paymentWindow.close();
+          paymentWindow?.close();
           window.location.assign(returnedUrl.toString());
           return;
         }
@@ -181,6 +264,70 @@ export default function CheckoutForm({
         // The payment provider is on another origin while checkout is active.
       }
     }, 500);
+  }
+
+  async function copyBpiAccountNumber() {
+    try {
+      await navigator.clipboard.writeText("4479214374");
+      setBpiCopied(true);
+      window.setTimeout(() => setBpiCopied(false), 1600);
+    } catch {
+      setBpiMessage("Please copy the account number manually.");
+    }
+  }
+
+  function closeBpiModal() {
+    if (bpiProofStatus === "UPLOADING") return;
+    setBpiModal(null);
+    setBpiMessage("");
+    setBpiProofStatus("IDLE");
+    setSubmitting(false);
+  }
+
+  async function submitBpiProof(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!bpiModal) return;
+
+    setBpiProofStatus("UPLOADING");
+    setBpiMessage("");
+
+    try {
+      const form = new FormData(event.currentTarget);
+      form.set("token", bpiModal.token);
+      form.set("payment_id", bpiModal.paymentId);
+
+      const response = await fetch("/api/bpi/proof", {
+        method: "POST",
+        body: form,
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { ok?: boolean; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(
+          payload?.error || "Unable to submit proof of payment.",
+        );
+      }
+
+      setBpiProofStatus("PENDING");
+      setBpiMessage(
+        "Proof submitted. Redirecting to payment verification status...",
+      );
+
+      window.location.assign(
+        `/checkout/success?receipt=${encodeURIComponent(bpiModal.token)}`,
+      );
+      return;
+    } catch (proofError) {
+      setBpiProofStatus("IDLE");
+      setBpiMessage(
+        proofError instanceof Error
+          ? proofError.message
+          : "Unable to submit proof of payment.",
+      );
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -203,18 +350,21 @@ export default function CheckoutForm({
       return;
     }
 
-    const paymentWindow = openPaymentWindow();
+    const paymentWindow =
+      paymentMethod === "BPI" ? null : openPaymentWindow();
 
-    if (!paymentWindow) {
+    if (paymentMethod !== "BPI" && !paymentWindow) {
       setError(
         "Your browser blocked the secure payment window. Please allow pop-ups for this site and try again.",
       );
       return;
     }
 
-    paymentWindow.document.title = "Opening secure payment...";
-    paymentWindow.document.body.innerHTML =
-      '<div style="font-family:Arial,sans-serif;padding:32px;text-align:center;color:#6f5963;">Opening secure payment...</div>';
+    if (paymentWindow) {
+      paymentWindow.document.title = "Opening secure payment...";
+      paymentWindow.document.body.innerHTML =
+        '<div style="font-family:Arial,sans-serif;padding:32px;text-align:center;color:#6f5963;">Opening secure payment...</div>';
+    }
 
     setSubmitting(true);
 
@@ -224,6 +374,52 @@ export default function CheckoutForm({
         version: POLICY_VERSION,
         acceptedAt: new Date().toISOString(),
       };
+
+      if (paymentMethod === "BPI") {
+        const response = await fetch("/api/bpi/create-order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+          },
+          body: JSON.stringify({
+            productSlug,
+            customerName,
+            customerEmail,
+            selectedDesignSlug,
+            selectedDesignName: selectedDesignLabel,
+            policyConsent,
+          }),
+        });
+
+        const data = (await response.json()) as {
+          receiptToken?: string;
+          paymentId?: string;
+          orderNumber?: string;
+          amount?: number;
+          error?: string;
+        };
+
+        if (
+          !response.ok ||
+          !data.receiptToken ||
+          !data.paymentId ||
+          !data.orderNumber ||
+          typeof data.amount !== "number"
+        ) {
+          throw new Error(data.error || "Unable to start Direct BPI checkout.");
+        }
+
+        setBpiProofStatus("IDLE");
+        setBpiMessage("");
+        setBpiModal({
+          token: data.receiptToken,
+          paymentId: data.paymentId,
+          orderNumber: data.orderNumber,
+          amount: data.amount,
+        });
+        return;
+      }
 
       if (paymentMethod === "PAYPAL") {
         const response = await fetch("/api/paypal/create-order", {
@@ -251,8 +447,8 @@ export default function CheckoutForm({
           throw new Error(data.error || "Unable to start PayPal checkout.");
         }
 
-        paymentWindow.location.href = data.approvalUrl;
-        watchPaymentWindow(paymentWindow);
+        paymentWindow!.location.href = data.approvalUrl;
+        watchPaymentWindow(paymentWindow!);
         return;
       }
 
@@ -281,10 +477,10 @@ export default function CheckoutForm({
         throw new Error(data.error || "Unable to start PayMongo checkout.");
       }
 
-      paymentWindow.location.href = data.checkoutUrl;
-      watchPaymentWindow(paymentWindow);
+      paymentWindow!.location.href = data.checkoutUrl;
+      watchPaymentWindow(paymentWindow!);
     } catch (checkoutError) {
-      paymentWindow.close();
+      paymentWindow?.close();
       setSubmitting(false);
       setError(
         checkoutError instanceof Error
@@ -296,6 +492,46 @@ export default function CheckoutForm({
 
   return (
     <>
+      {bpiOrderStatus ? (
+        <section className={`tcl-bpi-order-status tcl-bpi-order-status-${bpiOrderStatus.status.toLowerCase()}`}>
+          <span className="tcl-bpi-order-status-kicker">
+            {bpiOrderStatus.status === "PENDING"
+              ? "PAYMENT PENDING VERIFICATION"
+              : bpiOrderStatus.status === "VERIFIED"
+                ? "PAYMENT VERIFIED"
+                : "PAYMENT NEEDS ATTENTION"}
+          </span>
+          <h2>
+            {bpiOrderStatus.status === "PENDING"
+              ? "We received your proof of payment."
+              : bpiOrderStatus.status === "VERIFIED"
+                ? "Your BPI payment has been verified."
+                : "Your BPI proof was not approved."}
+          </h2>
+          <div className="tcl-bpi-order-status-details">
+            <span>Order <strong>{bpiOrderStatus.orderNumber}</strong></span>
+            <span>Direct BPI</span>
+            <span>
+              {new Intl.NumberFormat("en-PH", {
+                style: "currency",
+                currency: "PHP",
+              }).format(bpiOrderStatus.amount)}
+            </span>
+          </div>
+          <p>
+            {bpiOrderStatus.status === "PENDING"
+              ? "Your transfer is still being reviewed. This page checks the status automatically every 15 seconds. You can also return to this same checkout link later to see the latest status."
+              : bpiOrderStatus.status === "VERIFIED"
+                ? "Payment verification is complete. Your order can now proceed to the next fulfillment step."
+                : "Please contact TCL Systems & Digitals PH before sending another payment or uploading another proof."}
+          </p>
+          {bpiOrderStatus.status === "PENDING" ? (
+            <div className="tcl-bpi-order-status-live"><i /> Checking for updates automatically</div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {!bpiOrderStatus ? (
       <section className="tcl-checkout-card" aria-labelledby="customer-heading">
         <form onSubmit={handleSubmit}>
           {selectedDesignSlug ? (
@@ -377,7 +613,7 @@ export default function CheckoutForm({
 
                 <button
                   type="button"
-                  className={`tcl-checkout-method ${
+                  className={`tcl-checkout-method tcl-checkout-method-paypal ${
                     paymentMethod === "PAYPAL" ? "is-selected" : ""
                   }`}
                   onClick={() => choosePaymentMethod("PAYPAL")}
@@ -397,7 +633,7 @@ export default function CheckoutForm({
 
                 <button
                   type="button"
-                  className={`tcl-checkout-method ${
+                  className={`tcl-checkout-method tcl-checkout-method-paymongo ${
                     paymentMethod === "PAYMONGO" ? "is-selected" : ""
                   }`}
                   onClick={() => choosePaymentMethod("PAYMONGO")}
@@ -409,6 +645,26 @@ export default function CheckoutForm({
                     <strong>PayMongo</strong>
                     <small>
                       QR Ph payments via GCash, Maya, bank apps, and other supported e-wallets.
+                    </small>
+                  </span>
+
+                  <span className="tcl-checkout-radio" aria-hidden="true" />
+                </button>
+
+                <button
+                  type="button"
+                  className={`tcl-checkout-method tcl-checkout-method-bpi ${
+                    paymentMethod === "BPI" ? "is-selected" : ""
+                  }`}
+                  onClick={() => choosePaymentMethod("BPI")}
+                  aria-pressed={paymentMethod === "BPI"}
+                >
+                  <span className="tcl-checkout-method-icon">BPI</span>
+
+                  <span className="tcl-checkout-method-copy">
+                    <strong>Direct to BPI</strong>
+                    <small>
+                      Bank transfer with 0% processing fee. Upload proof after creating your order.
                     </small>
                   </span>
 
@@ -526,23 +782,164 @@ export default function CheckoutForm({
                   {submitting
                     ? paymentMethod === "PAYPAL"
                       ? "Opening PayPal..."
-                      : "Opening PayMongo..."
+                      : paymentMethod === "PAYMONGO"
+                        ? "Opening PayMongo..."
+                        : "Preparing BPI transfer..."
                     : paymentMethod === "PAYPAL"
                       ? "Continue with PayPal"
-                      : "Continue with PayMongo"}
+                      : paymentMethod === "PAYMONGO"
+                        ? "Continue with PayMongo"
+                        : "Continue with Direct BPI"}
                 </span>
 
                 {!submitting ? <span aria-hidden="true">→</span> : null}
               </button>
 
               <p className="tcl-checkout-footnote">
-                Your payment details are entered securely on the selected
-                provider&apos;s checkout.
+                PayPal and PayMongo continue on their secure checkout. Direct BPI
+                continues to TCL&apos;s bank-transfer instructions and proof upload.
               </p>
             </div>
           </div>
         </form>
       </section>
+      ) : null}
+
+      {bpiModal ? (
+        <div
+          className="tcl-bpi-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) closeBpiModal();
+          }}
+        >
+          <section
+            className="tcl-bpi-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tcl-bpi-modal-title"
+          >
+            <div className="tcl-bpi-modal-header">
+              <div>
+                <span>DIRECT BPI · 0% PROCESSING FEE</span>
+                <h2 id="tcl-bpi-modal-title">Complete your BPI transfer</h2>
+                <p>Order {bpiModal.orderNumber}</p>
+              </div>
+              <button
+                type="button"
+                className="tcl-bpi-modal-close"
+                onClick={closeBpiModal}
+                aria-label="Close BPI payment"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="tcl-bpi-modal-body">
+              <div className="tcl-bpi-amount">
+                <span>Amount to transfer</span>
+                <strong>
+                  {new Intl.NumberFormat("en-PH", {
+                    style: "currency",
+                    currency: "PHP",
+                  }).format(bpiModal.amount)}
+                </strong>
+                <small>No processing fee</small>
+              </div>
+
+              <div className="tcl-bpi-payment-grid">
+                <div className="tcl-bpi-qr">
+                  <img
+                    src="/BPIQR_TCLSystems.jpg"
+                    alt="TCL Systems BPI InstaPay QR"
+                  />
+                  <span>Scan using your banking or e-wallet app</span>
+                </div>
+
+                <div className="tcl-bpi-bank-details">
+                  <span className="tcl-bpi-label">BPI ACCOUNT</span>
+                  <strong>Marie Charlotte M Bernardo</strong>
+                  <div className="tcl-bpi-account-row">
+                    <code>4479214374</code>
+                    <button type="button" onClick={copyBpiAccountNumber}>
+                      {bpiCopied ? "Copied ✓" : "Copy"}
+                    </button>
+                  </div>
+                  <p>
+                    Transfer the exact amount above, then upload your proof of
+                    payment below.
+                  </p>
+                </div>
+              </div>
+
+              {bpiProofStatus === "PENDING" ? (
+                <div className="tcl-bpi-pending">
+                  <strong>Proof submitted ✓</strong>
+                  <p>
+                    Your payment is pending verification. TCL will verify the
+                    transfer before your order is marked as paid.
+                  </p>
+                  <button type="button" onClick={closeBpiModal}>
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form className="tcl-bpi-proof-form" onSubmit={submitBpiProof}>
+                  <label>
+                    <span>Proof of payment *</span>
+                    <input
+                      type="file"
+                      name="proof"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      required
+                      disabled={bpiProofStatus === "UPLOADING"}
+                    />
+                    <small>JPG, PNG, WEBP, or PDF · Maximum 4 MB</small>
+                  </label>
+
+                  <label>
+                    <span>Transfer reference number</span>
+                    <input
+                      type="text"
+                      name="reference_number"
+                      maxLength={120}
+                      placeholder="Optional"
+                      disabled={bpiProofStatus === "UPLOADING"}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Notes</span>
+                    <textarea
+                      name="customer_notes"
+                      rows={2}
+                      maxLength={500}
+                      placeholder="Optional"
+                      disabled={bpiProofStatus === "UPLOADING"}
+                    />
+                  </label>
+
+                  {bpiMessage ? (
+                    <p className="tcl-bpi-message" role="status">
+                      {bpiMessage}
+                    </p>
+                  ) : null}
+
+                  <button
+                    type="submit"
+                    className="tcl-bpi-submit"
+                    disabled={bpiProofStatus === "UPLOADING"}
+                  >
+                    {bpiProofStatus === "UPLOADING"
+                      ? "Uploading proof..."
+                      : "Submit Proof of Payment →"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {policyOpen ? (
         <div
@@ -880,6 +1277,342 @@ export default function CheckoutForm({
       ) : null}
 
       <style jsx global>{`
+        .tcl-bpi-order-status {
+          padding: 30px;
+          border: 1px solid rgba(70,49,58,.16);
+          background: #fffafb;
+          box-shadow: 0 20px 60px rgba(33,27,30,.08);
+        }
+        .tcl-bpi-order-status-kicker {
+          display: block;
+          margin-bottom: 10px;
+          color: #a45f63;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: .12em;
+        }
+        .tcl-bpi-order-status h2 {
+          margin: 0 0 18px;
+          color: #211b1e;
+          font-size: clamp(25px,4vw,38px);
+          line-height: 1;
+          letter-spacing: -.04em;
+        }
+        .tcl-bpi-order-status-details {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 18px;
+        }
+        .tcl-bpi-order-status-details span {
+          padding: 8px 10px;
+          border: 1px solid rgba(70,49,58,.14);
+          background: #fff;
+          color: #74666c;
+          font-size: 10px;
+          font-weight: 700;
+        }
+        .tcl-bpi-order-status p {
+          max-width: 680px;
+          margin: 0;
+          color: #74666c;
+          font-size: 12px;
+          line-height: 1.65;
+        }
+        .tcl-bpi-order-status-live {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 18px;
+          color: #a45f63;
+          font-size: 10px;
+          font-weight: 800;
+        }
+        .tcl-bpi-order-status-live i {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #c97b99;
+          animation: tclBpiPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes tclBpiPulse {
+          0%,100% { opacity: .35; transform: scale(.8); }
+          50% { opacity: 1; transform: scale(1.15); }
+        }
+        .tcl-bpi-order-status-verified {
+          border-color: rgba(67,122,89,.28);
+          background: #fbfffc;
+        }
+        .tcl-bpi-order-status-verified .tcl-bpi-order-status-kicker { color: #437a59; }
+        .tcl-bpi-order-status-rejected {
+          border-color: rgba(164,95,99,.30);
+          background: #fff9f9;
+        }
+
+        .tcl-bpi-modal-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 2147483647;
+          display: grid;
+          place-items: center;
+          padding: 20px;
+          background: rgba(33,27,30,.72);
+          backdrop-filter: blur(7px);
+        }
+        .tcl-bpi-modal {
+          width: min(760px, 100%);
+          max-height: 92vh;
+          overflow: auto;
+          border: 1px solid rgba(70,49,58,.18);
+          border-radius: 0;
+          background: #fffafb;
+          box-shadow: 0 30px 100px rgba(33,27,30,.30);
+        }
+        .tcl-bpi-modal-header {
+          display: flex;
+          justify-content: space-between;
+          gap: 20px;
+          padding: 24px 26px 20px;
+          border-bottom: 1px solid rgba(70,49,58,.14);
+          background:
+            linear-gradient(rgba(70,49,58,.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(70,49,58,.05) 1px, transparent 1px),
+            #fbe9e9;
+          background-size: 32px 32px;
+        }
+        .tcl-bpi-modal-header span {
+          color: #a45f63;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: .12em;
+        }
+        .tcl-bpi-modal-header h2 {
+          margin: 8px 0 5px;
+          color: #211b1e;
+          font-size: clamp(27px,4vw,40px);
+          line-height: .95;
+          letter-spacing: -.045em;
+        }
+        .tcl-bpi-modal-header p {
+          margin: 0;
+          color: #74666c;
+          font-size: 11px;
+        }
+        .tcl-bpi-modal-close {
+          flex: 0 0 auto;
+          width: 36px;
+          height: 36px;
+          border: 1px solid rgba(70,49,58,.18);
+          border-radius: 0;
+          background: rgba(255,255,255,.72);
+          color: #211b1e;
+          font-size: 22px;
+          cursor: pointer;
+        }
+        .tcl-bpi-modal-body { padding: 24px 26px 28px; }
+        .tcl-bpi-amount {
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+          padding-bottom: 18px;
+          border-bottom: 1px solid rgba(70,49,58,.14);
+        }
+        .tcl-bpi-amount span {
+          color: #74666c;
+          font-size: 10px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: .08em;
+        }
+        .tcl-bpi-amount strong {
+          margin-left: auto;
+          color: #c97b99;
+          font-size: 26px;
+          letter-spacing: -.035em;
+        }
+        .tcl-bpi-amount small {
+          color: #74666c;
+          font-size: 9px;
+        }
+        .tcl-bpi-payment-grid {
+          display: grid;
+          grid-template-columns: 210px minmax(0,1fr);
+          gap: 24px;
+          padding: 22px 0;
+          border-bottom: 1px solid rgba(70,49,58,.14);
+        }
+        .tcl-bpi-qr {
+          display: grid;
+          gap: 8px;
+        }
+        .tcl-bpi-qr img {
+          display: block;
+          width: 100%;
+          aspect-ratio: 1;
+          object-fit: contain;
+          border: 1px solid rgba(70,49,58,.14);
+          background: #fff;
+        }
+        .tcl-bpi-qr span {
+          color: #74666c;
+          font-size: 9px;
+          line-height: 1.45;
+        }
+        .tcl-bpi-bank-details {
+          align-self: center;
+          min-width: 0;
+        }
+        .tcl-bpi-label {
+          display: block;
+          margin-bottom: 8px;
+          color: #a45f63;
+          font-size: 9px;
+          font-weight: 900;
+          letter-spacing: .12em;
+        }
+        .tcl-bpi-bank-details > strong {
+          display: block;
+          margin-bottom: 12px;
+          color: #211b1e;
+          font-size: 17px;
+        }
+        .tcl-bpi-account-row {
+          display: flex;
+          align-items: stretch;
+          margin-bottom: 12px;
+        }
+        .tcl-bpi-account-row code {
+          flex: 1;
+          min-width: 0;
+          padding: 12px;
+          border: 1px solid rgba(70,49,58,.16);
+          background: #fff;
+          color: #211b1e;
+          font-size: 15px;
+          font-weight: 900;
+          letter-spacing: .08em;
+        }
+        .tcl-bpi-account-row button {
+          padding: 0 14px;
+          border: 1px solid #30272b;
+          border-left: 0;
+          border-radius: 0;
+          background: #30272b;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 900;
+          cursor: pointer;
+        }
+        .tcl-bpi-bank-details p {
+          margin: 0;
+          color: #74666c;
+          font-size: 11px;
+          line-height: 1.6;
+        }
+        .tcl-bpi-proof-form {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 13px;
+          padding-top: 20px;
+        }
+        .tcl-bpi-proof-form label {
+          display: grid;
+          gap: 7px;
+          color: #211b1e;
+          font-size: 10px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: .04em;
+        }
+        .tcl-bpi-proof-form label:first-child,
+        .tcl-bpi-proof-form label:nth-child(3) {
+          grid-column: 1 / -1;
+        }
+        .tcl-bpi-proof-form input,
+        .tcl-bpi-proof-form textarea {
+          width: 100%;
+          border: 1px solid rgba(70,49,58,.16);
+          border-radius: 0;
+          background: #fff;
+          color: #211b1e;
+          padding: 11px 12px;
+          font: inherit;
+          font-size: 12px;
+          font-weight: 500;
+          text-transform: none;
+          resize: vertical;
+        }
+        .tcl-bpi-proof-form small {
+          color: #74666c;
+          font-size: 9px;
+          font-weight: 500;
+          letter-spacing: 0;
+          text-transform: none;
+        }
+        .tcl-bpi-message {
+          grid-column: 1 / -1;
+          margin: 0;
+          padding: 10px 12px;
+          border: 1px solid #e5b1b1;
+          background: #fbe9e9;
+          color: #74484c;
+          font-size: 10px;
+        }
+        .tcl-bpi-submit {
+          grid-column: 1 / -1;
+          min-height: 50px;
+          border: 1px solid #30272b;
+          border-radius: 0;
+          background: #30272b;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: .055em;
+          text-transform: uppercase;
+          cursor: pointer;
+        }
+        .tcl-bpi-submit:hover { background: #c97b99; border-color: #c97b99; }
+        .tcl-bpi-pending {
+          padding-top: 22px;
+          text-align: center;
+        }
+        .tcl-bpi-pending strong {
+          display: block;
+          color: #211b1e;
+          font-size: 20px;
+        }
+        .tcl-bpi-pending p {
+          max-width: 480px;
+          margin: 8px auto 18px;
+          color: #74666c;
+          font-size: 11px;
+          line-height: 1.6;
+        }
+        .tcl-bpi-pending button {
+          min-width: 140px;
+          height: 44px;
+          border: 1px solid #30272b;
+          border-radius: 0;
+          background: #30272b;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 900;
+          cursor: pointer;
+        }
+        @media (max-width: 620px) {
+          .tcl-bpi-modal-backdrop { padding: 10px; }
+          .tcl-bpi-modal-header,
+          .tcl-bpi-modal-body { padding-left: 16px; padding-right: 16px; }
+          .tcl-bpi-payment-grid { grid-template-columns: 1fr; }
+          .tcl-bpi-qr { width: min(220px, 100%); margin: 0 auto; }
+          .tcl-bpi-proof-form { grid-template-columns: 1fr; }
+          .tcl-bpi-proof-form label,
+          .tcl-bpi-proof-form label:first-child,
+          .tcl-bpi-proof-form label:nth-child(3) { grid-column: 1; }
+          .tcl-bpi-amount { flex-wrap: wrap; }
+          .tcl-bpi-amount strong { width: 100%; margin-left: 0; }
+        }
+
         .tcl-checkout-form-design {
           display: flex;
           align-items: center;

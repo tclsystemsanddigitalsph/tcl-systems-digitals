@@ -3,8 +3,8 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import BackToTop from "@/components/BackToTop";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
-import FeaturedProjects from "./homepage-v2/FeaturedProjects";
-import "./homepage-v2/homepage-v2.css";
+import FeaturedProjects from "./FeaturedProjects";
+import "./homepage-v2.css";
 
 const solutions = [
   ["001", "Custom Business Website", "For Quotation", "A fully customized business website built around your goals, features, and workflow.", "/shop/custom-business-website", "CUSTOM DEVELOPMENT"],
@@ -55,7 +55,7 @@ const stackIcons: Record<string, string> = {
   "Resend": "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/resend.svg",
 };
 
-export default async function HomePage() {
+export default async function HomepageV2() {
   const admin = createAdminSupabaseClient();
   const { data: reviewRows } = await admin
     .from("reviews")

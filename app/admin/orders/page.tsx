@@ -10,6 +10,7 @@ type OrdersPageProps = {
   searchParams: Promise<{
     q?: string;
     status?: string;
+    progress?: string;
     provider?: string;
     page?: string;
     delivery_saved?: string;
@@ -36,6 +37,7 @@ type OrderRow = {
   currency: string | null;
   payment_provider: string | null;
   payment_status: string | null;
+  order_status: string | null;
   delivery_status: string | null;
   paid_at: string | null;
   created_at: string;
@@ -73,6 +75,22 @@ function deliveryLabel(status: string | null) {
   }
 }
 
+function progressLabel(status: string | null) {
+  switch (status) {
+    case "IN_PROGRESS":
+      return "In Progress";
+    case "READY_FOR_DELIVERY":
+      return "Ready for Delivery";
+    case "COMPLETED":
+      return "Completed";
+    case "CANCELLED":
+      return "Cancelled";
+    case "PENDING":
+    default:
+      return "Pending";
+  }
+}
+
 export default async function AdminOrdersPage({
   searchParams,
 }: OrdersPageProps) {
@@ -87,6 +105,7 @@ export default async function AdminOrdersPage({
   const adminSupabase = createAdminSupabaseClient();
   const search = (query.q ?? "").trim();
   const status = (query.status ?? "ALL").toUpperCase();
+  const progress = (query.progress ?? "ALL").toUpperCase();
   const provider = (query.provider ?? "ALL").toUpperCase();
   const requestedPage = Math.max(
     1,
@@ -98,6 +117,7 @@ export default async function AdminOrdersPage({
     let result = builder;
 
     if (status !== "ALL") result = result.eq("payment_status", status);
+    if (progress !== "ALL") result = result.eq("order_status", progress);
     if (provider !== "ALL") result = result.eq("payment_provider", provider);
 
     if (search) {
@@ -127,7 +147,7 @@ export default async function AdminOrdersPage({
     adminSupabase
       .from("orders")
       .select(
-        "id,order_number,customer_name,customer_email,product_name,base_price,processing_fee,total_amount,currency,payment_provider,payment_status,delivery_status,paid_at,created_at,order_source",
+        "id,order_number,customer_name,customer_email,product_name,base_price,processing_fee,total_amount,currency,payment_provider,payment_status,order_status,delivery_status,paid_at,created_at,order_source",
       ),
   )
     .order("created_at", { ascending: false })
@@ -163,6 +183,7 @@ export default async function AdminOrdersPage({
 
     if (search) params.set("q", search);
     if (status !== "ALL") params.set("status", status);
+    if (progress !== "ALL") params.set("progress", progress);
     if (provider !== "ALL") params.set("provider", provider);
     if (page > 1) params.set("page", String(page));
 
@@ -297,10 +318,23 @@ export default async function AdminOrdersPage({
                 defaultValue={status}
                 aria-label="Payment status"
               >
-                <option value="ALL">All statuses</option>
+                <option value="ALL">All payment statuses</option>
                 <option value="COMPLETED">Completed</option>
                 <option value="PENDING">Pending</option>
                 <option value="FAILED">Failed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+
+              <select
+                name="progress"
+                defaultValue={progress}
+                aria-label="Order progress"
+              >
+                <option value="ALL">All progress</option>
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="READY_FOR_DELIVERY">Ready for Delivery</option>
+                <option value="COMPLETED">Completed</option>
                 <option value="CANCELLED">Cancelled</option>
               </select>
 
@@ -344,6 +378,7 @@ export default async function AdminOrdersPage({
                         <th>Customer</th>
                         <th>Product</th>
                         <th>Payment</th>
+                        <th>Progress</th>
                         <th>Amount</th>
                         <th>Delivery</th>
                         <th>Date</th>
@@ -413,6 +448,22 @@ export default async function AdminOrdersPage({
                               </span>
                               <small>{order.payment_provider || "—"}</small>
                             </div>
+                          </td>
+
+                          <td>
+                            <span
+                              className={`${styles.statusPill} ${
+                                order.order_status === "COMPLETED"
+                                  ? styles.completed
+                                  : order.order_status === "PENDING"
+                                    ? styles.pending
+                                    : order.order_status === "CANCELLED"
+                                      ? styles.failed
+                                      : styles.progressActive
+                              }`}
+                            >
+                              {progressLabel(order.order_status)}
+                            </span>
                           </td>
 
                           <td>

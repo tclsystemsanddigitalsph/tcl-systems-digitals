@@ -80,7 +80,7 @@ export async function revokeReviewInvitation(formData: FormData) {
   const admin = createAdminSupabaseClient();
   const { error } = await admin
     .from("review_invitations")
-    .update({ status: "REVOKED", updated_at: new Date().toISOString() })
+    .delete()
     .eq("id", id)
     .eq("status", "ACTIVE");
 

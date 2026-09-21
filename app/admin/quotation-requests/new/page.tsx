@@ -25,52 +25,60 @@ export default async function NewManualQuotationPage() {
           <div className="manual-quote-page">
             <header className="manual-quote-top">
               <div>
-                <span>MANUAL QUOTATION</span>
+                <span className="manual-quote-eyebrow">MANUAL QUOTATION</span>
                 <h1>Create quotation</h1>
-                <p>
-                  Create a quotation for a client who did not submit the website
-                  quotation form.
-                </p>
+                <p>Create a quotation directly for a client.</p>
               </div>
 
-              <Link href="/admin/quotation-requests">← All Quotations</Link>
+              <Link
+                className="manual-quote-back"
+                href="/admin/quotation-requests"
+              >
+                ← All Quotations
+              </Link>
             </header>
 
             <form action={createManualQuotation} className="manual-quote-form">
               <section className="manual-quote-card">
                 <div className="manual-quote-card-head">
-                  <span>CUSTOMER</span>
-                  <h2>Customer & project</h2>
+                  <div>
+                    <span>CUSTOMER & PROJECT</span>
+                    <h2>Quotation details</h2>
+                  </div>
+                  <small>* Required fields</small>
                 </div>
 
                 <div className="manual-quote-grid">
                   <label>
-                    Full name *
+                    <span>Full name *</span>
                     <input name="full_name" required />
                   </label>
 
                   <label>
-                    Email *
+                    <span>Email *</span>
                     <input name="email" type="email" required />
                   </label>
 
                   <label>
-                    Mobile / Telegram
+                    <span>Mobile / Telegram</span>
                     <input name="contact_number" />
                   </label>
 
                   <label>
-                    Business / project name
+                    <span>Business / project name</span>
                     <input name="business_name" />
                   </label>
 
                   <label>
-                    Project type
-                    <input name="business_type" placeholder="e.g. Quiz / Reviewer System" />
+                    <span>Project type</span>
+                    <input
+                      name="business_type"
+                      placeholder="e.g. Quiz / Reviewer System"
+                    />
                   </label>
 
                   <label>
-                    Product / service
+                    <span>Product / service</span>
                     <input
                       name="product_name"
                       defaultValue="Custom Business Website"
@@ -78,25 +86,34 @@ export default async function NewManualQuotationPage() {
                   </label>
                 </div>
 
-                <label>
-                  Products / services / project description
-                  <textarea name="offerings" rows={4} />
-                </label>
+                <div className="manual-quote-text-grid">
+                  <label>
+                    <span>Products / services / project description</span>
+                    <textarea
+                      name="offerings"
+                      rows={3}
+                      placeholder="Brief project description or scope..."
+                    />
+                  </label>
 
-                <label>
-                  Main project goal
-                  <textarea name="main_goal" rows={4} />
-                </label>
+                  <label>
+                    <span>Main project goal</span>
+                    <textarea
+                      name="main_goal"
+                      rows={3}
+                      placeholder="What should this project achieve?"
+                    />
+                  </label>
+                </div>
               </section>
 
               <section className="manual-quote-card">
                 <div className="manual-quote-card-head">
-                  <span>QUOTATION</span>
-                  <h2>Items & pricing</h2>
-                  <p>
-                    Add the exact features or scope being quoted. The total is
-                    calculated automatically.
-                  </p>
+                  <div>
+                    <span>QUOTATION</span>
+                    <h2>Items & pricing</h2>
+                  </div>
+                  <small>Total is calculated automatically.</small>
                 </div>
 
                 <ManualQuotationItemsEditor />
@@ -104,16 +121,16 @@ export default async function NewManualQuotationPage() {
 
               <section className="manual-quote-card">
                 <div className="manual-quote-card-head">
-                  <span>QUOTATION SETTINGS</span>
-                  <h2>Status & client notes</h2>
-                  <p>
-                    Payment option is selected by the client from the private quotation link.
-                  </p>
+                  <div>
+                    <span>SETTINGS</span>
+                    <h2>Status & client notes</h2>
+                  </div>
+                  <small>Payment option is selected by the client.</small>
                 </div>
 
-                <div className="manual-quote-grid">
+                <div className="manual-quote-settings">
                   <label>
-                    Status
+                    <span>Status</span>
                     <select name="status" defaultValue="NEW">
                       <option value="NEW">New</option>
                       <option value="REVIEWING">Reviewing</option>
@@ -128,20 +145,24 @@ export default async function NewManualQuotationPage() {
                     </small>
                   </label>
 
+                  <label className="manual-quote-notes">
+                    <span>Quotation / scope notes</span>
+                    <textarea
+                      name="admin_notes"
+                      rows={4}
+                      placeholder="Inclusions, exclusions, special agreements, timeline notes, or anything the client should see..."
+                    />
+                  </label>
                 </div>
-
-                <label>
-                  Quotation / scope notes
-                  <textarea
-                    name="admin_notes"
-                    rows={7}
-                    placeholder="Scope, inclusions, exclusions, special agreements, or anything the client should see..."
-                  />
-                </label>
               </section>
 
               <div className="manual-quote-actions">
-                <Link href="/admin/quotation-requests">Cancel</Link>
+                <Link
+                  className="manual-quote-cancel"
+                  href="/admin/quotation-requests"
+                >
+                  Cancel
+                </Link>
                 <button type="submit">Create Quotation</button>
               </div>
             </form>

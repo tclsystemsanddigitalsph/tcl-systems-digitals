@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import styles from "./customers.module.css";
 import { orderNetRevenue } from "@/lib/revenue";
+import AdminNav from "@/app/admin/AdminNav";
 
 type CustomersPageProps = {
   searchParams: Promise<{
@@ -174,293 +175,178 @@ export default async function CustomersPage({
   return (
     <main className="store-admin-dashboard">
       <div className="store-admin-dashboard-shell">
-        <aside className="store-admin-sidebar">
-          <div className="store-admin-sidebar-brand">
-            <div className="store-admin-sidebar-logo">TCL</div>
-
-            <div>
-              <strong>TCL Systems</strong>
-              <span>&amp; Digitals PH</span>
-            </div>
-          </div>
-
-          <div className="store-admin-sidebar-label">
-            STORE ADMIN
-          </div>
-
-          <nav className="store-admin-nav">
-            <a href="/admin">
-              <span>⌂</span>
-              Dashboard
-            </a>
-
-            <a href="/admin/products">
-              <span>◇</span>
-              Products
-            </a>
-
-            <a href="/admin/orders">
-              <span>▣</span>
-              Orders
-            </a>
-
-            <a href="/admin/deliveries">
-              <span>↗</span>
-              Deliveries
-            </a>
-
-            <a className="active" href="/admin/customers">
-              <span>♡</span>
-              Customers
-            </a>
-
-            <a href="/admin/reviews">
-              <span>☆</span>
-              Reviews
-            </a>
-
-            <a href="/admin/settings">
-              <span>⚙</span>
-              Settings
-            </a>
-          </nav>
-
-          <div className="store-admin-sidebar-bottom">
-            <a href="/">
-              <span>←</span>
-              View Store
-            </a>
-
-            <div className="store-admin-user">
-              <div>
-                {user.email?.charAt(0).toUpperCase() || "T"}
-              </div>
-
-              <span>
-                <small>Signed in as</small>
-                <strong>{user.email}</strong>
-              </span>
-            </div>
-          </div>
-        </aside>
+        <AdminNav active="customers" email={user.email} />
 
         <section className="store-admin-main">
-          <header className={styles.topbar}>
-            <div>
-              <span className="store-admin-eyebrow">
-                CUSTOMER DIRECTORY
-              </span>
-
-              <h1>Customers</h1>
-
-              <p>
-                Customers are automatically grouped from your store
-                orders.
-              </p>
-            </div>
-          </header>
-
-          <section className={styles.stats}>
-            <article>
-              <span>TOTAL CUSTOMERS</span>
-              <strong>{customers.length}</strong>
-              <small>Unique customer emails</small>
-            </article>
-
-            <article>
-              <span>REPEAT CUSTOMERS</span>
-              <strong>{repeatCustomers}</strong>
-              <small>More than one completed order</small>
-            </article>
-
-            <article>
-              <span>NET REVENUE</span>
-              <strong>{formatMoney(totalRevenue)}</strong>
-              <small>Across all customers</small>
-            </article>
-          </section>
-
-          <section className={styles.panel}>
-            <div className={styles.panelHeader}>
+          <div className={styles.page}>
+            <header className={styles.topbar}>
               <div>
-                <span>CUSTOMERS</span>
-                <h2>Customer history</h2>
+                <span className="store-admin-eyebrow">CUSTOMER DIRECTORY</span>
+                <h1>Customers</h1>
+                <p>Customer history generated automatically from your orders.</p>
+              </div>
+            </header>
+
+            <section className={styles.stats}>
+              <div>
+                <span>TOTAL CUSTOMERS</span>
+                <strong>{customers.length}</strong>
+              </div>
+              <div>
+                <span>REPEAT CUSTOMERS</span>
+                <strong>{repeatCustomers}</strong>
+              </div>
+              <div>
+                <span>NET REVENUE</span>
+                <strong>{formatMoney(totalRevenue)}</strong>
+              </div>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <div>
+                  <span>CUSTOMERS</span>
+                  <h2>Customer history</h2>
+                </div>
+
+                <form className={styles.searchForm}>
+                  <input
+                    type="search"
+                    name="q"
+                    defaultValue={params.q ?? ""}
+                    placeholder="Search name or email"
+                  />
+                  <button type="submit">Search</button>
+                  {search ? <a href="/admin/customers">Clear</a> : null}
+                </form>
               </div>
 
-              <form className={styles.searchForm}>
-                <input
-                  type="search"
-                  name="q"
-                  defaultValue={params.q ?? ""}
-                  placeholder="Search name or email..."
-                />
+              {pagedCustomers.length > 0 ? (
+                <>
+                  <div className={styles.tableWrap}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Customer</th>
+                          <th>Orders</th>
+                          <th>Completed</th>
+                          <th>Net Spent</th>
+                          <th>Latest Order</th>
+                          <th aria-label="Actions" />
+                        </tr>
+                      </thead>
 
-                <button type="submit">Search</button>
-
-                {search ? (
-                  <a href="/admin/customers">Clear</a>
-                ) : null}
-              </form>
-            </div>
-
-            {pagedCustomers.length > 0 ? (
-              <>
-                <div className={styles.tableWrap}>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Customer</th>
-                        <th>Orders</th>
-                        <th>Completed</th>
-                        <th>Total Spent</th>
-                        <th>Latest Order</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {pagedCustomers.map((customer) => (
-                        <tr key={customer.email.toLowerCase()}>
-                          <td>
-                            <div className={styles.customerCell}>
-                              <div className={styles.avatar}>
-                                {customer.name
-                                  .charAt(0)
-                                  .toUpperCase()}
-                              </div>
-
-                              <div>
+                      <tbody>
+                        {pagedCustomers.map((customer) => (
+                          <tr key={customer.email.toLowerCase()}>
+                            <td>
+                              <div className={styles.customerCell}>
                                 <strong>{customer.name}</strong>
                                 <small>{customer.email}</small>
                               </div>
-                            </div>
-                          </td>
-
-                          <td>
-                            <strong>{customer.totalOrders}</strong>
-                          </td>
-
-                          <td>
-                            <strong>
+                            </td>
+                            <td className={styles.numberCell}>
+                              {customer.totalOrders}
+                            </td>
+                            <td className={styles.numberCell}>
                               {customer.completedOrders}
-                            </strong>
-                          </td>
+                            </td>
+                            <td>
+                              <strong className={styles.money}>
+                                {formatMoney(customer.totalSpent)}
+                              </strong>
+                            </td>
+                            <td>
+                              <span className={styles.date}>
+                                {formatDate(customer.latestOrderAt)}
+                              </span>
+                            </td>
+                            <td className={styles.actionCell}>
+                              <a
+                                className={styles.viewButton}
+                                href={`/admin/orders?q=${encodeURIComponent(
+                                  customer.email,
+                                )}`}
+                              >
+                                Orders →
+                              </a>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-                          <td>
-                            <strong className={styles.money}>
-                              {formatMoney(customer.totalSpent)}
-                            </strong>
-                          </td>
+                  <div className={styles.footer}>
+                    <span>
+                      Showing{" "}
+                      {filteredCustomers.length === 0 ? 0 : start + 1}–
+                      {Math.min(start + pageSize, filteredCustomers.length)} of{" "}
+                      {filteredCustomers.length}
+                    </span>
 
-                          <td>
-                            <span className={styles.date}>
-                              {formatDate(customer.latestOrderAt)}
-                            </span>
-                          </td>
-
-                          <td>
-                            <a
-                              className={styles.viewButton}
-                              href={`/admin/orders?q=${encodeURIComponent(
-                                customer.email,
-                              )}`}
-                            >
-                              View Orders
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className={styles.footer}>
-                  <span>
-                    Showing{" "}
-                    {filteredCustomers.length === 0
-                      ? 0
-                      : start + 1}
-                    –
-                    {Math.min(
-                      start + pageSize,
-                      filteredCustomers.length,
-                    )}{" "}
-                    of {filteredCustomers.length}
-                  </span>
-
-                  {totalPages > 1 ? (
-                    <nav
-                      className={styles.pagination}
-                      aria-label="Customers pagination"
-                    >
-                      <a
-                        className={
-                          currentPage === 1
-                            ? styles.pageDisabled
-                            : styles.pageButton
-                        }
-                        href={buildPageUrl(
-                          Math.max(1, currentPage - 1),
-                        )}
-                        aria-disabled={currentPage === 1}
+                    {totalPages > 1 ? (
+                      <nav
+                        className={styles.pagination}
+                        aria-label="Customers pagination"
                       >
-                        ←
-                      </a>
-
-                      {Array.from(
-                        { length: totalPages },
-                        (_, index) => index + 1,
-                      ).map((page) => (
                         <a
-                          key={page}
-                          href={buildPageUrl(page)}
                           className={
-                            page === currentPage
-                              ? styles.pageActive
+                            currentPage === 1
+                              ? styles.pageDisabled
                               : styles.pageButton
                           }
-                          aria-current={
-                            page === currentPage
-                              ? "page"
-                              : undefined
-                          }
+                          href={buildPageUrl(Math.max(1, currentPage - 1))}
+                          aria-disabled={currentPage === 1}
                         >
-                          {page}
+                          ←
                         </a>
-                      ))}
 
-                      <a
-                        className={
-                          currentPage === totalPages
-                            ? styles.pageDisabled
-                            : styles.pageButton
-                        }
-                        href={buildPageUrl(
-                          Math.min(
-                            totalPages,
-                            currentPage + 1,
-                          ),
-                        )}
-                        aria-disabled={
-                          currentPage === totalPages
-                        }
-                      >
-                        →
-                      </a>
-                    </nav>
-                  ) : null}
+                        {Array.from(
+                          { length: totalPages },
+                          (_, index) => index + 1,
+                        ).map((page) => (
+                          <a
+                            key={page}
+                            href={buildPageUrl(page)}
+                            className={
+                              page === currentPage
+                                ? styles.pageActive
+                                : styles.pageButton
+                            }
+                            aria-current={
+                              page === currentPage ? "page" : undefined
+                            }
+                          >
+                            {page}
+                          </a>
+                        ))}
+
+                        <a
+                          className={
+                            currentPage === totalPages
+                              ? styles.pageDisabled
+                              : styles.pageButton
+                          }
+                          href={buildPageUrl(
+                            Math.min(totalPages, currentPage + 1),
+                          )}
+                          aria-disabled={currentPage === totalPages}
+                        >
+                          →
+                        </a>
+                      </nav>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <div className={styles.empty}>
+                  <strong>No customers found</strong>
+                  <p>Customers will appear automatically after orders are created.</p>
                 </div>
-              </>
-            ) : (
-              <div className={styles.empty}>
-                <strong>No customers found</strong>
-                <p>
-                  Customers will appear automatically after orders
-                  are created.
-                </p>
-              </div>
-            )}
-          </section>
+              )}
+            </section>
+          </div>
         </section>
       </div>
     </main>

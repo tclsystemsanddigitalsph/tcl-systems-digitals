@@ -94,7 +94,6 @@ export default function QuotationItemsEditor({
 
   const pricing = useMemo(() => {
     const subtotalCentavos = toCentavos(subtotal);
-
     const fullFeeCentavos = Math.round(
       (subtotalCentavos * FULL_PAYMENT_FEE_PERCENT) / 100,
     );
@@ -103,9 +102,7 @@ export default function QuotationItemsEditor({
     );
 
     return {
-      fullFee: fullFeeCentavos / 100,
       fullTotal: (subtotalCentavos + fullFeeCentavos) / 100,
-      depositFee: depositFeeCentavos / 100,
       depositTotal: (subtotalCentavos + depositFeeCentavos) / 100,
     };
   }, [subtotal]);
@@ -138,7 +135,6 @@ export default function QuotationItemsEditor({
   function removeItem(key: string) {
     setItems((current) => {
       const next = current.filter((item) => item.key !== key);
-
       return next.length > 0
         ? next
         : [
@@ -158,36 +154,28 @@ export default function QuotationItemsEditor({
       <div className={styles.itemsEditorHeading}>
         <div>
           <span>QUOTATION ITEMS</span>
-          <strong>Features, services & scope</strong>
+          <strong>Scope & pricing</strong>
         </div>
-        <small>
-          The client chooses Online Full Payment (4%), Online 50% Down Payment (6%), or Direct BPI Full Payment (0%) on the quotation link.
-        </small>
+        <small>{items.length} item{items.length === 1 ? "" : "s"}</small>
       </div>
 
-      {items.map((item, index) => (
-        <article className={styles.quoteItem} key={item.key}>
-          <input type="hidden" name="item_id" value={item.id} />
+      <div className={styles.itemColumnLabels} aria-hidden="true">
+        <span>Feature / service</span>
+        <span>Description</span>
+        <span>Amount</span>
+        <span />
+      </div>
 
-          <div className={styles.quoteItemTop}>
-            <div>
-              <span>ITEM {String(index + 1).padStart(2, "0")}</span>
-              <strong>
-                {item.item_name.trim() || `Quotation Item ${index + 1}`}
-              </strong>
+      <div className={styles.compactItemList}>
+        {items.map((item, index) => (
+          <div className={styles.quoteItem} key={item.key}>
+            <input type="hidden" name="item_id" value={item.id} />
+
+            <div className={styles.itemNumber}>
+              {String(index + 1).padStart(2, "0")}
             </div>
 
-            <button
-              className={styles.removeItemButton}
-              type="button"
-              onClick={() => removeItem(item.key)}
-            >
-              Remove
-            </button>
-          </div>
-
-          <div className={styles.quoteItemGrid}>
-            <label>
+            <label className={styles.compactField}>
               <span>Feature / service</span>
               <input
                 type="text"
@@ -196,14 +184,15 @@ export default function QuotationItemsEditor({
                 onChange={(event) =>
                   updateItem(item.key, "item_name", event.target.value)
                 }
-                placeholder="e.g. Student account restriction"
+                placeholder="Feature or service"
               />
             </label>
 
-            <label>
+            <label className={styles.compactField}>
               <span>Description</span>
               <textarea
                 name="item_description"
+                rows={1}
                 value={item.item_description}
                 onChange={(event) =>
                   updateItem(item.key, "item_description", event.target.value)
@@ -212,7 +201,7 @@ export default function QuotationItemsEditor({
               />
             </label>
 
-            <label>
+            <label className={styles.compactField}>
               <span>Amount</span>
               <div className={styles.moneyInput}>
                 <span>₱</span>
@@ -229,67 +218,48 @@ export default function QuotationItemsEditor({
                 />
               </div>
             </label>
-          </div>
-        </article>
-      ))}
 
-      <button
-        className={styles.addItemButton}
-        type="button"
-        onClick={addItem}
-      >
-        + Add Another Item
+            <button
+              className={styles.removeItemButton}
+              type="button"
+              onClick={() => removeItem(item.key)}
+              aria-label={`Remove item ${index + 1}`}
+              title="Remove item"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button className={styles.addItemButton} type="button" onClick={addItem}>
+        + Add item
       </button>
 
-      <div className={styles.quoteTotal}>
-        <div>
+      <div className={styles.pricingSummary}>
+        <div className={styles.pricingPrimary}>
           <span>QUOTATION SUBTOTAL</span>
-          <small>Current agreed scope before processing fee</small>
+          <strong>{money(subtotal)}</strong>
         </div>
-        <strong>{money(subtotal)}</strong>
-      </div>
-
-      <div className={styles.quoteTotal}>
         <div>
-          <span>FULL PAYMENT OPTION</span>
-          <small>4% processing fee · full amount due after acceptance</small>
+          <span>ONLINE FULL · +4%</span>
+          <strong>{money(pricing.fullTotal)}</strong>
         </div>
-        <strong>{money(pricing.fullTotal)}</strong>
-      </div>
-
-      <div className={styles.quoteTotal}>
         <div>
-          <span>50% DOWN PAYMENT OPTION</span>
-          <small>6% processing fee · half of the fee-inclusive total due first</small>
+          <span>50% DOWN · +6%</span>
+          <strong>{money(pricing.depositTotal)}</strong>
         </div>
-        <strong>{money(pricing.depositTotal)}</strong>
+        <div>
+          <span>DIRECT BPI</span>
+          <strong>{money(subtotal)}</strong>
+        </div>
       </div>
 
-      <div
-        style={{
-          marginTop: 12,
-          padding: 14,
-          borderRadius: 13,
-          background: "rgba(0,0,0,.035)",
-          fontSize: ".84rem",
-          lineHeight: 1.6,
-        }}
-      >
-        <strong style={{ display: "block", marginBottom: 4 }}>
-          Payment option note
-        </strong>
-        The quotation stores the scope subtotal only. The client selects the
-        payment plan on the private quotation link. Full Payment uses a 4%
-        processing fee; 50% Down Payment uses a 6% processing fee. Once
-        accepted, that selected fee rate stays locked to the project.
-      </div>
+      <p className={styles.paymentNote}>
+        Client selects the payment option on the private quotation link. The
+        selected processing-fee rate is locked after acceptance.
+      </p>
 
-      {/*
-        quoted_amount intentionally stores the quotation-item SUBTOTAL.
-        The server-side acceptance action adds the fee selected by the client
-        (4% for Full Payment or 6% for 50% Down Payment). Keeping the subtotal
-        here prevents the processing fee from being applied twice.
-      */}
       <input type="hidden" name="quoted_amount" value={String(subtotal)} />
     </div>
   );

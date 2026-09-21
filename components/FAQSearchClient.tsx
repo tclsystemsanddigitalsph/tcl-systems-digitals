@@ -584,12 +584,13 @@ const faqGroups = [
 export default function FAQSearchClient() {
   const [input, setInput] = useState("");
   const [query, setQuery] = useState("");
+  const [activeGroup, setActiveGroup] = useState("01");
 
   const filteredGroups = useMemo(() => {
     const cleanQuery = query.trim().toLowerCase();
 
     if (!cleanQuery) {
-      return faqGroups;
+      return faqGroups.filter((group) => group.number === activeGroup);
     }
 
     return faqGroups
@@ -602,7 +603,7 @@ export default function FAQSearchClient() {
         ),
       }))
       .filter((group) => group.items.length > 0);
-  }, [query]);
+  }, [query, activeGroup]);
 
   const resultCount = filteredGroups.reduce(
     (total, group) => total + group.items.length,
@@ -619,122 +620,108 @@ export default function FAQSearchClient() {
     setQuery("");
   }
 
+  function selectGroup(number: string) {
+    setActiveGroup(number);
+    setInput("");
+    setQuery("");
+  }
+
   return (
     <section className={styles.contentSection}>
       <div className="container">
-        <div className={styles.searchCard}>
+        <div className={styles.faqIntro}>
           <div>
-            <span className={styles.searchKicker}>Search FAQs</span>
-            <h2>What can we help you with?</h2>
-            <p>
-              Search words like &ldquo;quotation&rdquo;, &ldquo;call&rdquo;,
-              &ldquo;maintenance&rdquo;, &ldquo;domain&rdquo;,
-              &ldquo;payment&rdquo;, or &ldquo;refund&rdquo;.
-            </p>
+            <span className={styles.searchKicker}>FAQ DIRECTORY</span>
+            <h2>Find your answer.</h2>
           </div>
 
-          <form className={styles.searchForm} onSubmit={handleSubmit}>
-            <div className={styles.searchInputWrap}>
-              <span className={styles.searchIcon} aria-hidden="true">
-                ⌕
-              </span>
-
-              <input
-                type="search"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder="Search a keyword..."
-                aria-label="Search frequently asked questions"
-              />
-            </div>
-
-            <button type="submit">Search</button>
-          </form>
-
-          {query && (
-            <div className={styles.searchStatus}>
-              <span>
-                {resultCount > 0
-                  ? `${resultCount} answer${resultCount === 1 ? "" : "s"} found for “${query}”`
-                  : `No answers found for “${query}”`}
-              </span>
-
-              <button type="button" onClick={handleClear}>
-                Clear search
-              </button>
-            </div>
-          )}
+          <p>
+            Choose a topic or search a keyword. Only one category is shown at a
+            time so you do not have to scroll through every FAQ.
+          </p>
         </div>
 
+        <div className={styles.topicTabs} aria-label="FAQ categories">
+          {faqGroups.map((group) => (
+            <button
+              type="button"
+              key={group.number}
+              className={
+                activeGroup === group.number && !query
+                  ? styles.topicTabActive
+                  : styles.topicTab
+              }
+              onClick={() => selectGroup(group.number)}
+            >
+              <span>{group.number}</span>
+              {group.title}
+            </button>
+          ))}
+        </div>
+
+        <form className={styles.compactSearch} onSubmit={handleSubmit}>
+          <div className={styles.searchInputWrap}>
+            <span className={styles.searchIcon} aria-hidden="true">⌕</span>
+            <input
+              type="search"
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="Search all FAQs..."
+              aria-label="Search frequently asked questions"
+            />
+          </div>
+
+          <button type="submit">Search</button>
+
+          {query && (
+            <button
+              type="button"
+              className={styles.clearButton}
+              onClick={handleClear}
+            >
+              Clear
+            </button>
+          )}
+        </form>
+
+        {query && (
+          <div className={styles.searchStatus}>
+            <span>
+              {resultCount > 0
+                ? `${resultCount} answer${resultCount === 1 ? "" : "s"} found for “${query}”`
+                : `No answers found for “${query}”`}
+            </span>
+          </div>
+        )}
+
         {filteredGroups.length > 0 ? (
-          <div className={styles.layout}>
-            <aside className={styles.sidebar}>
-              <div className={styles.sidebarCard}>
-                <span className={styles.sidebarKicker}>Browse by topic</span>
-                <h2>Find what you need.</h2>
+          <div className={styles.compactGroups}>
+            {filteredGroups.map((group) => (
+              <section className={styles.compactGroup} key={group.title}>
+                <div className={styles.compactGroupHeading}>
+                  <div>
+                    <span>{group.number} / FAQ CATEGORY</span>
+                    <h3>{group.title}</h3>
+                  </div>
+                  <p>{group.description}</p>
+                </div>
 
-                <nav
-                  className={styles.categoryNav}
-                  aria-label="FAQ categories"
-                >
-                  {filteredGroups.map((group) => (
-                    <a key={group.title} href={`#faq-${group.number}`}>
-                      <span>{group.number}</span>
-                      {group.title}
-                    </a>
+                <div className={styles.faqList}>
+                  {group.items.map((faq) => (
+                    <details className={styles.faqItem} key={faq.question}>
+                      <summary>
+                        <span>{faq.question}</span>
+                        <i>+</i>
+                      </summary>
+
+                      <div className={styles.answer}>
+                        <p>{faq.answer}</p>
+                      </div>
+                    </details>
                   ))}
-                </nav>
-              </div>
-
-              <div className={styles.helpCard}>
-                <span>Custom project?</span>
-                <strong>Tell TCL what you need.</strong>
-                <p>
-                  Custom pricing requires your project requirements first.
-                  Submit the quotation form so TCL can review the actual scope.
-                </p>
-
-                <Link href="/shop/custom-business-website">
-                  Request a Quote
-                  <span>→</span>
-                </Link>
-              </div>
-            </aside>
-
-            <div className={styles.groups}>
-              {filteredGroups.map((group) => (
-                <section
-                  className={styles.group}
-                  id={`faq-${group.number}`}
-                  key={group.title}
-                >
-                  <div className={styles.groupHeading}>
-                    <div className={styles.groupNumber}>{group.number}</div>
-
-                    <div>
-                      <span>FAQ CATEGORY</span>
-                      <h2>{group.title}</h2>
-                      <p>{group.description}</p>
-                    </div>
-                  </div>
-
-                  <div className={styles.faqList}>
-                    {group.items.map((faq) => (
-                      <details className={styles.faqItem} key={faq.question}>
-                        <summary>
-                          <span>{faq.question}</span>
-                          <i>+</i>
-                        </summary>
-
-                        <div className={styles.answer}>
-                          <p>{faq.answer}</p>
-                        </div>
-                      </details>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
+                </div>
+              </section>
+            ))}
           </div>
         ) : (
           <div className={styles.noResults}>
@@ -744,12 +731,22 @@ export default function FAQSearchClient() {
               Try a simpler keyword. For custom project pricing or requirements,
               submit a quotation request so TCL can review what you need.
             </p>
-
             <button type="button" onClick={handleClear}>
-              Show all FAQs
+              Clear search
             </button>
           </div>
         )}
+
+        <div className={styles.faqHelp}>
+          <div>
+            <span>CUSTOM PROJECT?</span>
+            <strong>Need an answer specific to your project?</strong>
+          </div>
+
+          <Link href="/shop/custom-business-website">
+            Request a Quote <span>→</span>
+          </Link>
+        </div>
       </div>
     </section>
   );

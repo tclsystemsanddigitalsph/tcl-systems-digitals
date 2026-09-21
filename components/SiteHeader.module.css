@@ -1,3 +1,124 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 850;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(22, 19, 21, 0.92);
+  color: #fff;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.navShell {
+  min-height: 74px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.logoShell {
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 43px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.logo {
+  width: 38px;
+  height: 38px;
+  display: block;
+  color: #fff;
+  overflow: visible;
+  filter:
+    drop-shadow(0 4px 7px rgba(0, 0, 0, 0.28))
+    drop-shadow(0 0 8px rgba(230, 140, 173, 0.14));
+  transform: translateY(-1px);
+  transition:
+    transform 180ms ease,
+    filter 180ms ease;
+}
+
+.brand:hover .logo {
+  transform: translateY(-3px);
+  filter:
+    drop-shadow(0 7px 11px rgba(0, 0, 0, 0.34))
+    drop-shadow(0 0 10px rgba(230, 140, 173, 0.2));
+}
+
+.brandCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.brandCopy strong {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.brandCopy small {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 8px;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.desktopNav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-left: auto;
+}
+
+.desktopNav > a {
+  position: relative;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.desktopNav > a::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -9px;
+  left: 0;
+  height: 1px;
+  background: #e68cad;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 160ms ease;
+}
+
+.desktopNav > a:hover {
+  color: #fff;
+}
+
+.desktopNav > a:hover::after {
+  transform: scaleX(1);
+}
+
 .desktopActions {
   display: flex;
   align-items: center;
@@ -9,17 +130,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 18px;
+  gap: 9px;
+  padding: 0 17px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 10px;
+  font-weight: 850;
   line-height: 1;
+  letter-spacing: 0.06em;
   text-decoration: none;
+  text-transform: uppercase;
   white-space: nowrap;
   transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease;
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
 }
 
 .actionButton:hover {
@@ -27,15 +151,53 @@
 }
 
 .contactButton {
-  border: 1px solid transparent;
-  background: linear-gradient(135deg, var(--pink-500), var(--pink-700));
-  color: #ffffff;
+  border: 1px solid rgba(230, 140, 173, 0.45);
+  background: rgba(230, 140, 173, 0.1);
+  color: #fff;
 }
 
-/* ========================================
-   DESKTOP HELP DROPDOWN
-======================================== */
+.contactButton:hover {
+  border-color: #e68cad;
+  background: rgba(230, 140, 173, 0.16);
+}
 
+.buttonArrow,
+.navArrow,
+.contactArrow {
+  position: relative;
+  width: 13px;
+  height: 8px;
+  display: inline-block;
+  flex: 0 0 13px;
+}
+
+.buttonArrow::before,
+.navArrow::before,
+.contactArrow::before {
+  content: "";
+  position: absolute;
+  top: 3.5px;
+  right: 0;
+  width: 12px;
+  height: 1px;
+  background: currentColor;
+}
+
+.buttonArrow::after,
+.navArrow::after,
+.contactArrow::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: 0;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* DESKTOP HELP */
 .helpMenu {
   position: relative;
   display: flex;
@@ -46,30 +208,30 @@
 .helpTrigger {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   padding: 0;
   border: 0;
   background: transparent;
-  color: #62545a;
+  color: rgba(255, 255, 255, 0.68);
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 650;
+  font-size: 11px;
+  font-weight: 750;
   line-height: normal;
-  letter-spacing: normal;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color 160ms ease;
 }
 
 .helpTrigger:hover {
-  color: var(--pink-700);
+  color: #fff;
 }
 
 .chevron {
   display: inline-block;
-  color: var(--pink-600);
-  font-size: 10px;
+  color: #e68cad;
+  font-size: 9px;
   line-height: 1;
-  transition: transform 0.18s ease;
+  transition: transform 180ms ease;
 }
 
 .chevronOpen {
@@ -78,16 +240,16 @@
 
 .helpDropdown {
   position: absolute;
-  top: calc(100% - 2px);
-  left: 50%;
+  top: calc(50% + 14px);
+  left: 0;
   z-index: 1000;
-  width: 190px;
+  width: 196px;
   padding: 7px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 18px 45px rgba(93, 55, 68, 0.14);
-  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: #201c1f;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.3);
+  transform: none;
 }
 
 .helpDropdown::before {
@@ -104,30 +266,23 @@
   display: flex;
   align-items: center;
   padding: 0 12px;
-  border-radius: 11px;
-  color: var(--text);
-  font-size: 12px;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .helpDropdown a:hover {
-  background: var(--pink-100);
-  color: var(--pink-700);
+  background: rgba(230, 140, 173, 0.1);
+  color: #fff;
 }
 
-/* ========================================
-   MOBILE MENU BUTTON
-======================================== */
-
+/* MOBILE */
 .mobileMenuButton {
   display: none;
 }
-
-/* ========================================
-   OVERLAY
-======================================== */
 
 .mobileOverlay {
   position: fixed;
@@ -138,77 +293,70 @@
   margin: 0;
   padding: 0;
   border: 0;
-  background: rgba(48, 39, 43, 0.38);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(11, 9, 10, 0.64);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   cursor: pointer;
 }
-
-/* ========================================
-   SIDE DRAWER
-======================================== */
 
 .mobileDrawer {
   position: fixed;
   top: 0;
   right: 0;
   z-index: 999;
-  width: min(88vw, 360px);
+  width: min(90vw, 390px);
   height: 100dvh;
   display: flex;
   flex-direction: column;
   padding:
-    max(22px, env(safe-area-inset-top))
-    20px
-    max(18px, env(safe-area-inset-bottom));
+    max(25px, env(safe-area-inset-top))
+    22px
+    max(20px, env(safe-area-inset-bottom));
   overflow-y: auto;
-  border-left: 1px solid var(--border);
-  background: linear-gradient(180deg, #fffdfd 0%, #fff8fb 100%);
-  box-shadow: -22px 0 55px rgba(93, 55, 68, 0.16);
-  animation: mobileDrawerIn 0.24s ease;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+    #181517;
+  background-size: 38px 38px;
+  color: #fff;
+  box-shadow: -28px 0 70px rgba(0, 0, 0, 0.38);
+  animation: mobileDrawerIn 220ms ease;
 }
 
 @keyframes mobileDrawerIn {
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
-
-/* ========================================
-   DRAWER TOP
-======================================== */
 
 .drawerTop {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  padding-bottom: 20px;
+  padding-bottom: 27px;
 }
 
 .drawerTop > div {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
 }
 
 .drawerEyebrow {
-  color: var(--pink-600);
-  font-size: 9px;
-  font-weight: 850;
-  letter-spacing: 0.15em;
+  color: #e68cad;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
 }
 
 .drawerTop h2 {
   margin: 0;
-  color: var(--text);
-  font-size: 25px;
-  line-height: 1;
-  letter-spacing: -0.04em;
+  color: #fff;
+  font-size: 35px;
+  font-weight: 850;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
 }
 
 .closeButton {
@@ -217,63 +365,60 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  padding: 0;
-  border: 1px solid var(--border);
+  padding: 0 0 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 50%;
-  background: #ffffff;
-  color: var(--text);
-  font-size: 25px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #fff;
+  font-size: 24px;
   font-weight: 300;
   line-height: 1;
   cursor: pointer;
 }
 
-/* ========================================
-   DRAWER NAVIGATION
-======================================== */
-
 .mobileNavigation {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .mobileNavigation > a,
 .mobileHelpTrigger {
   width: 100%;
-  min-height: 54px;
-  display: flex;
+  min-height: 66px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 20px;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 8px;
   padding: 0;
   border: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
   background: transparent;
-  color: var(--text);
+  color: #fff;
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
 }
 
-.mobileNavigation > a > span:last-child,
-.mobileHelpTrigger > span:last-child {
-  color: var(--pink-500);
-  font-size: 22px;
-  font-weight: 400;
+.mobileNavigation small {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
 }
 
-.mobileNavigation > a:active,
-.mobileHelpTrigger:active {
-  color: var(--pink-700);
+.mobileNavigation > a > span,
+.mobileHelpTrigger > span {
+  font-size: 16px;
+  font-weight: 760;
+  letter-spacing: -0.02em;
 }
 
-.mobileHelpChevron {
-  display: inline-block;
-  transition: transform 0.18s ease;
+.navArrow {
+  justify-self: end;
+  color: #e68cad;
+  transition: transform 180ms ease;
 }
 
 .mobileHelpChevronOpen {
@@ -283,9 +428,9 @@
 .mobileHelpLinks {
   display: flex;
   flex-direction: column;
-  padding: 5px 0 7px 14px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.46);
+  padding: 7px 0 9px 38px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .mobileHelpLinks a {
@@ -294,85 +439,84 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 8px 0 12px;
-  border-radius: 11px;
-  color: var(--text-light);
-  font-size: 12px;
+  padding: 0 8px 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .mobileHelpLinks a:active {
-  background: var(--pink-100);
-  color: var(--pink-700);
+  color: #fff;
 }
 
-.mobileHelpLinks a span:last-child {
-  color: var(--pink-400);
-  font-size: 18px;
+.mobileHelpLinks .navArrow {
+  transform: scale(0.8);
 }
-
-/* ========================================
-   BOTTOM ACTION
-======================================== */
 
 .mobileBottom {
   display: grid;
   gap: 10px;
-  margin-top: 22px;
+  margin-top: 24px;
 }
 
 .mobileContact {
-  min-height: 62px;
+  min-height: 70px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 13px 16px;
-  border: 1px solid var(--pink-200);
-  border-radius: 17px;
-  background: var(--pink-100);
-  color: var(--pink-700);
+  padding: 14px 17px;
+  border: 1px solid rgba(230, 140, 173, 0.32);
+  border-radius: 15px;
+  background: rgba(230, 140, 173, 0.09);
+  color: #fff;
   text-decoration: none;
 }
 
 .mobileContact > span:first-child {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .mobileContact small {
-  color: var(--pink-600);
-  font-size: 8px;
-  font-weight: 850;
-  letter-spacing: 0.12em;
+  color: #e68cad;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.17em;
 }
 
 .mobileContact strong {
-  color: var(--text);
+  color: #fff;
   font-size: 13px;
+  font-weight: 780;
 }
 
-.mobileContact > span:last-child {
-  color: var(--pink-600);
-  font-size: 17px;
+.contactArrow {
+  color: #e68cad;
 }
 
 .drawerFooter {
   margin: auto 0 0;
-  padding-top: 28px;
-  color: var(--text-light);
-  font-size: 9px;
-  font-weight: 650;
-  text-align: center;
+  padding-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.26);
+  font-size: 7px;
+  font-weight: 750;
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  text-align: left;
 }
 
-/* ========================================
-   MOBILE
-======================================== */
-
 @media (max-width: 820px) {
+  .navShell {
+    min-height: 68px;
+  }
+
+  .desktopNav,
   .desktopActions {
     display: none;
   }
@@ -388,32 +532,59 @@
     gap: 4px;
     margin-left: auto;
     padding: 0;
-    border: 1px solid var(--border-strong);
-    border-radius: 13px;
-    background: #fff8fb;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.035);
     cursor: pointer;
   }
 
   .mobileMenuButton span {
-    width: 18px;
-    height: 2px;
+    width: 16px;
+    height: 1px;
     display: block;
     border-radius: 999px;
-    background: var(--pink-700);
+    background: #fff;
   }
 }
 
 @media (max-width: 600px) {
+  .header {
+    background: rgba(22, 19, 21, 0.96);
+  }
+
+  .navShell {
+    min-height: 64px;
+  }
+
+  .logoShell {
+    width: 39px;
+    height: 39px;
+    flex-basis: 39px;
+  }
+
+  .logo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .brandCopy strong {
+    font-size: 12px;
+  }
+
+  .brandCopy small {
+    font-size: 7px;
+  }
+
   .mobileMenuButton {
-    width: 40px;
-    height: 40px;
-    flex-basis: 40px;
+    width: 39px;
+    height: 39px;
+    flex-basis: 39px;
   }
 
   .mobileDrawer {
-    width: min(90vw, 340px);
-    padding-left: 18px;
-    padding-right: 18px;
+    width: min(92vw, 360px);
+    padding-left: 20px;
+    padding-right: 20px;
   }
 }
 
@@ -423,7 +594,9 @@
   }
 
   .chevron,
-  .mobileHelpChevron {
+  .mobileHelpChevron,
+  .desktopNav > a::after,
+  .actionButton {
     transition: none;
   }
 }

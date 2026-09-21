@@ -164,6 +164,99 @@ export async function addOrderNote(formData: FormData) {
   revalidatePath(`/admin/orders/${orderId}`);
 }
 
+
+export async function updateOrderStatus(formData: FormData) {
+  const user = await requireAdmin();
+
+  const orderId = String(formData.get("order_id") ?? "").trim();
+  const nextStatus = String(formData.get("order_status") ?? "")
+    .trim()
+    .toUpperCase();
+
+  if (!orderId) throw new Error("Missing order ID.");
+
+  const allowedStatuses = [
+    "PENDING",
+    "IN_PROGRESS",
+    "READY_FOR_DELIVERY",
+    "COMPLETED",
+  ] as const;
+
+  if (!allowedStatuses.includes(nextStatus as (typeof allowedStatuses)[number])) {
+    throw new Error("Invalid order status.");
+  }
+
+  const admin = createAdminSupabaseClient();
+
+  const { data: order, error: orderError } = await admin
+    .from("orders")
+    .select("id,order_number,order_status")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (orderError || !order) throw new Error("Order not found.");
+
+  if (order.order_status === "CANCELLED") {
+    throw new Error("A cancelled order cannot be moved to another status.");
+  }
+
+  const previousStatus = String(order.order_status || "PENDING")
+    .trim()
+    .toUpperCase();
+
+  if (previousStatus === nextStatus) {
+    redirect(`/admin/orders/${orderId}`);
+  }
+
+  const now = new Date().toISOString();
+
+  const { error: updateError } = await admin
+    .from("orders")
+    .update({
+      order_status: nextStatus,
+      updated_at: now,
+    })
+    .eq("id", orderId);
+
+  if (updateError) {
+    throw new Error(`Unable to update order status: ${updateError.message}`);
+  }
+
+  const statusLabel = (status: string) =>
+    status
+      .toLowerCase()
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+
+  await addActivityNote(
+    orderId,
+    `Order status changed from ${statusLabel(previousStatus)} to ${statusLabel(nextStatus)}.`,
+    user.email || "Admin",
+  );
+
+  await addQuotationActivityLogsForOrder(admin, orderId, [
+    {
+      actionType: "ORDER_STATUS_CHANGED",
+      summary: `Order status changed from ${statusLabel(previousStatus)} to ${statusLabel(nextStatus)}.`,
+      details: {
+        changed_by: user.email || "Admin",
+        previous_status: previousStatus,
+        new_status: nextStatus,
+      },
+    },
+  ]);
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+  revalidatePath("/admin/customers");
+  revalidatePath("/admin/deliveries");
+
+  redirect(`/admin/orders/${orderId}?order_status_updated=1`);
+}
+
+
 export async function cancelOrder(formData: FormData) {
   const user = await requireAdmin();
   const orderId = String(formData.get("order_id") ?? "").trim();
@@ -232,15 +325,45 @@ export async function updateCustomProjectAmount(formData: FormData) {
   const orderId = String(formData.get("order_id") ?? "").trim();
   const basePriceRaw = String(formData.get("base_price") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
+  const discountType = String(formData.get("discount_type") ?? "NONE").trim().toUpperCase();
+  const discountValueRaw = String(formData.get("discount_value") ?? "").trim();
 
   if (!orderId) throw new Error("Missing order ID.");
   if (!reason) throw new Error("Adjustment reason is required.");
   if (reason.length > 1000) throw new Error("Adjustment reason is too long.");
 
-  const newBasePrice = Number(basePriceRaw);
+  const enteredBasePrice = Number(basePriceRaw);
 
-  if (!Number.isFinite(newBasePrice) || newBasePrice <= 0) {
+  if (!Number.isFinite(enteredBasePrice) || enteredBasePrice <= 0) {
     throw new Error("Project amount must be greater than zero.");
+  }
+
+  if (!["NONE", "FIXED", "PERCENT"].includes(discountType)) {
+    throw new Error("Invalid discount type.");
+  }
+
+  let discountValue = 0;
+  if (discountType !== "NONE") {
+    discountValue = Number(discountValueRaw);
+    if (!Number.isFinite(discountValue) || discountValue <= 0) {
+      throw new Error("Discount value must be greater than zero.");
+    }
+    if (discountType === "PERCENT" && discountValue >= 100) {
+      throw new Error("Percentage discount must be less than 100%.");
+    }
+  }
+
+  const discountAmount =
+    discountType === "PERCENT"
+      ? Number(((enteredBasePrice * discountValue) / 100).toFixed(2))
+      : discountType === "FIXED"
+        ? Number(discountValue.toFixed(2))
+        : 0;
+
+  const newBasePrice = Number((enteredBasePrice - discountAmount).toFixed(2));
+
+  if (newBasePrice <= 0) {
+    throw new Error("Discount cannot reduce the project amount to zero or below.");
   }
 
   const admin = createAdminSupabaseClient();
@@ -254,12 +377,6 @@ export async function updateCustomProjectAmount(formData: FormData) {
     .maybeSingle();
 
   if (orderError || !order) throw new Error("Order not found.");
-
-  if (!order.payment_terms) {
-    throw new Error(
-      "Only custom quotation orders can have their project amount edited here.",
-    );
-  }
 
   if (order.order_status === "CANCELLED") {
     throw new Error("A cancelled order cannot be adjusted.");
@@ -279,7 +396,7 @@ export async function updateCustomProjectAmount(formData: FormData) {
 
   if (!linkedQuotation) {
     throw new Error(
-      "This custom order is missing its linked quotation and cannot be adjusted safely.",
+      "Only orders linked to a quotation can have their custom project amount edited here.",
     );
   }
 
@@ -605,7 +722,7 @@ export async function updateCustomProjectAmount(formData: FormData) {
 
   await addActivityNote(
     order.id,
-    `Custom project amount adjusted from ${format(oldBasePrice)} to ${format(normalizedBasePrice)} before processing fee. New customer total: ${format(newTotal)}. Successful payments kept: ${format(amountPaid)}. Remaining balance: ${format(balanceDue)}. Reason: ${reason}`,
+    `Custom project amount adjusted from ${format(oldBasePrice)} to ${format(normalizedBasePrice)} before processing fee.${discountAmount > 0 ? ` Discount applied: ${discountType === "PERCENT" ? `${discountValue}%` : format(discountAmount)} from ${format(enteredBasePrice)}.` : ""} New customer total: ${format(newTotal)}. Successful payments kept: ${format(amountPaid)}. Remaining balance: ${format(balanceDue)}. Reason: ${reason}`,
     user.email || "Admin",
   );
 
@@ -620,6 +737,10 @@ export async function updateCustomProjectAmount(formData: FormData) {
       details: {
         changed_by: user.email || "Admin",
         reason,
+        entered_project_amount: enteredBasePrice,
+        discount_type: discountType,
+        discount_value: discountValue,
+        discount_amount: discountAmount,
         previous_project_amount: oldBasePrice,
         new_project_amount: normalizedBasePrice,
         previous_customer_total: oldTotal,
@@ -683,6 +804,233 @@ export async function updateCustomProjectAmount(formData: FormData) {
   redirect(`/admin/orders/${order.id}?amount_updated=1`);
 }
 
+
+
+export async function updateRegularOrderAmount(formData: FormData) {
+  const user = await requireAdmin();
+
+  const orderId = String(formData.get("order_id") ?? "").trim();
+  const basePriceRaw = String(formData.get("base_price") ?? "").trim();
+  const reason = String(formData.get("reason") ?? "").trim();
+  const discountType = String(
+    formData.get("discount_type") ?? "NONE",
+  ).trim().toUpperCase();
+  const discountValueRaw = String(
+    formData.get("discount_value") ?? "",
+  ).trim();
+
+  if (!orderId) throw new Error("Missing order ID.");
+  if (!reason) throw new Error("Adjustment reason is required.");
+  if (reason.length > 1000) throw new Error("Adjustment reason is too long.");
+
+  const enteredBasePrice = Number(basePriceRaw);
+  if (!Number.isFinite(enteredBasePrice) || enteredBasePrice <= 0) {
+    throw new Error("Order price must be greater than zero.");
+  }
+
+  if (!["NONE", "FIXED", "PERCENT"].includes(discountType)) {
+    throw new Error("Invalid discount type.");
+  }
+
+  let discountValue = 0;
+  if (discountType !== "NONE") {
+    discountValue = Number(discountValueRaw);
+    if (!Number.isFinite(discountValue) || discountValue <= 0) {
+      throw new Error("Discount value must be greater than zero.");
+    }
+    if (discountType === "PERCENT" && discountValue >= 100) {
+      throw new Error("Percentage discount must be less than 100%.");
+    }
+  }
+
+  const discountAmount =
+    discountType === "PERCENT"
+      ? Number(((enteredBasePrice * discountValue) / 100).toFixed(2))
+      : discountType === "FIXED"
+        ? Number(discountValue.toFixed(2))
+        : 0;
+
+  const adjustedBasePrice = Number(
+    (enteredBasePrice - discountAmount).toFixed(2),
+  );
+
+  if (adjustedBasePrice <= 0) {
+    throw new Error("Discount cannot reduce the order price to zero or below.");
+  }
+
+  const admin = createAdminSupabaseClient();
+
+  const { data: order, error: orderError } = await admin
+    .from("orders")
+    .select(
+      "id,order_number,base_price,processing_fee_percent,processing_fee,total_amount,payment_status,order_status,payment_provider",
+    )
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (orderError || !order) throw new Error("Order not found.");
+
+  if (order.order_status === "CANCELLED") {
+    throw new Error("A cancelled order cannot be adjusted.");
+  }
+
+  const { data: linkedQuotation, error: linkedQuotationError } = await admin
+    .from("quotation_requests")
+    .select("id")
+    .eq("order_id", order.id)
+    .maybeSingle();
+
+  if (linkedQuotationError) {
+    throw new Error(
+      `Unable to verify the order type: ${linkedQuotationError.message}`,
+    );
+  }
+
+  if (linkedQuotation) {
+    throw new Error(
+      "This is a quotation-linked order. Use Custom project controls instead.",
+    );
+  }
+
+  const successfulAmountPaid = await getSuccessfulPaymentTotal(admin, order.id);
+  const processingFeePercent = moneyNumber(order.processing_fee_percent);
+
+  const baseCentavos = Math.round(
+    (adjustedBasePrice + Number.EPSILON) * 100,
+  );
+  const feeCentavos = Math.round(
+    (baseCentavos * processingFeePercent) / 100,
+  );
+  const totalCentavos = baseCentavos + feeCentavos;
+
+  const normalizedBasePrice = baseCentavos / 100;
+  const processingFee = feeCentavos / 100;
+  const newTotal = totalCentavos / 100;
+
+  if (newTotal < successfulAmountPaid - 0.005) {
+    throw new Error(
+      `The new order total cannot be lower than the amount already successfully paid (${successfulAmountPaid.toFixed(2)}).`,
+    );
+  }
+
+  const amountPaid = Math.min(newTotal, successfulAmountPaid);
+  const balanceDue = Math.max(
+    0,
+    Number((newTotal - amountPaid).toFixed(2)),
+  );
+  const nextPaymentStatus =
+    balanceDue <= 0.005 ? "COMPLETED" : "PENDING";
+  const now = new Date().toISOString();
+
+  const { error: updateError } = await admin
+    .from("orders")
+    .update({
+      base_price: normalizedBasePrice,
+      processing_fee: processingFee,
+      total_amount: newTotal,
+      amount_paid: amountPaid,
+      balance_due: balanceDue,
+      payment_status: nextPaymentStatus,
+      paid_at: nextPaymentStatus === "COMPLETED" ? now : null,
+      updated_at: now,
+    })
+    .eq("id", order.id);
+
+  if (updateError) {
+    throw new Error(`Unable to update order price: ${updateError.message}`);
+  }
+
+  /*
+   * A pending provider checkout/payment was created for the old amount.
+   * Do not leave that stale provider session active after an admin price change.
+   * Completed payment rows are never modified.
+   */
+  const { data: pendingPayments, error: pendingPaymentsError } = await admin
+    .from("order_payments")
+    .select("id,status")
+    .eq("order_id", order.id)
+    .eq("status", "PENDING");
+
+  if (pendingPaymentsError) {
+    throw new Error(
+      `Order price changed, but pending payment records could not be refreshed: ${pendingPaymentsError.message}`,
+    );
+  }
+
+  for (const payment of pendingPayments ?? []) {
+    const { error: pendingUpdateError } = await admin
+      .from("order_payments")
+      .update({
+        amount: balanceDue,
+        currency: "PHP",
+        provider: null,
+        paypal_order_id: null,
+        paypal_capture_id: null,
+        paymongo_checkout_session_id: null,
+        paymongo_payment_id: null,
+        paymongo_checkout_url: null,
+        updated_at: now,
+      })
+      .eq("id", payment.id)
+      .eq("order_id", order.id);
+
+    if (pendingUpdateError) {
+      throw new Error(
+        `Order price changed, but a pending payment record could not be refreshed: ${pendingUpdateError.message}`,
+      );
+    }
+  }
+
+  const discountText =
+    discountType === "NONE"
+      ? ""
+      : discountType === "PERCENT"
+        ? ` Discount: ${discountValue}% (${new Intl.NumberFormat("en-PH", {
+            style: "currency",
+            currency: "PHP",
+          }).format(discountAmount)}).`
+        : ` Discount: ${new Intl.NumberFormat("en-PH", {
+            style: "currency",
+            currency: "PHP",
+          }).format(discountAmount)}.`;
+
+  await addActivityNote(
+    order.id,
+    `Regular order price adjusted from ${new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
+    }).format(moneyNumber(order.base_price))} to ${new Intl.NumberFormat(
+      "en-PH",
+      {
+        style: "currency",
+        currency: "PHP",
+      },
+    ).format(normalizedBasePrice)} before processing fee.${discountText} New total: ${new Intl.NumberFormat(
+      "en-PH",
+      {
+        style: "currency",
+        currency: "PHP",
+      },
+    ).format(newTotal)}. Successful payments kept: ${new Intl.NumberFormat(
+      "en-PH",
+      {
+        style: "currency",
+        currency: "PHP",
+      },
+    ).format(amountPaid)}. Remaining balance: ${new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
+    }).format(balanceDue)}. Reason: ${reason}`,
+    user.email || "Admin",
+  );
+
+  revalidatePath(`/admin/orders/${order.id}`);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+  revalidatePath("/admin/customers");
+
+  redirect(`/admin/orders/${order.id}?regular_price_updated=1`);
+}
 
 export async function requestCustomProjectPayment(formData: FormData) {
   const user = await requireAdmin();
@@ -917,6 +1265,195 @@ export async function requestCustomProjectPayment(formData: FormData) {
   redirect(`/admin/orders/${order.id}?payment_requested=1`);
 }
 
+export async function recordManualPayment(formData: FormData) {
+  const user = await requireAdmin();
+
+  const orderId = String(formData.get("order_id") ?? "").trim();
+  const amountRaw = String(formData.get("manual_amount") ?? "").trim();
+  const method = String(formData.get("manual_method") ?? "").trim();
+  const reference = String(formData.get("manual_reference") ?? "").trim();
+  const reason = String(formData.get("manual_reason") ?? "").trim();
+
+  if (!orderId) throw new Error("Missing order ID.");
+  if (!method) throw new Error("Manual payment method is required.");
+  if (!reason) throw new Error("A reason is required for a manual payment.");
+  if (method.length > 100) throw new Error("Payment method is too long.");
+  if (reference.length > 250) throw new Error("Payment reference is too long.");
+  if (reason.length > 1000) throw new Error("Manual payment reason is too long.");
+
+  const amount = moneyNumber(amountRaw);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("Manual payment amount must be greater than zero.");
+  }
+
+  const admin = createAdminSupabaseClient();
+
+  const { data: order, error: orderError } = await admin
+    .from("orders")
+    .select(
+      "id,order_number,total_amount,currency,payment_status,order_status,payment_terms,amount_paid,balance_due",
+    )
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (orderError || !order) throw new Error("Order not found.");
+  if (order.order_status === "CANCELLED") {
+    throw new Error("A cancelled order cannot receive a manual payment.");
+  }
+
+  const totalAmount = moneyNumber(order.total_amount);
+  if (totalAmount <= 0) throw new Error("This order has an invalid total.");
+
+  // Completed payment rows are the accounting source of truth.
+  const successfulBefore = await getSuccessfulPaymentTotal(admin, order.id);
+  const balanceBefore = Math.max(
+    0,
+    Number((totalAmount - successfulBefore).toFixed(2)),
+  );
+
+  if (balanceBefore <= 0.005) {
+    throw new Error("This order is already fully paid.");
+  }
+
+  if (amount > balanceBefore + 0.005) {
+    throw new Error(
+      `Manual payment cannot exceed the remaining balance of ${balanceBefore.toFixed(2)}.`,
+    );
+  }
+
+  const normalizedAmount = Math.min(amount, balanceBefore);
+  const now = new Date().toISOString();
+  const currency =
+    String(order.currency || "PHP").trim().toUpperCase() || "PHP";
+
+  const { data: linkedQuotation, error: quotationError } = await admin
+    .from("quotation_requests")
+    .select("id")
+    .eq("order_id", order.id)
+    .maybeSingle();
+
+  if (quotationError) {
+    throw new Error(
+      `Unable to verify whether this is a quotation order: ${quotationError.message}`,
+    );
+  }
+
+  const isCustomQuotationOrder = Boolean(linkedQuotation?.id);
+  const paymentStage =
+    isCustomQuotationOrder && order.payment_terms === "DEPOSIT_50"
+      ? successfulBefore <= 0.005
+        ? "DEPOSIT"
+        : "FINAL"
+      : successfulBefore <= 0.005 && normalizedAmount >= totalAmount - 0.005
+        ? "FULL"
+        : "FINAL";
+
+  const { data: manualPayment, error: insertError } = await admin
+    .from("order_payments")
+    .insert({
+      order_id: order.id,
+      payment_stage: paymentStage,
+      amount: normalizedAmount,
+      currency,
+      provider: "MANUAL",
+      status: "COMPLETED",
+      paid_at: now,
+      updated_at: now,
+    })
+    .select("id")
+    .single();
+
+  if (insertError || !manualPayment) {
+    throw new Error(
+      `Unable to record the manual payment${insertError?.message ? `: ${insertError.message}` : "."}`,
+    );
+  }
+
+  const successfulAfter = Number(
+    (successfulBefore + normalizedAmount).toFixed(2),
+  );
+  const amountPaid = Math.min(totalAmount, successfulAfter);
+  const balanceDue = Math.max(
+    0,
+    Number((totalAmount - amountPaid).toFixed(2)),
+  );
+  const fullyPaid = balanceDue <= 0.005;
+
+  const orderUpdate: Record<string, unknown> = {
+    payment_provider: "MANUAL",
+    payment_status: fullyPaid ? "COMPLETED" : "PENDING",
+    amount_paid: amountPaid,
+    balance_due: balanceDue,
+    updated_at: now,
+  };
+
+  if (fullyPaid) orderUpdate.paid_at = now;
+
+  const { error: updateError } = await admin
+    .from("orders")
+    .update(orderUpdate)
+    .eq("id", order.id);
+
+  if (updateError) {
+    // Avoid leaving a successful payment row behind if the order summary failed.
+    await admin
+      .from("order_payments")
+      .delete()
+      .eq("id", manualPayment.id)
+      .eq("order_id", order.id);
+
+    throw new Error(
+      `Manual payment was not saved because the order could not be updated: ${updateError.message}`,
+    );
+  }
+
+  const formattedAmount = new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency,
+  }).format(normalizedAmount);
+
+  const formattedBalance = new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency,
+  }).format(balanceDue);
+
+  await addActivityNote(
+    order.id,
+    `Emergency manual payment recorded: ${formattedAmount} via ${method}${reference ? ` · Ref: ${reference}` : ""}. Remaining balance: ${formattedBalance}. Reason: ${reason}`,
+    user.email || "Admin",
+  );
+
+  if (isCustomQuotationOrder) {
+    await addQuotationActivityLogsForOrder(admin, order.id, [
+      {
+        actionType: "MANUAL_PAYMENT_RECORDED",
+        summary: `Manual payment of ${formattedAmount} recorded by Admin.`,
+        details: {
+          changed_by: user.email || "Admin",
+          method,
+          reference: reference || null,
+          reason,
+          amount: normalizedAmount,
+          currency,
+          successful_payments: amountPaid,
+          remaining_balance: balanceDue,
+          payment_status: fullyPaid ? "COMPLETED" : "PENDING",
+        },
+      },
+    ]);
+
+    revalidatePath(`/admin/quotation-requests/${linkedQuotation!.id}`);
+  }
+
+  revalidatePath(`/admin/orders/${order.id}`);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+  revalidatePath("/admin/customers");
+
+  redirect(`/admin/orders/${order.id}?manual_payment=1`);
+}
+
+
 function normalizeProvider(value: string | null) {
   return (value || "").trim().toUpperCase();
 }
@@ -1087,7 +1624,140 @@ export async function verifyBpiTransferProof(formData: FormData) {
   }
   if (proof.status !== "PENDING") throw new Error("Only a pending BPI proof can be verified.");
 
-  await completeCustomOrderPayment({ paymentId: proof.payment_id, provider: "BPI" });
+  const { data: order, error: orderError } = await admin
+    .from("orders")
+    .select(
+      "id,order_number,total_amount,currency,payment_terms,payment_provider,payment_status",
+    )
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (orderError || !order) throw new Error("Order was not found.");
+
+  const { data: linkedQuotation, error: linkedQuotationError } = await admin
+    .from("quotation_requests")
+    .select("id")
+    .eq("order_id", orderId)
+    .maybeSingle();
+
+  if (linkedQuotationError) {
+    throw new Error(
+      `Unable to verify the order type: ${linkedQuotationError.message}`,
+    );
+  }
+
+  const isCustomQuotationOrder = Boolean(linkedQuotation?.id);
+
+  if (isCustomQuotationOrder) {
+    /*
+     * Preserve the existing quotation/custom-checkout accounting flow.
+     * Deposits, final balances, quotation activity logs, and custom receipts
+     * continue to be handled by completeCustomOrderPayment().
+     */
+    await completeCustomOrderPayment({
+      paymentId: proof.payment_id,
+      provider: "BPI",
+    });
+  } else {
+    /*
+     * Regular storefront BPI orders do not belong to the quotation system.
+     * Complete their own payment row and order directly so they never trigger
+     * custom-project pricing, quotation logs, or custom-payment receipts.
+     */
+    const { data: payment, error: paymentError } = await admin
+      .from("order_payments")
+      .select("id,order_id,amount,currency,provider,status")
+      .eq("id", proof.payment_id)
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    if (paymentError || !payment) {
+      throw new Error("The BPI payment record for this order was not found.");
+    }
+
+    if (
+      payment.provider &&
+      String(payment.provider).trim().toUpperCase() !== "BPI"
+    ) {
+      throw new Error("This payment record is not a Direct BPI payment.");
+    }
+
+    const totalAmount = moneyNumber(order.total_amount);
+    const paymentAmount = moneyNumber(payment.amount);
+
+    if (totalAmount <= 0 || paymentAmount <= 0) {
+      throw new Error("The BPI payment amount is invalid.");
+    }
+
+    if (Math.abs(totalAmount - paymentAmount) > 0.005) {
+      throw new Error(
+        "The submitted BPI payment does not match the regular order total.",
+      );
+    }
+
+    const now = new Date().toISOString();
+
+    if (payment.status !== "COMPLETED") {
+      const { data: completedPayment, error: paymentUpdateError } = await admin
+        .from("order_payments")
+        .update({
+          provider: "BPI",
+          status: "COMPLETED",
+          paid_at: now,
+          updated_at: now,
+        })
+        .eq("id", payment.id)
+        .eq("order_id", orderId)
+        .neq("status", "COMPLETED")
+        .select("id")
+        .maybeSingle();
+
+      if (paymentUpdateError) {
+        throw new Error(
+          `Unable to complete the BPI payment record: ${paymentUpdateError.message}`,
+        );
+      }
+
+      /*
+       * If another request completed the same payment first, continue safely.
+       * The order synchronization below is idempotent.
+       */
+      if (!completedPayment) {
+        const { data: refreshedPayment, error: refreshedPaymentError } =
+          await admin
+            .from("order_payments")
+            .select("status")
+            .eq("id", payment.id)
+            .eq("order_id", orderId)
+            .maybeSingle();
+
+        if (
+          refreshedPaymentError ||
+          refreshedPayment?.status !== "COMPLETED"
+        ) {
+          throw new Error("The BPI payment could not be marked as completed.");
+        }
+      }
+    }
+
+    const { error: orderUpdateError } = await admin
+      .from("orders")
+      .update({
+        payment_provider: "BPI",
+        payment_status: "COMPLETED",
+        amount_paid: totalAmount,
+        balance_due: 0,
+        paid_at: now,
+        updated_at: now,
+      })
+      .eq("id", orderId);
+
+    if (orderUpdateError) {
+      throw new Error(
+        `The BPI payment was completed, but the order could not be marked paid: ${orderUpdateError.message}`,
+      );
+    }
+  }
 
   const now = new Date().toISOString();
   const { error: proofUpdateError } = await admin

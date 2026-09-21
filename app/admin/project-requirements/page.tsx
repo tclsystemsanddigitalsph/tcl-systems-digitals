@@ -256,218 +256,153 @@ export default async function AdminProjectRequirementsPage() {
         <AdminNav active="requirements" email={user.email} />
 
         <section className="store-admin-main">
-          <header className={`${dashboardStyles.topbar} ${styles.pageHeader}`}>
-            <div>
-              <span className="store-admin-eyebrow">PROJECT WORKFLOW</span>
-              <h1>Project Requirements</h1>
-              <p>
-                Review customer briefs and manage every customized project from
-                requirements to final handover.
-              </p>
-            </div>
-
-            <div className={`${dashboardStyles.topbarActions} ${styles.headerActions}`}>
-              <a
-                className={dashboardStyles.secondaryButton}
-                href="/admin/orders"
-              >
-                View Orders
-              </a>
-
-              <a className={dashboardStyles.secondaryButton} href="/admin">
-                Dashboard
-              </a>
-            </div>
-          </header>
-
-          <section className={styles.summaryGrid}>
-            <article className={styles.summaryCard}>
-              <div className={styles.summaryHeading}>
-                <span>WAITING ON CUSTOMER</span>
-                <i>◷</i>
-              </div>
-              <strong>{waitingOnCustomer}</strong>
-              <p>Requirements not finished or more information requested.</p>
-            </article>
-
-            <article className={`${styles.summaryCard} ${styles.summaryFocus}`}>
-              <div className={styles.summaryHeading}>
-                <span>NEEDS REVIEW</span>
-                <i>!</i>
-              </div>
-              <strong>{needsReview}</strong>
-              <p>Submitted or resubmitted briefs ready for your review.</p>
-            </article>
-
-            <article className={styles.summaryCard}>
-              <div className={styles.summaryHeading}>
-                <span>ACTIVE PROJECTS</span>
-                <i>◇</i>
-              </div>
-              <strong>{activeProjects}</strong>
-              <p>Projects currently being reviewed, built, or checked.</p>
-            </article>
-
-            <article className={styles.summaryCard}>
-              <div className={styles.summaryHeading}>
-                <span>READY TO HANDOVER</span>
-                <i>↗</i>
-              </div>
-              <strong>{readyForHandover}</strong>
-              <p>Projects ready for final delivery to the customer.</p>
-            </article>
-
-            <article className={styles.summaryCard}>
-              <div className={styles.summaryHeading}>
-                <span>COMPLETED</span>
-                <i>✓</i>
-              </div>
-              <strong>{completedProjects}</strong>
-              <p>Finished customized projects in your records.</p>
-            </article>
-          </section>
-
-          <section className={styles.projectsSection}>
-            <div className={styles.sectionHeader}>
+          <div className={styles.page}>
+            <header className={styles.pageHeader}>
               <div>
-                <span>CLIENT PROJECTS</span>
-                <h2>Project Queue</h2>
-                <p>
-                  Projects that need your attention appear first automatically.
-                </p>
+                <span className="store-admin-eyebrow">PROJECT WORKFLOW</span>
+                <h1>Project Requirements</h1>
+                <p>Review client requirements and track customized projects through delivery.</p>
               </div>
 
-              <div className={styles.queueCount}>
+              <a className={styles.secondaryButton} href="/admin/orders">
+                View orders
+              </a>
+            </header>
+
+            <section className={styles.summaryBar}>
+              <div>
+                <span>TOTAL PROJECTS</span>
                 <strong>{requirements.length}</strong>
-                <span>Total projects</span>
               </div>
-            </div>
+              <div className={styles.summaryFocus}>
+                <span>NEEDS REVIEW</span>
+                <strong>{needsReview}</strong>
+              </div>
+              <div>
+                <span>WAITING CLIENT</span>
+                <strong>{waitingOnCustomer}</strong>
+              </div>
+              <div>
+                <span>ACTIVE</span>
+                <strong>{activeProjects}</strong>
+              </div>
+              <div>
+                <span>READY</span>
+                <strong>{readyForHandover}</strong>
+              </div>
+              <div>
+                <span>COMPLETED</span>
+                <strong>{completedProjects}</strong>
+              </div>
+            </section>
 
-            {sortedRequirements.length > 0 ? (
-              <div className={styles.projectList}>
-                {sortedRequirements.map((item) => {
-                  const priority = priorityInfo(item);
-                  const shownTier = displayProjectTier(
-                    item.product_slug,
-                    item.product_tier,
-                  );
+            <section className={styles.projectsSection}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <span>PROJECT QUEUE</span>
+                  <h2>Client projects</h2>
+                </div>
+                <p>Items needing attention are prioritized automatically.</p>
+              </div>
 
-                  return (
-                    <a
-                      key={item.id}
-                      href={`/admin/project-requirements/${item.id}`}
-                      className={styles.projectCard}
-                    >
-                      <div className={styles.cardAccent} />
+              {sortedRequirements.length > 0 ? (
+                <div className={styles.tableWrap}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Client</th>
+                        <th>Project</th>
+                        <th>Requirements</th>
+                        <th>Progress</th>
+                        <th>Priority</th>
+                        <th>Updated</th>
+                        <th aria-label="Actions" />
+                      </tr>
+                    </thead>
 
-                      <div className={styles.projectMain}>
-                        <div className={styles.projectTop}>
-                          <div className={styles.customerIdentity}>
-                            <div className={styles.avatar}>
-                              {item.customer_name
-                                ?.charAt(0)
-                                .toUpperCase() || "C"}
-                            </div>
+                    <tbody>
+                      {sortedRequirements.map((item) => {
+                        const priority = priorityInfo(item);
+                        const shownTier = displayProjectTier(
+                          item.product_slug,
+                          item.product_tier,
+                        );
 
-                            <div className={styles.customerCopy}>
-                              <strong>
-                                {item.customer_name || "Customer"}
+                        return (
+                          <tr key={item.id}>
+                            <td>
+                              <div className={styles.primaryCell}>
+                                <strong>{item.customer_name || "Customer"}</strong>
+                                <span>{item.customer_email || "No email"}</span>
+                              </div>
+                            </td>
+
+                            <td>
+                              <div className={styles.primaryCell}>
+                                <strong>{item.product_name || "Custom Project"}</strong>
+                                <span>
+                                  {item.order_number || "No order"} · {shownTier}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td>
+                              <strong
+                                className={requirementStatusClass(
+                                  item.requirements_status,
+                                )}
+                              >
+                                {titleCase(item.requirements_status)}
                               </strong>
-                              <span>{item.customer_email || "No email"}</span>
-                            </div>
-                          </div>
+                            </td>
 
-                          <div
-                            className={`${styles.priorityBadge} ${priority.className}`}
-                          >
-                            <span />
-                            {priority.label}
-                          </div>
-                        </div>
+                            <td>
+                              <strong
+                                className={projectStatusClass(item.project_status)}
+                              >
+                                {titleCase(item.project_status)}
+                              </strong>
+                            </td>
 
-                        <div className={styles.projectTitleRow}>
-                          <div>
-                            <span>PROJECT</span>
-                            <h3>{item.product_name || "Custom Project"}</h3>
-                            <p>{priority.note}</p>
-                          </div>
+                            <td>
+                              <div className={styles.priority}>
+                                <span className={priority.className} />
+                                <div>
+                                  <strong>{priority.label}</strong>
+                                  <small>{priority.note}</small>
+                                </div>
+                              </div>
+                            </td>
 
-                          <div className={styles.openProject}>
-                            Open project <b>→</b>
-                          </div>
-                        </div>
+                            <td className={styles.dateCell}>
+                              {formatDate(item.submitted_at || item.created_at)}
+                            </td>
 
-                        <div className={styles.statusRow}>
-                          <div>
-                            <span className={styles.statusLabel}>
-                              Requirements
-                            </span>
-                            <strong
-                              className={requirementStatusClass(
-                                item.requirements_status,
-                              )}
-                            >
-                              {titleCase(item.requirements_status)}
-                            </strong>
-                          </div>
-
-                          <div>
-                            <span className={styles.statusLabel}>
-                              Project
-                            </span>
-                            <strong
-                              className={projectStatusClass(
-                                item.project_status,
-                              )}
-                            >
-                              {titleCase(item.project_status)}
-                            </strong>
-                          </div>
-                        </div>
-
-                        <div className={styles.metaGrid}>
-                          <div>
-                            <span>ORDER</span>
-                            <strong>{item.order_number || "—"}</strong>
-                          </div>
-
-                          <div>
-                            <span>TIER</span>
-                            <strong>{shownTier}</strong>
-                          </div>
-
-                          <div>
-                            <span>CATEGORY</span>
-                            <strong>{item.product_category || "—"}</strong>
-                          </div>
-
-                          <div>
-                            <span>
-                              {item.submitted_at ? "SUBMITTED" : "CREATED"}
-                            </span>
-                            <strong>
-                              {formatDate(
-                                item.submitted_at || item.created_at,
-                              )}
-                            </strong>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className={styles.emptyState}>
-                <div>◇</div>
-                <strong>No project requirements yet</strong>
-                <p>
-                  Paid customized services will appear here once their project
-                  requirements record is created.
-                </p>
-              </div>
-            )}
-          </section>
+                            <td className={styles.actionCell}>
+                              <a
+                                href={`/admin/project-requirements/${item.id}`}
+                                className={styles.openProject}
+                              >
+                                Open →
+                              </a>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  <strong>No project requirements yet</strong>
+                  <p>
+                    Paid customized services will appear here once their project
+                    requirements record is created.
+                  </p>
+                </div>
+              )}
+            </section>
+          </div>
         </section>
       </div>
     </main>

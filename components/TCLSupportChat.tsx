@@ -453,25 +453,64 @@ export default function TCLSupportChat() {
         </section>
       )}
 
-      <button type="button" aria-label={open ? "Close TCL support" : "Chat with TCL"} aria-expanded={open}
-        onClick={() => setOpen((value) => !value)} style={{
-          position: "fixed", right: "max(12px, env(safe-area-inset-right, 0px))",
-          bottom: "calc(20px + env(safe-area-inset-bottom, 0px))", zIndex: 2147483647,
-          minHeight: 54, height: 54, maxWidth: "calc(100vw - 24px)",
-          padding: "0 10px", display: "inline-flex", alignItems: "center",
-          gap: 9, border: "1px solid rgba(217,86,139,.18)", borderRadius: 999,
-          background: "#fff", color: "var(--text, #312529)", boxShadow: "0 12px 34px rgba(49,37,41,.16)",
-          cursor: "pointer", font: "inherit", fontWeight: 750
-        }}>
-        <span aria-hidden="true" style={{ width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: "50%", background: "rgba(217,86,139,.12)" }}>{open ? "×" : "💬"}</span>
-        {!open && <span className="tcl-support-button-label" style={{ fontSize: ".84rem" }}>Chat with TCL</span>}
-        <style jsx>{`
-          @media (max-width: 600px) {
-            .tcl-support-button-label {
-              display: none;
-            }
+      <style>{`
+        @media screen and (max-width: 600px) {
+          .tcl-support-button-label {
+            display: none !important;
           }
-        `}</style>
+        }
+      `}</style>
+
+      <button
+        type="button"
+        aria-label={open ? "Close TCL support" : "Chat with TCL"}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        style={{
+          position: "fixed",
+          right: "max(10px, env(safe-area-inset-right, 0px))",
+          bottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
+          zIndex: 2147483647,
+          minHeight: 54,
+          height: 54,
+          maxWidth: "calc(100vw - 24px)",
+          padding: "0 10px",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 9,
+          border: "1px solid rgba(217,86,139,.18)",
+          borderRadius: 999,
+          background: "#fff",
+          color: "var(--text, #312529)",
+          boxShadow: "0 12px 34px rgba(49,37,41,.16)",
+          cursor: "pointer",
+          font: "inherit",
+          fontWeight: 750,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            width: 34,
+            height: 34,
+            display: "grid",
+            placeItems: "center",
+            borderRadius: "50%",
+            background: "rgba(217,86,139,.12)",
+          }}
+        >
+          {open ? "×" : "💬"}
+        </span>
+
+        {!open && (
+          <span
+            className="tcl-support-button-label"
+            style={{ fontSize: ".84rem" }}
+          >
+            Chat with TCL
+          </span>
+        )}
       </button>
     </>
   );

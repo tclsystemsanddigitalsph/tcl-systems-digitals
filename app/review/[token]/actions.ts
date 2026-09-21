@@ -64,10 +64,7 @@ export async function submitInvitedReview(formData: FormData) {
   if (isExpired(invite.expires_at)) {
     await admin
       .from("review_invitations")
-      .update({
-        status: "EXPIRED",
-        updated_at: new Date().toISOString(),
-      })
+      .delete()
       .eq("id", invite.id)
       .eq("status", "ACTIVE");
 
@@ -96,22 +93,15 @@ export async function submitInvitedReview(formData: FormData) {
     throw new Error("Unable to submit your review right now.");
   }
 
-  const now = new Date().toISOString();
-
-  const { data: updatedInvite, error: updateError } = await admin
+  const { data: deletedInvite, error: deleteError } = await admin
     .from("review_invitations")
-    .update({
-      status: "USED",
-      used_at: now,
-      review_id: review.id,
-      updated_at: now,
-    })
+    .delete()
     .eq("id", invite.id)
     .eq("status", "ACTIVE")
     .select("id")
     .maybeSingle();
 
-  if (updateError || !updatedInvite) {
+  if (deleteError || !deletedInvite) {
     await admin.from("reviews").delete().eq("id", review.id);
     throw new Error("This review invitation was already used.");
   }

@@ -204,6 +204,8 @@ export default function HowItWorksPage() {
       <main className={styles.page}>
         {/* HERO */}
         <section className={styles.hero}>
+          <div className={styles.heroGrid} aria-hidden="true" />
+          <div className={styles.heroSignal} aria-hidden="true"><span /><span /><span /></div>
           <div className={styles.heroInner}>
             <span className={styles.heroKicker}>HOW IT WORKS</span>
 
@@ -226,6 +228,11 @@ export default function HowItWorksPage() {
               <Link href="/faqs" className={styles.secondaryButton}>
                 Read FAQs
               </Link>
+            </div>
+
+            <div className={styles.heroSystemLine} aria-hidden="true">
+              <span>PROCESS / 001</span>
+              <span>SHOP / CUSTOM / DELIVERY</span>
             </div>
 
             <div className={styles.heroRoutes}>

@@ -1314,9 +1314,15 @@ export default function OrderStatusLookup() {
                         display: "flex",
                         alignItems:
                           "center",
+                        justifyContent:
+                          "flex-end",
                         gap: 8,
                         flexWrap:
                           "wrap",
+                        marginLeft:
+                          "auto",
+                        textAlign:
+                          "right",
                       }}
                     >
                       <strong>
@@ -1401,6 +1407,10 @@ export default function OrderStatusLookup() {
                       className={statusTone(
                         order.paymentStatus,
                       )}
+                      style={{
+                        marginLeft: "auto",
+                        textAlign: "right",
+                      }}
                     >
                       {titleCase(
                         order.paymentStatus,

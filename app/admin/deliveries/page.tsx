@@ -109,360 +109,208 @@ export default async function DeliveriesPage({
         <AdminNav active="deliveries" email={user.email} />
 
         <section className="store-admin-main">
-          <header className={styles.topbar}>
-            <div>
-              <span className="store-admin-eyebrow">
-                FULFILLMENT
-              </span>
-
-              <h1>Manual Deliveries</h1>
-
-              <p>
-                Manage manual product delivery and custom fulfillment
-                requests.
-              </p>
-            </div>
-          </header>
-
-          <section
-            aria-labelledby="manual-deliveries-guide"
-            style={{
-              marginBottom: "18px",
-              padding: "18px",
-              border: "1px solid rgba(217, 86, 139, 0.2)",
-              borderRadius: "16px",
-              background:
-                "linear-gradient(145deg, rgba(217, 86, 139, 0.07), rgba(255, 255, 255, 0.98))",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: "18px",
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ flex: "1 1 560px" }}>
-                <span
-                  style={{
-                    display: "block",
-                    marginBottom: "6px",
-                    color: "var(--text-light)",
-                    fontSize: "0.56rem",
-                    fontWeight: 900,
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  WHAT THIS PAGE IS FOR
-                </span>
-
-                <h2
-                  id="manual-deliveries-guide"
-                  style={{
-                    margin: "0 0 8px",
-                    fontSize: "1rem",
-                  }}
-                >
-                  Manual fulfillment requests only
-                </h2>
-
-                <p
-                  style={{
-                    margin: 0,
-                    color: "var(--text-soft)",
-                    fontSize: "0.68rem",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  Use this page when a purchased product needs a manual
-                  handover, transfer, or fulfillment request. Customized
-                  websites and booking systems are managed in Project
-                  Requirements instead. Automatic digital downloads are
-                  handled through Digital Access and normally do not appear
-                  here.
-                </p>
-
-                <div
-                  style={{
-                    marginTop: "14px",
-                    padding: "12px 14px",
-                    borderRadius: "12px",
-                    background: "rgba(255,255,255,0.82)",
-                    border: "1px solid rgba(217, 86, 139, 0.12)",
-                  }}
-                >
-                  <strong
-                    style={{
-                      display: "block",
-                      marginBottom: "5px",
-                      fontSize: "0.62rem",
-                    }}
-                  >
-                    Manual delivery flow
-                  </strong>
-                  <p
-                    style={{
-                      margin: 0,
-                      color: "var(--text-soft)",
-                      fontSize: "0.62rem",
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    Request created → appears in this queue → TCL reviews and
-                    fulfills it → status is updated → request is completed.
-                  </p>
-                </div>
+          <div className={styles.page}>
+            <header className={styles.topbar}>
+              <div>
+                <span className="store-admin-eyebrow">FULFILLMENT</span>
+                <h1>Manual Deliveries</h1>
+                <p>Manage manual handovers, transfers, and fulfillment requests.</p>
               </div>
 
               <Link
                 href="/admin/project-requirements"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: "38px",
-                  padding: "0 13px",
-                  border: "1px solid rgba(217, 86, 139, 0.24)",
-                  borderRadius: "10px",
-                  background: "#fff",
-                  color: "var(--text)",
-                  fontSize: "0.6rem",
-                  fontWeight: 850,
-                  textDecoration: "none",
-                  whiteSpace: "nowrap",
-                }}
+                className={styles.secondaryButton}
               >
-                Go to Project Requirements →
+                Project Requirements →
               </Link>
-            </div>
-          </section>
+            </header>
 
-          <section className={styles.stats}>
-            <article>
-              <span>PENDING</span>
-              <strong>{pendingCount}</strong>
-              <small>Waiting to be handled</small>
-            </article>
-
-            <article>
-              <span>IN PROGRESS</span>
-              <strong>{inProgressCount}</strong>
-              <small>Currently being fulfilled</small>
-            </article>
-
-            <article>
-              <span>COMPLETED</span>
-              <strong>{completedCount}</strong>
-              <small>Finished deliveries</small>
-            </article>
-
-            <article>
-              <span>TOTAL REQUESTS</span>
-              <strong>{requests.length}</strong>
-              <small>All manual requests</small>
-            </article>
-          </section>
-
-          <section className={styles.panel}>
-            <div className={styles.panelHeader}>
+            <section className={styles.stats}>
+              <div className={styles.statFocus}>
+                <span>PENDING</span>
+                <strong>{pendingCount}</strong>
+              </div>
               <div>
-                <span>DELIVERY QUEUE</span>
-                <h2>Manual fulfillment requests</h2>
+                <span>IN PROGRESS</span>
+                <strong>{inProgressCount}</strong>
+              </div>
+              <div>
+                <span>COMPLETED</span>
+                <strong>{completedCount}</strong>
+              </div>
+              <div>
+                <span>TOTAL REQUESTS</span>
+                <strong>{requests.length}</strong>
+              </div>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <div>
+                  <span>DELIVERY QUEUE</span>
+                  <h2>Manual fulfillment requests</h2>
+                </div>
+
+                <form className={styles.filterForm}>
+                  <select
+                    name="status"
+                    defaultValue={selectedStatus}
+                    aria-label="Filter by delivery status"
+                  >
+                    <option value="ALL">All statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="IN_PROGRESS">In progress</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                  </select>
+                  <button type="submit">Filter</button>
+                </form>
               </div>
 
-              <form className={styles.filterForm}>
-                <select
-                  name="status"
-                  defaultValue={selectedStatus}
-                  aria-label="Filter by delivery status"
-                >
-                  <option value="ALL">All statuses</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="IN_PROGRESS">
-                    In progress
-                  </option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
+              <div className={styles.contextBar}>
+                <strong>Manual fulfillment only.</strong>
+                <span>
+                  Customized website projects are managed in Project Requirements.
+                  Automatic downloads are handled through Digital Access.
+                </span>
+              </div>
 
-                <button type="submit">Filter</button>
-              </form>
-            </div>
+              {filteredRequests.length > 0 ? (
+                <div className={styles.requestList}>
+                  {filteredRequests.map((request) => {
+                    const order = orderMap.get(request.order_id);
 
-            {filteredRequests.length > 0 ? (
-              <div className={styles.requestList}>
-                {filteredRequests.map((request) => {
-                  const order = orderMap.get(request.order_id);
+                    return (
+                      <article key={request.id} className={styles.requestCard}>
+                        <div className={styles.requestHeader}>
+                          <div className={styles.requestIdentity}>
+                            <div className={styles.requestMeta}>
+                              <span
+                                className={`${styles.statusPill} ${deliveryStatusClass(
+                                  request.status,
+                                )}`}
+                              >
+                                {request.status.replaceAll("_", " ")}
+                              </span>
+                              <span>{request.delivery_type}</span>
+                            </div>
 
-                  return (
-                    <article
-                      key={request.id}
-                      className={styles.requestCard}
-                    >
-                      <div className={styles.requestTop}>
-                        <div>
-                          <div className={styles.requestMeta}>
-                            <span
-                              className={`${styles.statusPill} ${deliveryStatusClass(
-                                request.status,
-                              )}`}
-                            >
-                              {request.status.replaceAll("_", " ")}
-                            </span>
-
-                            <span>
-                              {request.delivery_type}
-                            </span>
+                            <h3>
+                              {order?.product_name || "Manual delivery request"}
+                            </h3>
+                            <p>
+                              {order?.customer_name || "Unknown customer"}
+                              {order?.customer_email
+                                ? ` · ${order.customer_email}`
+                                : ""}
+                            </p>
                           </div>
 
-                          <h3>
-                            {order?.product_name ||
-                              "Manual delivery request"}
-                          </h3>
-
-                          <p>
-                            {order?.customer_name ||
-                              "Unknown customer"}
-                            {order?.customer_email
-                              ? ` · ${order.customer_email}`
-                              : ""}
-                          </p>
-                        </div>
-
-                        <div className={styles.orderLinkBlock}>
-                          {order ? (
-                            <>
-                              <span>{order.order_number}</span>
-                              <a
-                                href={`/admin/orders/${order.id}`}
-                              >
-                                View order →
-                              </a>
-                            </>
-                          ) : (
-                            <span>Order unavailable</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className={styles.detailsGrid}>
-                        <div>
-                          <span>Requested</span>
-                          <strong>
-                            {formatDateTime(
-                              request.requested_at ||
-                                request.created_at,
+                          <div className={styles.orderLinkBlock}>
+                            {order ? (
+                              <>
+                                <span>{order.order_number}</span>
+                                <a href={`/admin/orders/${order.id}`}>
+                                  View order →
+                                </a>
+                              </>
+                            ) : (
+                              <span>Order unavailable</span>
                             )}
-                          </strong>
+                          </div>
                         </div>
 
-                        <div>
-                          <span>GitHub username</span>
-                          <strong>
-                            {request.github_username || "—"}
-                          </strong>
+                        <div className={styles.detailsGrid}>
+                          <div>
+                            <span>REQUESTED</span>
+                            <strong>
+                              {formatDateTime(
+                                request.requested_at || request.created_at,
+                              )}
+                            </strong>
+                          </div>
+                          <div>
+                            <span>GITHUB</span>
+                            <strong>{request.github_username || "—"}</strong>
+                          </div>
+                          <div>
+                            <span>PAYMENT</span>
+                            <strong>{order?.payment_status || "—"}</strong>
+                          </div>
+                          <div>
+                            <span>ORDER DELIVERY</span>
+                            <strong>{order?.delivery_status || "—"}</strong>
+                          </div>
                         </div>
 
-                        <div>
-                          <span>Payment</span>
-                          <strong>
-                            {order?.payment_status || "—"}
-                          </strong>
-                        </div>
+                        {request.customer_message ? (
+                          <div className={styles.customerMessage}>
+                            <span>CUSTOMER MESSAGE</span>
+                            <p>{request.customer_message}</p>
+                          </div>
+                        ) : null}
 
-                        <div>
-                          <span>Order delivery</span>
-                          <strong>
-                            {order?.delivery_status || "—"}
-                          </strong>
-                        </div>
-                      </div>
+                        <form
+                          action={updateDeliveryRequest}
+                          className={styles.manageForm}
+                        >
+                          <input
+                            type="hidden"
+                            name="request_id"
+                            value={request.id}
+                          />
+                          <input
+                            type="hidden"
+                            name="order_id"
+                            value={request.order_id}
+                          />
 
-                      {request.customer_message ? (
-                        <div className={styles.customerMessage}>
-                          <span>CUSTOMER MESSAGE</span>
-                          <p>{request.customer_message}</p>
-                        </div>
-                      ) : null}
+                          <div className={styles.formRow}>
+                            <label>
+                              <span>STATUS</span>
+                              <select
+                                name="status"
+                                defaultValue={request.status}
+                              >
+                                <option value="PENDING">Pending</option>
+                                <option value="IN_PROGRESS">In progress</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="CANCELLED">Cancelled</option>
+                              </select>
+                            </label>
 
-                      <form
-                        action={updateDeliveryRequest}
-                        className={styles.manageForm}
-                      >
-                        <input
-                          type="hidden"
-                          name="request_id"
-                          value={request.id}
-                        />
+                            <label className={styles.notesField}>
+                              <span>ADMIN NOTES</span>
+                              <textarea
+                                name="admin_notes"
+                                defaultValue={request.admin_notes ?? ""}
+                                placeholder="Internal fulfillment notes"
+                                rows={2}
+                              />
+                            </label>
 
-                        <input
-                          type="hidden"
-                          name="order_id"
-                          value={request.order_id}
-                        />
+                            <button type="submit">Save</button>
+                          </div>
 
-                        <div className={styles.formRow}>
-                          <label>
-                            <span>Status</span>
-                            <select
-                              name="status"
-                              defaultValue={request.status}
-                            >
-                              <option value="PENDING">
-                                Pending
-                              </option>
-                              <option value="IN_PROGRESS">
-                                In progress
-                              </option>
-                              <option value="COMPLETED">
-                                Completed
-                              </option>
-                              <option value="CANCELLED">
-                                Cancelled
-                              </option>
-                            </select>
-                          </label>
-
-                          <label className={styles.notesField}>
-                            <span>Admin notes</span>
-                            <textarea
-                              name="admin_notes"
-                              defaultValue={
-                                request.admin_notes ?? ""
-                              }
-                              placeholder="Add internal fulfillment notes..."
-                              rows={3}
-                            />
-                          </label>
-                        </div>
-
-                        <div className={styles.formBottom}>
-                          <p>
-                            Admin notes are internal and are not shown
-                            to the customer.
+                          <p className={styles.internalNote}>
+                            Admin notes are internal and are not shown to the customer.
                           </p>
-
-                          <button type="submit">
-                            Save Delivery
-                          </button>
-                        </div>
-                      </form>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className={styles.emptyState}>
-                <strong>No delivery requests found</strong>
-                <p>
-                  Manual fulfillment requests will appear here when a
-                  purchased product requires them.
-                </p>
-              </div>
-            )}
-          </section>
+                        </form>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  <strong>No delivery requests found</strong>
+                  <p>
+                    Manual fulfillment requests will appear here when a purchased
+                    product requires them.
+                  </p>
+                </div>
+              )}
+            </section>
+          </div>
         </section>
       </div>
     </main>

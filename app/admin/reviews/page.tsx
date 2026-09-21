@@ -84,6 +84,7 @@ export default async function AdminReviewsPage({ searchParams }: ReviewsPageProp
         <AdminNav active="reviews" email={user.email} />
 
         <section className="store-admin-main">
+          <div className={styles.page}>
           <header className={styles.topbar}>
             <div>
               <span className="store-admin-eyebrow">CUSTOMER FEEDBACK</span>
@@ -277,6 +278,7 @@ export default async function AdminReviewsPage({ searchParams }: ReviewsPageProp
               </nav>
             ) : null}
           </section>
+          </div>
         </section>
       </div>
     </main>

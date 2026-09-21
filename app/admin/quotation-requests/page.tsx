@@ -113,185 +113,140 @@ export default async function AdminQuotationRequestsPage() {
               <div className={styles.heading}>
                 <span className={styles.eyebrow}>QUOTATIONS</span>
                 <h1>Quotation Requests</h1>
-                <p>
-                  Review project requirements, prepare pricing, and manage quote
-                  follow-ups.
-                </p>
+                <p>Review requests, prepare pricing, and track client decisions.</p>
               </div>
 
-              <div className={styles.topbarActions}>
-                <Link
-                  className={styles.primaryButton}
-                  href="/admin/quotation-requests/new"
-                >
-                  + Add Manual Quotation
-                </Link>
-
-                <Link className={styles.secondaryButton} href="/admin">
-                  Dashboard
-                </Link>
-
-                <Link className={styles.secondaryButton} href="/">
-                  View Store
-                </Link>
-              </div>
+              <Link
+                className={styles.primaryButton}
+                href="/admin/quotation-requests/new"
+              >
+                + Add quotation
+              </Link>
             </header>
 
-            <section className={styles.statsGrid}>
-              <article className={styles.statCard}>
-                <div className={styles.statHeader}>
-                  <span>NEW</span>
-                  <div className={styles.statIcon}>✦</div>
-                </div>
+            <section className={styles.summary}>
+              <div>
+                <span>ALL REQUESTS</span>
+                <strong>{rows.length}</strong>
+              </div>
+              <div>
+                <span>NEW</span>
                 <strong>{newCount}</strong>
-                <p>Waiting for review</p>
-              </article>
-
-              <article className={styles.statCard}>
-                <div className={styles.statHeader}>
-                  <span>REVIEWING</span>
-                  <div className={styles.statIcon}>⌕</div>
-                </div>
+              </div>
+              <div>
+                <span>REVIEWING</span>
                 <strong>{reviewingCount}</strong>
-                <p>Currently being assessed</p>
-              </article>
-
-              <article className={styles.statCard}>
-                <div className={styles.statHeader}>
-                  <span>QUOTED</span>
-                  <div className={styles.statIcon}>₱</div>
-                </div>
+              </div>
+              <div>
+                <span>QUOTED</span>
                 <strong>{quotedCount}</strong>
-                <p>Quote already prepared</p>
-              </article>
-
-              <article className={styles.statCard}>
-                <div className={styles.statHeader}>
-                  <span>ACCEPTED</span>
-                  <div className={styles.statIcon}>♡</div>
-                </div>
+              </div>
+              <div>
+                <span>ACCEPTED</span>
                 <strong>{acceptedCount}</strong>
-                <p>Ready to proceed</p>
-              </article>
+              </div>
             </section>
 
             <section className={styles.panel}>
               <div className={styles.panelHeader}>
                 <div>
                   <span className={styles.panelEyebrow}>REQUESTS</span>
-                  <h2>All quotation requests</h2>
-                  <p>
-                    Open a request to view full business details and manage the
-                    quote.
-                  </p>
+                  <h2>All quotations</h2>
                 </div>
-
-                <div className={styles.requestCount}>
-                  {rows.length} {rows.length === 1 ? "request" : "requests"}
-                </div>
+                <span className={styles.requestCount}>
+                  {rows.length} {rows.length === 1 ? "record" : "records"}
+                </span>
               </div>
 
               {rows.length > 0 ? (
-                <div className={styles.requestList}>
-                  {rows.map((request) => {
-                    const initial =
-                      request.business_name?.charAt(0).toUpperCase() ||
-                      request.full_name?.charAt(0).toUpperCase() ||
-                      "Q";
-
-                    return (
-                      <article className={styles.requestCard} key={request.id}>
-                        <div className={styles.cardTop}>
-                          <div className={styles.customer}>
-                            <div className={styles.avatar}>{initial}</div>
-
-                            <div className={styles.customerDetails}>
-                              <div className={styles.customerTitleRow}>
-                                <h3>{request.business_name || "No business name"}</h3>
-                                <span
-                                  className={`${styles.statusBadge} ${statusClass(
-                                    request.status,
-                                  )}`}
-                                >
-                                  {statusLabel(request.status)}
-                                </span>
-                              </div>
-
-                              <p>
+                <div className={styles.tableWrap}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Client</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Budget</th>
+                        <th>Quoted</th>
+                        <th>Submitted</th>
+                        <th aria-label="Actions" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((request) => (
+                        <tr key={request.id}>
+                          <td>
+                            <div className={styles.client}>
+                              <strong>
+                                {request.business_name ||
+                                  request.full_name ||
+                                  "Unnamed request"}
+                              </strong>
+                              <span>
                                 {request.full_name}
-                                <span>•</span>
+                                {request.full_name && request.email ? " · " : ""}
                                 {request.email}
-                              </p>
+                              </span>
                             </div>
-                          </div>
+                          </td>
 
-                          <Link
-                            href={`/admin/quotation-requests/${request.id}`}
-                            className={styles.viewButton}
-                          >
-                            View Request →
-                          </Link>
-                        </div>
+                          <td>
+                            <div className={styles.service}>
+                              <strong>
+                                {request.product_name || "Custom Business Website"}
+                              </strong>
+                              <span>{request.timeline || "Timeline not specified"}</span>
+                            </div>
+                          </td>
 
-                        <div className={styles.cardBody}>
-                          <div className={styles.serviceBlock}>
-                            <span className={styles.metaLabel}>SERVICE</span>
-                            <strong>
-                              {request.product_name || "Custom Business Website"}
-                            </strong>
-                          </div>
+                          <td>
+                            <span
+                              className={`${styles.statusBadge} ${statusClass(
+                                request.status,
+                              )}`}
+                            >
+                              {statusLabel(request.status)}
+                            </span>
+                          </td>
 
-                          <div className={styles.amountBlock}>
-                            <span className={styles.metaLabel}>QUOTED AMOUNT</span>
-                            <strong>
-                              {formatMoney(
-                                request.quoted_amount === null
-                                  ? null
-                                  : Number(request.quoted_amount),
-                              )}
-                            </strong>
-                          </div>
-                        </div>
+                          <td className={styles.secondaryValue}>
+                            {request.budget || "—"}
+                          </td>
 
-                        <div className={styles.metaGrid}>
-                          <div>
-                            <span className={styles.metaLabel}>BUDGET</span>
-                            <strong>{request.budget || "—"}</strong>
-                          </div>
+                          <td className={styles.amount}>
+                            {formatMoney(
+                              request.quoted_amount === null
+                                ? null
+                                : Number(request.quoted_amount),
+                            )}
+                          </td>
 
-                          <div>
-                            <span className={styles.metaLabel}>TIMELINE</span>
-                            <strong>{request.timeline || "—"}</strong>
-                          </div>
+                          <td className={styles.date}>
+                            {formatDate(request.created_at)}
+                          </td>
 
-                          <div>
-                            <span className={styles.metaLabel}>STATUS</span>
-                            <strong>{statusLabel(request.status)}</strong>
-                          </div>
-
-                          <div>
-                            <span className={styles.metaLabel}>SUBMITTED</span>
-                            <strong>{formatDate(request.created_at)}</strong>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
+                          <td className={styles.actionCell}>
+                            <Link
+                              href={`/admin/quotation-requests/${request.id}`}
+                              className={styles.viewButton}
+                            >
+                              Open →
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
                 <div className={styles.empty}>
-                  <div className={styles.emptyIcon}>✦</div>
                   <strong>No quotation requests yet</strong>
-                  <p>
-                    New quotation requests submitted through the store will
-                    appear here.
-                  </p>
-
+                  <p>New quotation requests will appear here.</p>
                   <Link
                     className={styles.primaryButton}
                     href="/admin/quotation-requests/new"
                   >
-                    + Add Manual Quotation
+                    + Add quotation
                   </Link>
                 </div>
               )}
