@@ -1982,6 +1982,20 @@ export default function CheckoutForm({
             font-size: 0.8rem;
           }
         }
+
+        /* Mobile: keep the policy consent copy compact beside the checkbox. */
+        @media (max-width: 620px) {
+          .tcl-checkout-policy {
+            align-items: flex-start;
+          }
+
+          .tcl-policy-consent-copy,
+          .tcl-policy-consent-copy .tcl-policy-inline-link {
+            font-size: 11px !important;
+            line-height: 1.5 !important;
+          }
+        }
+
       `}</style>
     </>
   );

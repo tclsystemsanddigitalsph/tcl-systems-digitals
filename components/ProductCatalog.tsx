@@ -973,8 +973,18 @@ export default function ProductCatalog({
 
         @media (max-width: 430px) {
           .shop-tech-hero-copy h1 {
-            font-size: clamp(45px, 13.8vw, 62px);
+            width: 100%;
+            max-width: 100%;
+            font-size: clamp(40px, 12.2vw, 55px);
+            line-height: .8;
+            letter-spacing: -.075em;
           }
+
+          .shop-tech-hero-copy h1 > em {
+            font-size: .92em;
+            letter-spacing: -.085em;
+          }
+
           .shop-product-card,
           .shop-product-body { min-height: 275px !important; }
           .shop-product-body { padding: 11px !important; }
