@@ -245,24 +245,15 @@ export default function AboutPage() {
                 <div className="stackList">
                   {stack.map((item) => (
                     <span className="stackPill" key={item.name}>
-                      {item.logo ? (
-                        <img
-                          src={item.logo}
-                          alt=""
-                          aria-hidden="true"
-                          className="stackLogo"
-                          width="15"
-                          height="15"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <span
-                          className="stackLogoFallback"
-                          aria-hidden="true"
-                        >
-                          {item.fallback}
-                        </span>
-                      )}
+                      <img
+                        src={item.logo}
+                        alt=""
+                        aria-hidden="true"
+                        className="stackLogo"
+                        width="15"
+                        height="15"
+                        loading="lazy"
+                      />
 
                       <span className="stackName">{item.name}</span>
                     </span>
