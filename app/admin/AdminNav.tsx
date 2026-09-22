@@ -19,6 +19,12 @@ const links = [
     key: "requirements",
   },
   {
+    href: "/admin/external-submissions",
+    label: "External Submissions",
+    icon: "◎",
+    key: "external-submissions",
+  },
+  {
     href: "/admin/deliveries",
     label: "Deliveries",
     icon: "↗",

@@ -20,7 +20,6 @@
   width: 76px;
   height: 100vh;
   align-self: start;
-  overflow: visible;
 }
 
 .desktopInner {
@@ -32,26 +31,24 @@
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid #efdee6;
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(255, 255, 255, 0.985);
   box-shadow: 8px 0 30px rgba(79, 36, 55, 0.035);
-  backdrop-filter: blur(12px);
-  transition:
-    width 190ms ease,
-    box-shadow 190ms ease;
+  backdrop-filter: blur(14px);
+  transition: width 190ms ease, box-shadow 190ms ease;
 }
 
 .desktopNav:hover .desktopInner,
 .desktopNav:focus-within .desktopInner {
-  width: 242px;
+  width: 246px;
   box-shadow: 14px 0 40px rgba(79, 36, 55, 0.11);
 }
 
 .brand {
   display: flex;
-  min-height: 82px;
+  min-height: 70px;
   align-items: center;
   gap: 11px;
-  padding: 14px 16px;
+  padding: 11px 16px;
   border-bottom: 1px solid #f4e8ed;
 }
 
@@ -72,14 +69,12 @@
 
 .brandText {
   display: flex;
-  min-width: 150px;
+  min-width: 155px;
   flex-direction: column;
   gap: 2px;
   opacity: 0;
   transform: translateX(-5px);
-  transition:
-    opacity 140ms ease 25ms,
-    transform 170ms ease 25ms;
+  transition: opacity 140ms ease 25ms, transform 170ms ease 25ms;
 }
 
 .desktopNav:hover .brandText,
@@ -102,12 +97,13 @@
 }
 
 .sectionLabel {
+  position: relative;
   display: flex;
-  min-height: 32px;
+  min-height: 27px;
   align-items: center;
-  padding: 10px 0 4px;
+  padding: 7px 0 2px;
   color: #b48e9e;
-  font-size: 0.49rem;
+  font-size: 0.47rem;
   font-weight: 900;
   letter-spacing: 0.16em;
 }
@@ -139,28 +135,34 @@
   opacity: 0;
 }
 
+/* Scroll only the navigation links when there are many items. */
 .desktopLinks {
   display: grid;
-  gap: 5px;
-  padding: 7px 9px;
+  gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 9px 7px;
+  scrollbar-width: none;
+}
+
+.desktopLinks::-webkit-scrollbar {
+  display: none;
 }
 
 .desktopLinks a,
 .storeLink {
   position: relative;
   display: flex;
-  min-height: 44px;
+  min-height: 37px;
   align-items: center;
   gap: 11px;
   overflow: hidden;
   border: 1px solid transparent;
-  border-radius: 11px;
+  border-radius: 10px;
   color: #66575e;
   text-decoration: none;
-  transition:
-    background 150ms ease,
-    border-color 150ms ease,
-    color 150ms ease,
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease,
     transform 150ms ease;
 }
 
@@ -178,25 +180,23 @@
 .navIcon {
   display: grid;
   width: 38px;
-  height: 38px;
+  height: 35px;
   flex: 0 0 38px;
   place-items: center;
   color: #ab607e;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 800;
   line-height: 1;
 }
 
 .navLabel {
-  min-width: 150px;
+  min-width: 155px;
   opacity: 0;
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   font-weight: 800;
   white-space: nowrap;
   transform: translateX(-5px);
-  transition:
-    opacity 135ms ease 20ms,
-    transform 165ms ease 20ms;
+  transition: opacity 135ms ease 20ms, transform 165ms ease 20ms;
 }
 
 .desktopNav:hover .navLabel,
@@ -234,14 +234,16 @@
 
 .desktopBottom {
   display: grid;
-  gap: 7px;
+  gap: 4px;
   margin-top: auto;
-  padding: 9px;
+  padding: 7px 9px 8px;
   border-top: 1px solid #f2e6eb;
+  background: rgba(255, 255, 255, 0.985);
 }
 
-.storeLink {
-  min-height: 42px;
+.storeLink,
+.desktopSignOut {
+  min-height: 36px;
 }
 
 .desktopBottom form {
@@ -251,20 +253,16 @@
 .desktopSignOut {
   display: flex;
   width: 100%;
-  min-height: 42px;
   align-items: center;
   gap: 11px;
   overflow: hidden;
   border: 1px solid #eadde3;
-  border-radius: 11px;
+  border-radius: 10px;
   background: #fff;
   color: #66575e;
   font: inherit;
   cursor: pointer;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
 }
 
 .desktopSignOut:hover {
@@ -276,49 +274,47 @@
 .signOutIcon {
   display: grid;
   width: 38px;
-  height: 38px;
+  height: 34px;
   flex: 0 0 38px;
   place-items: center;
   color: #a8617d;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   line-height: 1;
 }
 
 .user {
   display: flex;
-  min-height: 51px;
+  min-height: 43px;
   align-items: center;
   gap: 10px;
   overflow: hidden;
-  padding: 6px 7px;
-  border-radius: 11px;
+  padding: 4px 7px;
+  border-radius: 10px;
   background: #faf6f8;
 }
 
 .avatar {
   display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
   place-items: center;
   border: 1px solid #efd5e0;
-  border-radius: 10px;
+  border-radius: 9px;
   background: #fff;
   color: #a64d70;
-  font-size: 0.67rem;
+  font-size: 0.65rem;
   font-weight: 900;
 }
 
 .userText {
   display: flex;
-  min-width: 154px;
+  min-width: 158px;
   flex-direction: column;
   gap: 1px;
   opacity: 0;
   transform: translateX(-5px);
-  transition:
-    opacity 135ms ease 25ms,
-    transform 165ms ease 25ms;
+  transition: opacity 135ms ease 25ms, transform 165ms ease 25ms;
 }
 
 .desktopNav:hover .userText,
@@ -329,19 +325,18 @@
 
 .userText small {
   color: #a58f99;
-  font-size: 0.48rem;
+  font-size: 0.47rem;
 }
 
 .userText strong {
-  max-width: 152px;
+  max-width: 156px;
   overflow: hidden;
   color: #4a3b42;
-  font-size: 0.55rem;
+  font-size: 0.54rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Mobile navigation stays dropdown-based. */
 .mobileWrap {
   display: none;
 }
@@ -440,6 +435,8 @@
     top: calc(100% + 7px);
     right: 0;
     left: 0;
+    max-height: calc(100vh - 92px);
+    overflow-y: auto;
     padding: 8px;
     border: 1px solid #eedde5;
     border-radius: 16px;
@@ -455,32 +452,35 @@
 
   .menuPanel nav a {
     display: flex;
-    min-height: 45px;
+    min-height: 43px;
     align-items: center;
     gap: 8px;
-    padding: 0 10px;
+    padding: 0 9px;
     border: 1px solid transparent;
     border-radius: 11px;
     color: #5e5056;
-    font-size: 0.64rem;
+    font-size: 0.61rem;
     text-decoration: none;
   }
 
   .menuPanel nav a > span {
     display: grid;
-    width: 24px;
-    height: 24px;
+    width: 23px;
+    height: 23px;
+    flex: 0 0 23px;
     place-items: center;
     border-radius: 7px;
     background: #faf3f6;
     color: #a75d7b;
   }
 
+  .menuPanel nav a strong {
+    min-width: 0;
+    line-height: 1.25;
+  }
+
   .menuPanel nav a small {
-    margin-left: auto;
-    color: #b56b88;
-    font-size: 0.48rem;
-    font-weight: 800;
+    display: none;
   }
 
   .menuPanel nav a.active {
@@ -533,8 +533,6 @@
   }
 }
 
-
-/* Exact desktop icon alignment */
 @media (min-width: 701px) {
   .desktopLinks,
   .desktopBottom {
@@ -555,6 +553,48 @@
   }
 
   .avatar {
-    margin-left: 2px;
+    margin-left: 3px;
+  }
+}
+
+/* Extra compression for shorter laptop screens. */
+@media (min-width: 701px) and (max-height: 760px) {
+  .brand {
+    min-height: 62px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .sectionLabel {
+    min-height: 22px;
+    padding-top: 4px;
+  }
+
+  .desktopLinks {
+    gap: 1px;
+    padding-top: 2px;
+  }
+
+  .desktopLinks a {
+    min-height: 33px;
+  }
+
+  .navIcon {
+    height: 31px;
+  }
+
+  .desktopBottom {
+    gap: 2px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .storeLink,
+  .desktopSignOut {
+    min-height: 32px;
+  }
+
+  .user {
+    min-height: 39px;
   }
 }
