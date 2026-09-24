@@ -661,3 +661,322 @@
 @media (prefers-reduced-motion: reduce) {
   .progressTrack span { transition: none; }
 }
+
+/* =========================================================
+   MOBILE QUOTE EXPERIENCE
+   Compact app-style layout; desktop styles remain unchanged.
+   ========================================================= */
+@media (max-width: 640px) {
+  .quoteShell {
+    padding: 14px 0 88px;
+  }
+
+  .quoteUtility {
+    width: 100%;
+    margin: 0 0 10px;
+    padding: 0 14px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .backProductPill {
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 6px 11px;
+    font-size: 8px;
+  }
+
+  .selectedService {
+    flex: 1 1 auto;
+    max-width: none;
+    text-align: right;
+  }
+
+  .selectedService > span {
+    margin-bottom: 1px;
+    font-size: 7px;
+    letter-spacing: .11em;
+  }
+
+  .selectedService strong {
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .selectedService small {
+    margin-top: 1px;
+    font-size: 8px;
+  }
+
+  .form {
+    width: 100%;
+  }
+
+  .welcomeActions,
+  .requestActions {
+    margin: 0;
+    padding: 0 14px 8px;
+  }
+
+  .requestActions {
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .requestActionsRight {
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .exitRequest,
+  .startOverRequest {
+    min-height: 30px;
+    padding: 5px 10px;
+    font-size: 7.5px;
+    letter-spacing: .035em;
+    white-space: nowrap;
+  }
+
+  .welcome {
+    margin: 0;
+    padding: 22px 18px 24px;
+    border-left: 0;
+    border-right: 0;
+    box-shadow: none;
+  }
+
+  .eyebrow {
+    margin-bottom: 7px;
+    font-size: 9px;
+  }
+
+  .welcome h2 {
+    max-width: 420px;
+    font-size: 28px;
+    line-height: 1.04;
+    letter-spacing: -.04em;
+  }
+
+  .welcome > p {
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .welcomePoints {
+    gap: 6px;
+    margin: 17px 0;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .emailNotice {
+    margin-top: 15px;
+    padding: 12px 13px;
+  }
+
+  .emailNotice strong {
+    font-size: 11px;
+  }
+
+  .emailNotice span {
+    font-size: 10px;
+    line-height: 1.45;
+  }
+
+  .disclaimer {
+    font-size: 9px !important;
+    line-height: 1.45 !important;
+  }
+
+  .startButton {
+    width: 100%;
+    min-height: 45px;
+    margin-top: 16px;
+    padding: 0 16px;
+    font-size: 10px;
+  }
+
+  .wizardTop {
+    margin: 0;
+    padding: 13px 16px 11px;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .topLine {
+    gap: 10px;
+  }
+
+  .topLine strong {
+    font-size: 14px;
+  }
+
+  .autosave {
+    font-size: 7.5px;
+  }
+
+  .progressTrack {
+    height: 3px;
+    margin-top: 10px;
+  }
+
+  .stepLabels {
+    gap: 0;
+    margin-top: 7px;
+  }
+
+  .stepLabels span {
+    font-size: 8px;
+  }
+
+  .stepLabels span::first-letter {
+    font-size: inherit;
+  }
+
+  .stepCard,
+  .questionPanel {
+    margin-top: 8px;
+    padding: 18px 16px 20px;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .stepHeading {
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+  }
+
+  .stepHeading > span,
+  .questionMeta > span {
+    margin-bottom: 5px;
+    font-size: 8px;
+  }
+
+  .welcome h2,
+  .stepHeading h2,
+  .questionPanel h2 {
+    font-size: 24px;
+    line-height: 1.08;
+  }
+
+  .stepHeading p,
+  .questionPanel > p {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .form label {
+    gap: 5px;
+    font-size: 11px;
+  }
+
+  .form input:not([type="checkbox"]),
+  .form select {
+    min-height: 43px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+
+  .form textarea {
+    min-height: 76px;
+    padding: 10px 11px;
+    font-size: 12px;
+  }
+
+  .optionList {
+    gap: 6px;
+  }
+
+  .optionList button {
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .optionList button small {
+    font-size: 8.5px;
+  }
+
+  .check {
+    flex-basis: 19px;
+    width: 19px;
+    height: 19px;
+  }
+
+  .questionMeta {
+    margin-bottom: 6px;
+  }
+
+  .questionMeta small {
+    font-size: 8px;
+  }
+
+  .questionPanel h2 {
+    margin-bottom: 13px;
+  }
+
+  .twoColumns,
+  .readiness,
+  .summaryTop {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .readiness {
+    margin-top: 14px;
+    padding-top: 13px;
+  }
+
+  .confirmRow {
+    margin-top: 13px;
+    padding: 10px 11px;
+    font-size: 10px !important;
+  }
+
+  .summaryTop > div,
+  .contactReview {
+    padding: 10px 11px;
+  }
+
+  .finalEstimate {
+    padding: 12px;
+  }
+
+  .finalEstimate strong {
+    font-size: 20px;
+  }
+
+  .reviewSections dl > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .wizardActions {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    grid-template-columns: 96px 1fr;
+    gap: 7px;
+    margin: 8px 8px 0;
+    padding: 7px;
+    border-radius: 0;
+  }
+
+  .wizardActions > span {
+    display: none;
+  }
+
+  .backButton,
+  .nextButton {
+    min-height: 43px;
+    padding: 0 11px;
+    font-size: 9px;
+  }
+
+  .nextButton {
+    width: 100%;
+  }
+}
+
