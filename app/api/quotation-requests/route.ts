@@ -59,6 +59,9 @@ type QuotePayload = {
   budget?: unknown;
   timeline?: unknown;
   notes?: unknown;
+
+  estimateMin?: unknown;
+  estimateMax?: unknown;
 };
 
 type TelegramSection = {
@@ -97,6 +100,16 @@ function cleanFeatures(value: unknown) {
     .filter(Boolean)
     .slice(0, 150)
     .map((item) => item.slice(0, 220));
+}
+
+function cleanEstimate(value: unknown) {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount) || amount < 0) return null;
+
+  return Math.round(amount * 100) / 100;
 }
 
 function getAdminClient() {
@@ -871,6 +884,15 @@ export async function POST(request: Request) {
 
     const notes = cleanString(body.notes);
 
+    const estimateMin = cleanEstimate(body.estimateMin);
+    const estimateMax = cleanEstimate(body.estimateMax);
+
+    const hasValidEstimate =
+      estimateMin !== null &&
+      estimateMax !== null &&
+      estimateMin > 0 &&
+      estimateMax >= estimateMin;
+
     const { data: savedRequest, error: insertError } =
       await supabase
         .from("quotation_requests")
@@ -932,6 +954,8 @@ export async function POST(request: Request) {
           budget,
           timeline,
           notes,
+          estimate_min: hasValidEstimate ? estimateMin : null,
+          estimate_max: hasValidEstimate ? estimateMax : null,
           status: "NEW",
         })
         .select("id,secure_token")

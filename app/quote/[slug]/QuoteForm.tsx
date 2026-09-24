@@ -1603,6 +1603,8 @@ export default function QuoteForm({ productName, productSlug, category, backHref
       productSlug,
       productName,
       category,
+      estimateMin: estimate?.low ?? null,
+      estimateMax: estimate?.high ?? null,
       fullName: form.fullName.trim(),
       businessName: form.businessName.trim(),
       email: form.email.trim(),
