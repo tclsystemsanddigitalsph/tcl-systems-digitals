@@ -183,11 +183,11 @@ export default async function AdminQuotationRequestDetailPage({
   if (error) console.error("Quotation request detail error:", error);
   if (!request) notFound();
 
-  const features = Array.isArray(request.selected_features)
-    ? request.selected_features
+  const features: string[] = Array.isArray(request.selected_features)
+    ? request.selected_features.map((feature: unknown) => String(feature))
     : [];
 
-  const scopeGroups = buildScopeGroups(features.map((feature) => String(feature)));
+  const scopeGroups = buildScopeGroups(features);
 
   const { data: quotationItemsData, error: quotationItemsError } =
     await adminSupabase

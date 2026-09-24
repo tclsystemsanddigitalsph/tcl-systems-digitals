@@ -1281,7 +1281,7 @@ function calculateEstimate(form: FormState) {
   add(has(form, "selfManage", "yes") || has(form, "selfManage", "some"), 3000);
   add(has(form, "accountsNeeded", "yes"), 3500);
   add(has(form, "accountCreation", "approval") || has(form, "accountCreation", "mixed"), 2000);
-  add((form.answers.userRoles as string[] | undefined)?.length > 3, 3000);
+  add(((form.answers.userRoles as string[] | undefined)?.length ?? 0) > 3, 3000);
   add(has(form, "inventory", "variant"), 2500);
   add(has(form, "inventory", "location") || has(form, "inventory", "advanced"), 5000);
   add(has(form, "paymentsNeeded", "yes"), 2500);
