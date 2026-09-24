@@ -980,3 +980,86 @@
   }
 }
 
+/* =========================================================
+   MOBILE FORM GUTTER FIX
+   Keep the quote experience away from the screen edges.
+   ========================================================= */
+@media (max-width: 640px) {
+  .quoteShellInner {
+    width: 100%;
+    padding-inline: 12px;
+  }
+
+  .quoteUtility {
+    width: 100%;
+    padding-inline: 0;
+  }
+
+  .form {
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .welcomeActions,
+  .requestActions {
+    padding-inline: 0;
+  }
+
+  .welcome,
+  .wizardTop,
+  .stepCard,
+  .questionPanel {
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  .welcome {
+    padding: 20px 16px 22px;
+  }
+
+  .wizardTop {
+    padding: 13px 14px 11px;
+  }
+
+  .stepCard,
+  .questionPanel {
+    padding: 17px 14px 19px;
+  }
+
+  .wizardActions {
+    width: 100%;
+    margin: 8px 0 0;
+    border-radius: 12px;
+  }
+}
+
+/* MOBILE COMPACT EXIT / START OVER CONTROLS */
+@media (max-width: 640px) {
+  .requestActions {
+    min-height: 28px;
+    padding: 0;
+    margin-bottom: 7px;
+    align-items: center;
+  }
+
+  .requestActionsRight {
+    gap: 4px;
+  }
+
+  .exitRequest,
+  .startOverRequest {
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 7px;
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 24px;
+    letter-spacing: .025em;
+    white-space: nowrap;
+  }
+}
+
