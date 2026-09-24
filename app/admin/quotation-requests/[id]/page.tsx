@@ -82,6 +82,33 @@ function paymentTermsLabel(value: string | null) {
   return "Not set";
 }
 
+type ScopeGroup = {
+  name: string;
+  items: string[];
+};
+
+function buildScopeGroups(features: string[]): ScopeGroup[] {
+  const groups = new Map<string, string[]>();
+
+  for (const rawFeature of features) {
+    const feature = String(rawFeature || "").trim();
+    if (!feature) continue;
+
+    const dashIndex = feature.indexOf(" — ");
+    const groupName = dashIndex > 0 ? feature.slice(0, dashIndex).trim() : "Other";
+    const remainder = dashIndex > 0 ? feature.slice(dashIndex + 3).trim() : feature;
+    const colonIndex = remainder.indexOf(":");
+    const answer = (colonIndex >= 0 ? remainder.slice(colonIndex + 1) : remainder).trim();
+
+    if (!answer) continue;
+    const current = groups.get(groupName) ?? [];
+    if (!current.includes(answer)) current.push(answer);
+    groups.set(groupName, current);
+  }
+
+  return Array.from(groups, ([name, items]) => ({ name, items }));
+}
+
 function Field({
   label,
   value,
@@ -159,6 +186,8 @@ export default async function AdminQuotationRequestDetailPage({
   const features = Array.isArray(request.selected_features)
     ? request.selected_features
     : [];
+
+  const scopeGroups = buildScopeGroups(features.map((feature) => String(feature)));
 
   const { data: quotationItemsData, error: quotationItemsError } =
     await adminSupabase
@@ -377,6 +406,43 @@ export default async function AdminQuotationRequestDetailPage({
 
             <section className={detailStyles.primaryLayout}>
               <div className={detailStyles.primaryColumn}>
+                <section className={detailStyles.requestSnapshot}>
+                  <div className={detailStyles.snapshotHeader}>
+                    <div>
+                      <span>CLIENT REQUEST</span>
+                      <h2>Request snapshot</h2>
+                      <p>Review the client&apos;s selected requirements before building the final quotation.</p>
+                    </div>
+                    <span className={detailStyles.snapshotCount}>
+                      {features.length} requirement{features.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
+
+                  <div className={detailStyles.snapshotFacts}>
+                    <div><small>Industry / context</small><strong>{request.project_context || "—"}</strong></div>
+                    <div><small>Project type</small><strong>{request.business_type || request.product_name || "—"}</strong></div>
+                    <div><small>Budget</small><strong>{request.budget || "—"}</strong></div>
+                    <div><small>Timeline</small><strong>{request.timeline || "—"}</strong></div>
+                  </div>
+
+                  {scopeGroups.length > 0 ? (
+                    <div className={detailStyles.scopeGroups}>
+                      {scopeGroups.map((group) => (
+                        <section className={detailStyles.scopeGroup} key={group.name}>
+                          <strong>{group.name}</strong>
+                          <ul>
+                            {group.items.map((item) => (
+                              <li key={`${group.name}-${item}`}>{item}</li>
+                            ))}
+                          </ul>
+                        </section>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={detailStyles.emptyText}>No guided requirements were saved for this request.</div>
+                  )}
+                </section>
+
                 <section className={detailStyles.manageCard}>
                   <div className={detailStyles.sectionHeader}>
                     <div>
@@ -439,215 +505,225 @@ export default async function AdminQuotationRequestDetailPage({
                   </form>
                 </section>
 
-                <section className={detailStyles.requestSection}>
-              <div className={detailStyles.requestHeading}>
-                <span>ORIGINAL REQUEST</span>
-                <h2>Client & project information</h2>
-                <p>
-                  The original information is kept below for reference. Open
-                  only the section you need.
-                </p>
-              </div>
-
-              <div className={detailStyles.detailsList}>
-                <DetailSection
-                  eyebrow="CLIENT"
-                  title="Contact & project details"
-                  description="Basic client, business, and project information."
-                >
-                  <div className={detailStyles.fieldGrid}>
-                    <Field label="Full name" value={request.full_name} />
-                    <Field
-                      label="Business / project name"
-                      value={request.business_name}
-                    />
-                    <Field label="Email" value={request.email} />
-                    <Field
-                      label="Mobile / Telegram"
-                      value={request.contact_number}
-                    />
-                    <Field
-                      label="Preferred contact"
-                      value={request.preferred_contact}
-                    />
-                    <Field label="Project context" value={request.project_context} />
-                    <Field label="Project type" value={request.business_type} />
-                    <Field
-                      label="Location / audience area"
-                      value={request.business_location}
-                    />
-                    <Field
-                      label="Project / business stage"
-                      value={request.business_age}
-                    />
-                    <Field label="Team size" value={request.staff_count} />
-                    <Field
-                      label="Physical locations"
-                      value={request.location_count}
-                    />
-                    <Field
-                      label="Website / social page"
-                      value={request.current_link}
-                    />
-                    <Field
-                      label="Already has a website"
-                      value={request.existing_website}
-                    />
-                  </div>
-
-                  <Field
-                    label="Project description / products / services / content"
-                    value={request.offerings}
-                  />
-                </DetailSection>
-
-                <DetailSection
-                  eyebrow="FUNCTION"
-                  title="How the project should work"
-                  description="Requested functionality and how the client expects to manage it."
-                >
-                  <Field
-                    label="What users should be able to do"
-                    value={request.visitor_actions}
-                  />
-                  <Field label="Who will use it" value={request.user_types} />
-                  <Field label="Account / access setup" value={request.access_model} />
-                  <Field
-                    label="Admin / owner requirements"
-                    value={request.admin_requirements}
-                  />
-                  <Field
-                    label="Device requirements"
-                    value={request.device_requirements}
-                  />
-
-                  <div className={detailStyles.fieldGrid}>
-                    <Field
-                      label="Needs to update it themselves"
-                      value={request.self_manage}
-                    />
-                    <Field
-                      label="User / customer accounts"
-                      value={request.user_accounts}
-                    />
-                    <Field label="Will sell online" value={request.sell_online} />
-                    <Field
-                      label="Needs online payments"
-                      value={request.online_payments}
-                    />
-                    <Field
-                      label="Needs platform integrations"
-                      value={request.integration_needed}
-                    />
-                  </div>
-
-                  <Field
-                    label="Unsure about / wants TCL to recommend"
-                    value={request.uncertainty_notes}
-                  />
-                </DetailSection>
-
-                <DetailSection
-                  eyebrow="WORKFLOW"
-                  title="Current setup & goals"
-                  description="What the client uses now, current problems, and the desired result."
-                >
-                  <Field
-                    label="Current process / setup"
-                    value={request.current_process}
-                  />
-                  <Field
-                    label="Main problems / needs"
-                    value={request.main_problems}
-                  />
-                  <Field label="Main project goal" value={request.main_goal} />
-                </DetailSection>
-
-                <DetailSection
-                  eyebrow="FEATURES"
-                  title="Requested features & requirements"
-                  description="Potential features selected or mentioned by the client."
-                >
-                  {features.length > 0 ? (
-                    <div className={detailStyles.featureGrid}>
-                      {features.map((feature: string) => (
-                        <span key={feature}>✓ {feature}</span>
-                      ))}
+                <details className={detailStyles.originalSubmission}>
+                  <summary className={detailStyles.originalSubmissionSummary}>
+                    <div>
+                      <span>ORIGINAL SUBMISSION</span>
+                      <strong>View full questionnaire response</strong>
+                      <small>
+                        Complete client-submitted details kept for reference.
+                      </small>
                     </div>
-                  ) : (
-                    <div className={detailStyles.emptyText}>
-                      No specific features selected.
-                    </div>
-                  )}
+                    <span
+                      className={detailStyles.originalSubmissionChevron}
+                      aria-hidden="true"
+                    >
+                      ⌄
+                    </span>
+                  </summary>
 
-                  <div className={detailStyles.fieldGrid}>
-                    <Field
-                      label="Expected activity"
-                      value={request.expected_volume}
-                    />
-                    <Field
-                      label="Payment methods"
-                      value={request.payment_methods}
-                    />
-                    <Field
-                      label="Delivery / fulfillment"
-                      value={request.delivery_needs}
-                    />
-                    <Field
-                      label="Admin / editor access"
-                      value={request.admin_access}
-                    />
+                  <div className={detailStyles.originalSubmissionBody}>
+                    <div className={detailStyles.detailsList}>
+                                    <DetailSection
+                                      eyebrow="CLIENT"
+                                      title="Contact & project details"
+                                      description="Basic client, business, and project information."
+                                    >
+                                      <div className={detailStyles.fieldGrid}>
+                                        <Field label="Full name" value={request.full_name} />
+                                        <Field
+                                          label="Business / project name"
+                                          value={request.business_name}
+                                        />
+                                        <Field label="Email" value={request.email} />
+                                        <Field
+                                          label="Mobile / Telegram"
+                                          value={request.contact_number}
+                                        />
+                                        <Field
+                                          label="Preferred contact"
+                                          value={request.preferred_contact}
+                                        />
+                                        <Field label="Project context" value={request.project_context} />
+                                        <Field label="Project type" value={request.business_type} />
+                                        <Field
+                                          label="Location / audience area"
+                                          value={request.business_location}
+                                        />
+                                        <Field
+                                          label="Project / business stage"
+                                          value={request.business_age}
+                                        />
+                                        <Field label="Team size" value={request.staff_count} />
+                                        <Field
+                                          label="Physical locations"
+                                          value={request.location_count}
+                                        />
+                                        <Field
+                                          label="Website / social page"
+                                          value={request.current_link}
+                                        />
+                                        <Field
+                                          label="Already has a website"
+                                          value={request.existing_website}
+                                        />
+                                      </div>
+                    
+                                      <Field
+                                        label="Project description / products / services / content"
+                                        value={request.offerings}
+                                      />
+                                    </DetailSection>
+                    
+                                    <DetailSection
+                                      eyebrow="FUNCTION"
+                                      title="How the project should work"
+                                      description="Requested functionality and how the client expects to manage it."
+                                    >
+                                      <Field
+                                        label="What users should be able to do"
+                                        value={request.visitor_actions}
+                                      />
+                                      <Field label="Who will use it" value={request.user_types} />
+                                      <Field label="Account / access setup" value={request.access_model} />
+                                      <Field
+                                        label="Admin / owner requirements"
+                                        value={request.admin_requirements}
+                                      />
+                                      <Field
+                                        label="Device requirements"
+                                        value={request.device_requirements}
+                                      />
+                    
+                                      <div className={detailStyles.fieldGrid}>
+                                        <Field
+                                          label="Needs to update it themselves"
+                                          value={request.self_manage}
+                                        />
+                                        <Field
+                                          label="User / customer accounts"
+                                          value={request.user_accounts}
+                                        />
+                                        <Field label="Will sell online" value={request.sell_online} />
+                                        <Field
+                                          label="Needs online payments"
+                                          value={request.online_payments}
+                                        />
+                                        <Field
+                                          label="Needs platform integrations"
+                                          value={request.integration_needed}
+                                        />
+                                      </div>
+                    
+                                      <Field
+                                        label="Unsure about / wants TCL to recommend"
+                                        value={request.uncertainty_notes}
+                                      />
+                                    </DetailSection>
+                    
+                                    <DetailSection
+                                      eyebrow="WORKFLOW"
+                                      title="Current setup & goals"
+                                      description="What the client uses now, current problems, and the desired result."
+                                    >
+                                      <Field
+                                        label="Current process / setup"
+                                        value={request.current_process}
+                                      />
+                                      <Field
+                                        label="Main problems / needs"
+                                        value={request.main_problems}
+                                      />
+                                      <Field label="Main project goal" value={request.main_goal} />
+                                    </DetailSection>
+                    
+                                    <DetailSection
+                                      eyebrow="FEATURES"
+                                      title="Requested features & requirements"
+                                      description="Potential features selected or mentioned by the client."
+                                    >
+                                      {scopeGroups.length > 0 ? (
+                                        <div className={detailStyles.scopeGroupsCompact}>
+                                          {scopeGroups.map((group) => (
+                                            <div className={detailStyles.scopeGroupCompact} key={group.name}>
+                                              <strong>{group.name}</strong>
+                                              <span>{group.items.join(" · ")}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className={detailStyles.emptyText}>No specific features selected.</div>
+                                      )}
+                    
+                                      <div className={detailStyles.fieldGrid}>
+                                        <Field
+                                          label="Expected activity"
+                                          value={request.expected_volume}
+                                        />
+                                        <Field
+                                          label="Payment methods"
+                                          value={request.payment_methods}
+                                        />
+                                        <Field
+                                          label="Delivery / fulfillment"
+                                          value={request.delivery_needs}
+                                        />
+                                        <Field
+                                          label="Admin / editor access"
+                                          value={request.admin_access}
+                                        />
+                                      </div>
+                    
+                                      <Field
+                                        label="Integrations / tools"
+                                        value={request.integrations}
+                                      />
+                                      <Field
+                                        label="Data / content management"
+                                        value={request.data_management}
+                                      />
+                                      <Field
+                                        label="Recurring changes"
+                                        value={request.recurring_changes}
+                                      />
+                                      <Field
+                                        label="Rules / limits / permissions"
+                                        value={request.usage_rules}
+                                      />
+                                      <Field
+                                        label="Results / reports / tracking"
+                                        value={request.results_reporting}
+                                      />
+                                    </DetailSection>
+                    
+                                    <DetailSection
+                                      eyebrow="BRANDING"
+                                      title="Branding & content readiness"
+                                      description="Assets, content, domain, and timeline information."
+                                    >
+                                      <div className={detailStyles.fieldGrid}>
+                                        <Field label="Logo ready" value={request.logo_ready} />
+                                        <Field
+                                          label="Branding ready"
+                                          value={request.branding_ready}
+                                        />
+                                        <Field
+                                          label="Content ready"
+                                          value={request.content_ready}
+                                        />
+                                        <Field
+                                          label="Domain status"
+                                          value={request.domain_status}
+                                        />
+                                        <Field label="Timeline" value={request.timeline} />
+                                        <Field label="Budget" value={request.budget} />
+                                      </div>
+                    
+                                      <Field label="Additional notes" value={request.notes} />
+                                    </DetailSection>
+                                  </div>
                   </div>
-
-                  <Field
-                    label="Integrations / tools"
-                    value={request.integrations}
-                  />
-                  <Field
-                    label="Data / content management"
-                    value={request.data_management}
-                  />
-                  <Field
-                    label="Recurring changes"
-                    value={request.recurring_changes}
-                  />
-                  <Field
-                    label="Rules / limits / permissions"
-                    value={request.usage_rules}
-                  />
-                  <Field
-                    label="Results / reports / tracking"
-                    value={request.results_reporting}
-                  />
-                </DetailSection>
-
-                <DetailSection
-                  eyebrow="BRANDING"
-                  title="Branding & content readiness"
-                  description="Assets, content, domain, and timeline information."
-                >
-                  <div className={detailStyles.fieldGrid}>
-                    <Field label="Logo ready" value={request.logo_ready} />
-                    <Field
-                      label="Branding ready"
-                      value={request.branding_ready}
-                    />
-                    <Field
-                      label="Content ready"
-                      value={request.content_ready}
-                    />
-                    <Field
-                      label="Domain status"
-                      value={request.domain_status}
-                    />
-                    <Field label="Timeline" value={request.timeline} />
-                    <Field label="Budget" value={request.budget} />
-                  </div>
-
-                  <Field label="Additional notes" value={request.notes} />
-                </DetailSection>
-              </div>
-            </section>
+                </details>
 
 
                 <section className={detailStyles.historySection}>

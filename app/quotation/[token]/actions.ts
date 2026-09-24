@@ -103,6 +103,16 @@ async function addQuotationActivityLogs({
   }
 }
 
+export async function beginQuotationAcceptance(formData: FormData) {
+  const token = String(formData.get("token") ?? "").trim();
+
+  if (!token) {
+    redirect("/");
+  }
+
+  redirect(reviewPath(token, "accept=1"));
+}
+
 export async function acceptQuotation(formData: FormData) {
   const token = String(formData.get("token") ?? "").trim();
   const paymentChoice = readPaymentChoice(formData);

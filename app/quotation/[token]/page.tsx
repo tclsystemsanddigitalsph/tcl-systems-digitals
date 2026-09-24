@@ -4,8 +4,9 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { getCustomCheckoutState } from "@/lib/custom-order-payments";
-import { acceptQuotation, decideLater } from "./actions";
+import { acceptQuotation, beginQuotationAcceptance, decideLater } from "./actions";
 import styles from "./quotation.module.css";
+import scopeStyles from "./quotation-scope.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -209,11 +210,35 @@ export default async function ClientQuotationPage({
       )
     : [];
 
+  const groupedRequestedFeatures = requestedFeatures.reduce<
+    Record<string, string[]>
+  >((groups, feature) => {
+    const [rawSection, ...rest] = feature.split(" — ");
+    const section = (rawSection || "Project").trim();
+    const detail = rest.join(" — ").trim() || feature.trim();
+
+    // The saved feature format is usually:
+    // “Section — Question?: Answer”. On the quotation we only need the
+    // agreed answer/deliverable, not the questionnaire wording.
+    const colonIndex = detail.indexOf(":");
+    const answer = (colonIndex >= 0 ? detail.slice(colonIndex + 1) : detail)
+      .trim()
+      .replace(/^yes\s*[—-]\s*/i, "")
+      .replace(/^no\s*[—-]\s*/i, "")
+      .replace(/\s+/g, " ");
+
+    if (!answer) return groups;
+    if (!groups[section]) groups[section] = [];
+    if (!groups[section].includes(answer)) groups[section].push(answer);
+    return groups;
+  }, {});
+
   const hasItemizedScope = quotationItems.length > 0;
 
   const isReviewable = quotation.status === "QUOTED" && base > 0;
 
   const later = query.later === "1";
+  const choosingPayment = query.accept === "1";
   const hasError = typeof query.error === "string";
 
   return (
@@ -296,7 +321,14 @@ export default async function ClientQuotationPage({
 
               <section className={styles.card}>
                 <span className={styles.sectionLabel}>AGREED SCOPE</span>
-                <h2>Items included in this quotation</h2>
+                <h2>{hasItemizedScope ? "Final quoted scope" : "Requested scope"}</h2>
+
+                {hasItemizedScope ? (
+                  <p className={styles.muted}>
+                    These are the final items included in this quotation. Only the
+                    scope listed below is included in the quoted project price.
+                  </p>
+                ) : null}
 
                 {hasItemizedScope ? (
                   <div
@@ -385,11 +417,21 @@ export default async function ClientQuotationPage({
                     </div>
                   </div>
                 ) : requestedFeatures.length > 0 ? (
-                  <div className={styles.block}>
-                    <small>Requested / included features</small>
-                    <div className={styles.features}>
-                      {requestedFeatures.map((feature) => (
-                        <span key={feature}>✓ {feature}</span>
+                  <div className={scopeStyles.scopeBlock}>
+                    <small className={scopeStyles.scopeIntro}>Requested / included features</small>
+                    <div className={scopeStyles.scopeGroups}>
+                      {Object.entries(groupedRequestedFeatures).map(([section, items]) => (
+                        <section className={scopeStyles.scopeGroup} key={section}>
+                          <h3>{section}</h3>
+                          <ul>
+                            {items.map((item) => (
+                              <li key={`${section}-${item}`}>
+                                <span className={scopeStyles.scopeCheck}>✓</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
                       ))}
                     </div>
                   </div>
@@ -511,88 +553,215 @@ export default async function ClientQuotationPage({
 
                 {isReviewable ? (
                   <div className={styles.actions}>
-                    <form action={acceptQuotation}>
-                      <input type="hidden" name="token" value={token} />
-
-                      <label
-                        style={{
-                          display: "grid",
-                          gap: 7,
-                          marginBottom: 16,
-                          color: "#4d3f45",
-                          fontSize: ".82rem",
-                          fontWeight: 800,
-                        }}
-                      >
-                        Email for this order
-                        <input
-                          type="email"
-                          name="customer_email"
-                          defaultValue={quotation.email ?? ""}
-                          placeholder="you@example.com"
-                          autoComplete="email"
-                          required
+                    {choosingPayment ? (
+                      <>
+                        <div
                           style={{
-                            width: "100%",
-                            minHeight: 44,
-                            padding: "0 12px",
-                            border: "1px solid rgba(27,22,24,.14)",
-                            borderRadius: 12,
-                            background: "#fff",
-                            color: "inherit",
-                            font: "inherit",
-                          }}
-                        />
-                        <span
-                          style={{
-                            color: "rgba(27,22,24,.58)",
-                            fontSize: ".72rem",
-                            fontWeight: 600,
-                            lineHeight: 1.5,
+                            marginBottom: 16,
+                            padding: 14,
+                            borderRadius: 13,
+                            background: "rgba(0,0,0,.035)",
                           }}
                         >
-                          We&apos;ll use this for your order and payment record.
-                        </span>
-                      </label>
+                          <strong style={{ display: "block", marginBottom: 4 }}>
+                            Quotation accepted for review
+                          </strong>
+                          <span style={{ fontSize: ".82rem", opacity: 0.72 }}>
+                            Choose how you would like to pay before we create your
+                            project order.
+                          </span>
+                        </div>
 
-                      <div style={{ display: "grid", gap: 12, marginBottom: 16 }}>
-                        <label style={{ display: "block", padding: 14, border: "1px solid rgba(27,22,24,.12)", borderRadius: 14, cursor: "pointer" }}>
-                          <input type="radio" name="payment_choice" value="PROVIDER_FULL" required />
-                          <strong style={{ display: "block", marginTop: 6 }}>Pay in Full — Online Provider</strong>
-                          <span style={{ display: "block", marginTop: 4, opacity: .75 }}>4% processing fee · Total due now: {money(providerFullTotal)}</span>
-                        </label>
+                        <form action={acceptQuotation}>
+                          <input type="hidden" name="token" value={token} />
 
-                        <label style={{ display: "block", padding: 14, border: "1px solid rgba(27,22,24,.12)", borderRadius: 14, cursor: "pointer" }}>
-                          <input type="radio" name="payment_choice" value="PROVIDER_DEPOSIT" required />
-                          <strong style={{ display: "block", marginTop: 6 }}>50% Down Payment — Online Provider</strong>
-                          <span style={{ display: "block", marginTop: 4, opacity: .75 }}>6% processing fee · Due now: {money(providerDepositDueNow)} · Remaining later: {money(providerDepositTotal - providerDepositDueNow)}</span>
-                        </label>
+                          <label
+                            style={{
+                              display: "grid",
+                              gap: 7,
+                              marginBottom: 16,
+                              color: "#4d3f45",
+                              fontSize: ".82rem",
+                              fontWeight: 800,
+                            }}
+                          >
+                            Email for this order
+                            <input
+                              type="email"
+                              name="customer_email"
+                              defaultValue={quotation.email ?? ""}
+                              placeholder="you@example.com"
+                              autoComplete="email"
+                              required
+                              style={{
+                                width: "100%",
+                                minHeight: 44,
+                                padding: "0 12px",
+                                border: "1px solid rgba(27,22,24,.14)",
+                                borderRadius: 12,
+                                background: "#fff",
+                                color: "inherit",
+                                font: "inherit",
+                              }}
+                            />
+                            <span
+                              style={{
+                                color: "rgba(27,22,24,.58)",
+                                fontSize: ".72rem",
+                                fontWeight: 600,
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              We&apos;ll use this for your order and payment record.
+                            </span>
+                          </label>
 
-                        <label style={{ display: "block", padding: 14, border: "1px solid rgba(27,22,24,.12)", borderRadius: 14, cursor: "pointer" }}>
-                          <input type="radio" name="payment_choice" value="BPI_FULL" required />
-                          <strong style={{ display: "block", marginTop: 6 }}>Pay in Full — Direct BPI Bank Transfer</strong>
-                          <span style={{ display: "block", marginTop: 4, opacity: .75 }}>0% processing fee · Total due now: {money(bpiTotal)}</span>
-                        </label>
-                      </div>
+                          <div
+                            style={{
+                              display: "grid",
+                              gap: 12,
+                              marginBottom: 16,
+                            }}
+                          >
+                            <label
+                              style={{
+                                display: "block",
+                                padding: 14,
+                                border: "1px solid rgba(27,22,24,.12)",
+                                borderRadius: 14,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name="payment_choice"
+                                value="PROVIDER_FULL"
+                                required
+                              />
+                              <strong style={{ display: "block", marginTop: 6 }}>
+                                Pay in Full — Online Provider
+                              </strong>
+                              <span
+                                style={{
+                                  display: "block",
+                                  marginTop: 4,
+                                  opacity: 0.75,
+                                }}
+                              >
+                                4% processing fee · Total due now:{" "}
+                                {money(providerFullTotal)}
+                              </span>
+                            </label>
 
-                      <button className={styles.accept} type="submit">
-                        Accept &amp; Continue to Payment →
-                      </button>
-                    </form>
+                            <label
+                              style={{
+                                display: "block",
+                                padding: 14,
+                                border: "1px solid rgba(27,22,24,.12)",
+                                borderRadius: 14,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name="payment_choice"
+                                value="PROVIDER_DEPOSIT"
+                                required
+                              />
+                              <strong style={{ display: "block", marginTop: 6 }}>
+                                50% Down Payment — Online Provider
+                              </strong>
+                              <span
+                                style={{
+                                  display: "block",
+                                  marginTop: 4,
+                                  opacity: 0.75,
+                                }}
+                              >
+                                6% processing fee · Due now:{" "}
+                                {money(providerDepositDueNow)} · Remaining later:{" "}
+                                {money(
+                                  providerDepositTotal - providerDepositDueNow,
+                                )}
+                              </span>
+                            </label>
 
-                    <form action={decideLater}>
-                      <input type="hidden" name="token" value={token} />
+                            <label
+                              style={{
+                                display: "block",
+                                padding: 14,
+                                border: "1px solid rgba(27,22,24,.12)",
+                                borderRadius: 14,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name="payment_choice"
+                                value="BPI_FULL"
+                                required
+                              />
+                              <strong style={{ display: "block", marginTop: 6 }}>
+                                Pay in Full — Direct BPI Bank Transfer
+                              </strong>
+                              <span
+                                style={{
+                                  display: "block",
+                                  marginTop: 4,
+                                  opacity: 0.75,
+                                }}
+                              >
+                                0% processing fee · Total due now: {money(bpiTotal)}
+                              </span>
+                            </label>
+                          </div>
 
-                      <button className={styles.later} type="submit">
-                        Decide Later
-                      </button>
-                    </form>
+                          <button className={styles.accept} type="submit">
+                            Confirm Payment Option &amp; Continue →
+                          </button>
+                        </form>
 
-                    <p className={styles.finePrint}>
-                      By accepting, you confirm the latest scope and quotation
-                      subtotal. Your selected payment option and its processing
-                      fee are locked when the quotation is accepted.
-                    </p>
+                        <Link
+                          className={styles.later}
+                          href={`/quotation/${encodeURIComponent(token)}`}
+                          style={{
+                            display: "block",
+                            textAlign: "center",
+                            textDecoration: "none",
+                          }}
+                        >
+                          ← Back to Quotation
+                        </Link>
+
+                        <p className={styles.finePrint}>
+                          Your quotation is only marked as accepted after you
+                          confirm a payment option. No payment is charged on this
+                          page.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <form action={beginQuotationAcceptance}>
+                          <input type="hidden" name="token" value={token} />
+                          <button className={styles.accept} type="submit">
+                            Accept Quotation →
+                          </button>
+                        </form>
+
+                        <form action={decideLater}>
+                          <input type="hidden" name="token" value={token} />
+                          <button className={styles.later} type="submit">
+                            Decide Later
+                          </button>
+                        </form>
+
+                        <p className={styles.finePrint}>
+                          Accepting takes you to the next step where you can
+                          choose your payment option. No payment is charged by
+                          clicking Accept Quotation.
+                        </p>
+                      </>
+                    )}
                   </div>
                 ) : quotation.status === "ACCEPTED" &&
                   quotation.order_id ? (

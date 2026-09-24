@@ -24,61 +24,21 @@ function QuotationLayout({
       <SiteHeader />
 
       <main className={styles.page}>
-        <section className={styles.hero}>
-          <div className={`container ${styles.heroInner}`}>
-            <Link href={backHref} className={styles.heroBack}>
-              ← Back to Product
-            </Link>
-
-            <div className={styles.heroContent}>
-              <span className={styles.heroKicker}>
-                Request a Quotation
-              </span>
-
-              <h1>Tell us what you want to build.</h1>
-
-              <p>
-                Share your project idea, who will use it, how it should work,
-                the features you may need, and the problem you want it to solve.
-                TCL will review the actual scope before preparing a quotation.
-              </p>
-            </div>
-
-            <div className={styles.serviceBar}>
-              <div className={styles.serviceMain}>
+        <section className={styles.quoteShell}>
+          <div className={`container ${styles.quoteShellInner}`}>
+            <div className={styles.quoteUtility}>
+              <div className={styles.selectedService}>
                 <span>Selected service</span>
                 <strong>{productName}</strong>
-              </div>
-
-              <div className={styles.serviceMeta}>
-                <div>
-                  <small>Category</small>
-                  <span>{category}</span>
-                </div>
-
-                <div>
-                  <small>Pricing</small>
-                  <b>For Quotation</b>
-                </div>
+                <small>{category} · For Quotation</small>
               </div>
             </div>
 
-            <div className={styles.heroNote}>
-              <span>♡</span>
-              <p>
-                For business, personal, educational, organizational, and custom
-                web system projects.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.formSection}>
-          <div className="container">
             <QuoteForm
               productName={productName}
               productSlug={productSlug}
               category={category}
+              backHref={backHref}
             />
           </div>
         </section>
@@ -133,9 +93,7 @@ export default async function QuotePage({
         <main className={styles.page}>
           <div className="container">
             <section className={styles.notQuote}>
-              <span className="section-kicker">
-                TCL Quotation
-              </span>
+              <span className="section-kicker">TCL Quotation</span>
 
               <h1>This product has a fixed price.</h1>
 
