@@ -1117,3 +1117,45 @@
   }
 }
 
+/* =========================================================
+   MOBILE UTILITY BUTTONS — EXACT BACK TO PRODUCT SIZE
+   ========================================================= */
+@media (max-width: 640px) {
+  .exitRequest,
+  .startOverRequest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: max-content;
+    min-height: 26px !important;
+    height: 26px !important;
+    padding: 5px 9px !important;
+    border: 1px solid rgba(91, 68, 77, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.8);
+    font-size: 7px !important;
+    font-weight: 800;
+    line-height: 1.25 !important;
+    letter-spacing: 0.045em;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .requestActions,
+  .requestActionsStarted {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .requestActionsRight {
+    display: flex;
+    flex: 0 0 auto;
+    width: auto;
+    gap: 5px;
+  }
+}
+
